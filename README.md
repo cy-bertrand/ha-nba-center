@@ -15,7 +15,7 @@ Le backend Python/Home Assistant reste la seule couche autorisée à communiquer
 - Projet de référence : https://github.com/cy-bertrand/ha-nba
 - Nouveau projet : https://github.com/cy-bertrand/ha-nba-center
 
-Le dépôt source reste intact. Le code sera repris sans historique Git, puis adapté progressivement. Les capteurs, services, événements, automatisations et blueprints existants doivent rester compatibles.
+Le dépôt source reste intact. Les 23 fichiers suivis du dépôt source ont été repris sans historique Git ; le README a été remplacé et les liens du manifest adaptés. Les capteurs, services, événements, automatisations et blueprints existants restent la base de compatibilité.
 
 ## Feuille de route
 
