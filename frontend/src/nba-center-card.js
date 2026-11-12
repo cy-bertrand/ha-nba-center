@@ -51,7 +51,7 @@ class NBACenterCard extends LitElement {
     h1{margin:8px 0 4px;font-size:clamp(25px,4vw,36px);line-height:1;letter-spacing:-.045em;font-weight:950}
     .subtitle{color:#aab6ca;font-size:12px}
     .meta{display:flex;gap:8px;align-items:center;margin-top:14px;color:#aab6ca;font-size:10px;text-transform:uppercase;letter-spacing:.1em}
-    .dot{width:7px;height:7px;border-radius:50%;background:#e95d63;box-shadow:0 0 0 4px #e95d6322}
+    .dot{width:7px;height:7px;border-radius:50%;background:#e8b74e;box-shadow:0 0 0 4px #e8b74e22}
     nav{display:flex;gap:5px;overflow-x:auto;padding:10px 12px;background:#0c1421;border-bottom:1px solid #ffffff12;scrollbar-width:thin}
     button{border:0;border-radius:9px;background:transparent;color:#8997ad;padding:10px 14px;min-width:76px;cursor:pointer;font:inherit;font-size:10px;font-weight:800;letter-spacing:.09em;white-space:nowrap}
     button:hover{color:#fff;background:#ffffff0a}
@@ -141,7 +141,7 @@ class NBACenterCard extends LitElement {
   }
 
   _games() {
-    const state = this._entity("games", (s) => Array.isArray(s.attributes?.games));
+    const state = this._entity("games", (s) => Array.isArray(s.attributes?.games) && !s.attributes?.team_id);
     return { state, rows: state?.attributes?.games ?? [] };
   }
 
@@ -330,7 +330,7 @@ class NBACenterCard extends LitElement {
       <ha-card class="shell">
         <header class="hero"><div class="eyebrow">THE ASSOCIATION · HOME ASSISTANT</div>
           <h1>${this._config.title}</h1><div class="subtitle">${this._config.subtitle}</div>
-          <div class="meta"><span class="dot"></span><span>NBA CENTER</span><span>·</span>
+          <div class="meta"><span class="dot"></span><span>NBA DATA</span><span>·</span>
             <span>${this.hass ? "CONNECTED TO HOME ASSISTANT" : "WAITING FOR HOME ASSISTANT"}</span></div>
         </header>
         <nav aria-label="NBA Center navigation">${VIEWS.map((v) => html`
