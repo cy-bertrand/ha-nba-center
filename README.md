@@ -2,7 +2,7 @@
 
 **NBA Dark · ESPN (sans clé API) · Home Assistant · Lovelace**
 
-> Projet en phase de préparation. Cette nouvelle base est destinée à accueillir l'évolution de l'intégration `ha-nba` vers une expérience NBA complète dans Lovelace.
+> Base initiale importée depuis `ha-nba` sans historique Git. Le projet NBA Center est en phase d'audit ; aucune nouvelle interface Lovelace n'est encore livrée.
 
 ## Objectif
 
