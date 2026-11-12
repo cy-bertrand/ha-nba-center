@@ -1,7 +1,7 @@
 # Phase 2 — Match Center
 
 **Branche :** `phase-2-match-center`  
-**Statut :** implémentation en cours — backend calendrier daté, commandes WebSocket et interface calendrier/overlay ajoutés ; CI et validation HA en cours
+**Statut :** première implémentation compilée et CI réussie ; validation en instance Home Assistant réelle restante
 
 ## Décisions produit confirmées
 
@@ -154,7 +154,7 @@ Déjà ajouté sur la branche de travail :
 - Workflow CI étendu à la branche `phase-2-match-center`.
 
 À confirmer avant livraison :
-- Résultat final du workflow après les derniers commits.
-- Validation du paramètre ESPN `dates` sur l'instance réelle, car l'endpoint est non officiel.
+- CI GitHub Actions : succès sur la dernière implémentation, compilation Python, vérification JavaScript, build Lit et tests du bundle.
+- Validation du paramètre ESPN `dates` sur l'instance réelle, car l'endpoint est non officiel (les références communautaires confirment le format YYYYMMDD).
 - Tests interactifs dans Home Assistant, notamment navigation des dates, overlay mobile et fuseau Europe/Brussels.
 - Cas d'erreur et changements d'heure CET/CEST.
