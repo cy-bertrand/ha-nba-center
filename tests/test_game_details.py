@@ -1,9 +1,11 @@
-"""Tests du parseur de box score ESPN sans Home Assistant ni réseau."""
+"""Tests du parseur de détails de match ESPN NBA."""
 import importlib.util
+import json
 import unittest
 from pathlib import Path
 
-MODULE_PATH = Path(__file__).resolve().parents[1] / "custom_components" / "nba" / "game_details.py"
+ROOT = Path(__file__).resolve().parents[1]
+MODULE_PATH = ROOT / "custom_components" / "nba" / "game_details.py"
 SPEC = importlib.util.spec_from_file_location("game_details", MODULE_PATH)
 module = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(module)
@@ -50,7 +52,6 @@ class BoxscoreParsingTests(unittest.TestCase):
         self.assertTrue(bos["players"][1]["did_not_play"])
         self.assertEqual(bos["players"][1]["reason"], "Coach's Decision")
 
-
     def test_parses_play_by_play_and_scoring_state(self):
         raw = {"plays": [
             {"id": "p1", "period": {"number": 4}, "clock": {"displayValue": "02:14"},
@@ -69,12 +70,10 @@ class BoxscoreParsingTests(unittest.TestCase):
         self.assertEqual(plays[0]["home_score"], "98")
         self.assertFalse(plays[1]["scoring"])
 
-
     def test_play_parser_tolerates_scalar_nested_fields(self):
         plays = parse_plays({"plays": [
             {"id": 9, "period": 3, "clock": "00:12", "type": "Timeout", "team": "2"},
-            None,
-            "invalid",
+            None, "invalid",
         ]})
         self.assertEqual(len(plays), 1)
         self.assertEqual(plays[0]["period"], "3")
@@ -99,6 +98,34 @@ class BoxscoreParsingTests(unittest.TestCase):
         ]}})
         stats = result["player_stats"][0]["players"][0]["stats"]
         self.assertEqual(stats, {"MIN": "DNP", "PTS": None})
+
+    def test_actual_espn_fixture_schema_and_enriched_fields(self):
+        fixture = json.loads((ROOT / "tests" / "fixtures" / "espn_summary_401909971.json").read_text())
+        box = parse_boxscore(fixture)
+        self.assertEqual([team["abbr"] for team in box["team_stats"]], ["LAL", "MIL"])
+        self.assertEqual(box["team_stats"][0]["statistics"][0]["value"], "44-95")
+        self.assertEqual(box["player_stats"][0]["players"][0]["stats"]["PTS"], "0")
+        self.assertEqual(box["player_stats"][0]["players"][0]["stats_by_key"]["points"], "0")
+        self.assertEqual(box["player_stats"][0]["players"][0]["stat_labels"]["points"]["description"], "Points")
+        self.assertEqual(box["player_stats"][0]["totals"][1]["value"], "123")
+        self.assertEqual(box["player_stats"][1]["totals"][1]["value"], "112")
+
+        plays = parse_plays(fixture)
+        self.assertEqual(len(plays), 3)
+        self.assertEqual(plays[-1]["sequence_number"], "766")
+        self.assertEqual(plays[-1]["away_score"], "123")
+        self.assertEqual(plays[-1]["home_score"], "112")
+        self.assertEqual(plays[-1]["short_description"], "End of Game")
+        self.assertEqual(plays[0]["participants"], ["4433136", "5105623", "4592691"])
+        self.assertIsNone(plays[0]["coordinate"])
+        self.assertEqual(plays[1]["coordinate"], {"x": 36, "y": 0})
+
+    def test_fixture_play_events_keep_clock_and_period_display(self):
+        fixture = json.loads((ROOT / "tests" / "fixtures" / "espn_summary_401909971.json").read_text())
+        plays = parse_plays(fixture)
+        self.assertEqual(plays[0]["period_display"], "1st Quarter")
+        self.assertEqual(plays[0]["clock"], "12:00")
+        self.assertEqual(plays[-1]["type"], "End Game")
 
 
 if __name__ == "__main__":
