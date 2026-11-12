@@ -38,9 +38,35 @@ async def websocket_get_scoreboard(
     connection.send_result(msg["id"], result)
 
 
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "nba/game_details",
+        vol.Required("game_id"): str,
+    }
+)
+@websocket_api.async_response
+async def websocket_get_game_details(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Return cached ESPN summary details for one game."""
+    coordinators = list(hass.data.get(DOMAIN, {}).values())
+    if not coordinators:
+        connection.send_error(msg["id"], "not_ready", "L'intégration NBA n'est pas chargée.")
+        return
+    result = await coordinators[0].async_get_game_details(msg["game_id"])
+    if result.get("error"):
+        connection.send_error(msg["id"], "api_error", result["error"])
+        return
+    connection.send_result(msg["id"], result)
+
+
 def async_register(hass: HomeAssistant) -> None:
     """Register NBA Center websocket commands once per HA instance."""
     if hass.data.get("nba_center_websocket_registered"):
         return
     websocket_api.async_register_command(hass, websocket_get_scoreboard)
+    websocket_api.async_register_command(hass, websocket_get_game_details)
     hass.data["nba_center_websocket_registered"] = True
