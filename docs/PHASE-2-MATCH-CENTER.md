@@ -1,7 +1,7 @@
 # Phase 2 — Match Center
 
 **Branche :** `phase-2-match-center`  
-**Statut :** préparation validée — implémentation à démarrer après revue de ce plan
+**Statut :** implémentation en cours — backend calendrier daté, commandes WebSocket et interface calendrier/overlay ajoutés ; CI et validation HA en cours
 
 ## Décisions produit confirmées
 
@@ -140,3 +140,21 @@ Ne pas modifier le contrat des capteurs existants sans raison et préserver les 
 - Exploration des 30 équipes et effectifs (Phase 4).
 - Profils et comparaisons de joueurs (Phase 5).
 - Refonte des onglets ou ajout d'une barre de navigation basse (non retenu).
+
+## État d'implémentation — 12 novembre 2026
+
+Déjà ajouté sur la branche de travail :
+- Récupération du scoreboard ESPN par dates US adjacentes et filtrage après conversion dans le fuseau local Home Assistant.
+- Cache par date, verrou contre les requêtes simultanées et TTL de 30 secondes en LIVE / 180 secondes hors LIVE.
+- Repli sur le dernier calendrier en cache marqué obsolète si un appel de date adjacent échoue ; sans cache complet, une erreur est remontée plutôt qu'une liste partielle présentée comme complète.
+- Commandes WebSocket `nba/scoreboard` et `nba/game_details`, enregistrées une seule fois par instance HA.
+- Navigation par date, recherche et filtres dans SCORES.
+- Clic sur les rencontres ouvrant un overlay avec résumé ESPN, quart-temps et leaders disponibles.
+- Contrôles frontend ajoutés pour vérifier les commandes WebSocket et les composants Match Center.
+- Workflow CI étendu à la branche `phase-2-match-center`.
+
+À confirmer avant livraison :
+- Résultat final du workflow après les derniers commits.
+- Validation du paramètre ESPN `dates` sur l'instance réelle, car l'endpoint est non officiel.
+- Tests interactifs dans Home Assistant, notamment navigation des dates, overlay mobile et fuseau Europe/Brussels.
+- Cas d'erreur et changements d'heure CET/CEST.
