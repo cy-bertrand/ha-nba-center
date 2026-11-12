@@ -1,4 +1,4 @@
-// NBA Center Lovelace card — reads only Home Assistant entity state.\nimport { LitElement, css, html } from "lit";
+// NBA Center Lovelace card — reads only Home Assistant entity state. Lit is bundled locally.\nimport { LitElement, css, html } from "lit";
 
 const VIEWS = [
   { id: "home", label: "HOME" },
