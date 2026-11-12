@@ -1,0 +1,14 @@
+{
+  "name": "ha-nba-center-frontend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node frontend/test-bundle.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.5",
+    "lit": "3.3.1"
+  }
+}

@@ -2,7 +2,7 @@
 
 **NBA Dark · ESPN (sans clé API) · Home Assistant · Lovelace**
 
-> Base initiale importée depuis `ha-nba` sans historique Git. Le projet NBA Center est en phase d'audit ; aucune nouvelle interface Lovelace n'est encore livrée.
+> Base initiale importée depuis `ha-nba` sans historique Git. Phase 0 validée ; Phase 1 a maintenant une carte Lit interactive reliée aux capteurs existants, en attente de validation dans Home Assistant réel.
 
 ## Objectif
 
@@ -44,7 +44,7 @@ Chaque phase fera l'objet d'une validation avant le démarrage de la suivante.
 
 - [x] Dépôt public créé.
 - [x] Reprise des 23 fichiers suivis du code source sans historique.
-- [x] Inventaire et audit technique documentaire Phase 0 (validation finale en attente).
-- [x] Proposition d'architecture, contrats de données et plan de tests documentés (validation utilisateur en attente).
+- [x] Audit documentaire et architecture Phase 0 validés.
+- [x] Contrats de données, architecture et plan de tests documentés.\n- [x] Carte Lit NBA Dark avec cinq vues, filtres de scores et tableaux statistiques.\n- [x] Bundle autonome et contrôles CI (syntaxe Python/JavaScript, build et tests frontend) réussis.\n- [ ] Validation dans une instance Home Assistant réelle.
 
-Voir [`docs/ROADMAP.md`](docs/ROADMAP.md), [`docs/PHASE-0-AUDIT.md`](docs/PHASE-0-AUDIT.md), [`docs/ESPN-DATA-MAP.md`](docs/ESPN-DATA-MAP.md), [`docs/DATA-CONTRACTS.md`](docs/DATA-CONTRACTS.md) et [`docs/TEST-PLAN.md`](docs/TEST-PLAN.md).
+Voir [`docs/PHASE-1-FOUNDATION.md`](docs/PHASE-1-FOUNDATION.md), [`docs/FRONTEND-INSTALLATION.md`](docs/FRONTEND-INSTALLATION.md), [`docs/ROADMAP.md`](docs/ROADMAP.md), [`docs/PHASE-0-AUDIT.md`](docs/PHASE-0-AUDIT.md), [`docs/ESPN-DATA-MAP.md`](docs/ESPN-DATA-MAP.md), [`docs/DATA-CONTRACTS.md`](docs/DATA-CONTRACTS.md) et [`docs/TEST-PLAN.md`](docs/TEST-PLAN.md).

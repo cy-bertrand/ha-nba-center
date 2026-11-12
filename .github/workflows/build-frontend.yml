@@ -1,0 +1,60 @@
+name: Build NBA Center frontend
+
+on:
+  push:
+    branches:
+      - phase-1-foundation
+    paths:
+      - 'frontend/**'
+      - 'custom_components/nba/**/*.py'
+      - 'custom_components/nba/manifest.json'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'build.mjs'
+  workflow_dispatch:
+
+concurrency:
+  group: nba-center-frontend-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: phase-1-foundation
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Validate Python syntax
+        run: python -m compileall -q custom_components/nba
+      - name: Build bundled Lit card
+        run: |
+          npm install --package-lock-only --no-audit --no-fund
+          npm ci --no-audit --no-fund
+          node --check frontend/src/nba-center-card.js
+          npm run build
+          npm test
+      - name: Commit generated frontend bundle
+        run: |
+          if git diff --quiet -- custom_components/nba/www/nba-center-card.js; then
+            echo "Frontend bundle is already up to date."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add custom_components/nba/www/nba-center-card.js package-lock.json
+          git commit -m "build(frontend): bundle NBA Center Lit card"
+          git fetch origin phase-1-foundation
+          git rebase origin/phase-1-foundation
+          git push origin HEAD:phase-1-foundation

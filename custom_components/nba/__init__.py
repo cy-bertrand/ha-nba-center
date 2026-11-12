@@ -81,6 +81,17 @@ async def _register_services(hass: HomeAssistant) -> None:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Démarre l'intégration depuis une entrée de configuration."""
+    # Enregistrement de la carte intégrée : une erreur frontend ne doit pas
+    # empêcher le chargement des capteurs et services historiques.
+    if not hass.data.get("nba_center_frontend_registered", False):
+        try:
+            from .frontend import async_register_frontend
+
+            await async_register_frontend(hass)
+            hass.data["nba_center_frontend_registered"] = True
+        except Exception:  # noqa: BLE001 - le backend NBA reste prioritaire
+            _LOGGER.warning("Impossible d'enregistrer la carte NBA Center", exc_info=True)
+
     # Installation du blueprint (opération disque : hors boucle principale)
     try:
         await hass.async_add_executor_job(
