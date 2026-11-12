@@ -35,7 +35,7 @@
 
 ## CI et contrôles
 
-Le workflow GitHub Actions exécute :
+Dernier workflow validé : [run 43304186808](https://github.com/cy-bertrand/ha-nba-center/actions/runs/43304186808) — succès.\n\nLe workflow GitHub Actions exécute :
 - `python -m compileall -q custom_components/nba`
 - `npm ci`
 - `npm run build`
