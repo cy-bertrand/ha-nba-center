@@ -29,6 +29,7 @@ jobs:
           npm install --package-lock-only --no-audit --no-fund
           npm ci --no-audit --no-fund
           npm run build
+          npm test
       - name: Commit generated frontend bundle
         run: |
           if git diff --quiet -- custom_components/nba/www/nba-center-card.js; then
