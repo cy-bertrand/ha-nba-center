@@ -46,7 +46,7 @@ class NBACenterCard extends LitElement {
     _filter: { state: true },
     _search: { state: true },
     _selectedDate: { state: true }, _calendarGames: { state: true },
-    _calendarLoading: { state: true }, _calendarError: { state: true },
+    _calendarLoading: { state: true }, _calendarError: { state: true }, _calendarStale: { state: true },
     _overlayGame: { state: true }, _overlayDetails: { state: true },
     _overlayLoading: { state: true }, _overlayError: { state: true },
   };
@@ -146,7 +146,7 @@ class NBACenterCard extends LitElement {
     this._filter = "all";
     this._search = "";
     this._selectedDate = localDateISO();
-    this._calendarGames = []; this._calendarLoading = false; this._calendarError = ""; this._calendarInitialized = false;
+    this._calendarGames = []; this._calendarLoading = false; this._calendarError = ""; this._calendarStale = false; this._calendarInitialized = false;
     this._overlayGame = null; this._overlayDetails = null;
     this._overlayLoading = false; this._overlayError = "";
     this._config = {};
@@ -231,8 +231,8 @@ class NBACenterCard extends LitElement {
   _setDate(event) { this._selectedDate = event.target.value; this._loadCalendar(this._selectedDate); }
   async _loadCalendar(date) {
     if (!this.hass?.callWS || !date) return;
-    this._calendarLoading = true; this._calendarError = "";
-    try { const result = await this.hass.callWS({ type: "nba/scoreboard", date }); this._calendarGames = result.games ?? []; }
+    this._calendarLoading = true; this._calendarError = ""; this._calendarStale = false;
+    try { const result = await this.hass.callWS({ type: "nba/scoreboard", date }); this._calendarGames = result.games ?? []; this._calendarStale = Boolean(result.stale); }
     catch (err) { this._calendarError = err?.message ?? "Impossible de charger le calendrier NBA."; this._calendarGames = []; }
     finally { this._calendarLoading = false; }
   }
@@ -362,6 +362,7 @@ class NBACenterCard extends LitElement {
         <span class="date-label">${dateLabel}</span><input type="date" aria-label="Choisir une date" .value=${this._selectedDate} @change=${this._setDate}>
         <button aria-label="Jour suivant" @click=${() => this._shiftDate(1)}>›</button>
         <button @click=${() => { this._selectedDate = new Date().toLocaleDateString("en-CA"); this._loadCalendar(this._selectedDate); }}>AUJOURD&#39;HUI</button></div>
+      ${this._calendarStale ? html`<p class="muted">Données en cache · actualisation ESPN indisponible</p>` : ""}
       <div class="filters">${[["all","TOUS"],["in","LIVE"],["pre","À VENIR"],["post","TERMINÉS"]].map(([k,l]) => html`<button class="chip" aria-pressed=${this._filter===k} @click=${() => this._setFilter(k)}>${l}</button>`)}
         <input type="search" aria-label="Rechercher une équipe" placeholder="Filtrer une équipe…" .value=${this._search} @input=${this._setSearch}></div>
       ${this._calendarLoading ? html`<section class="empty">Chargement du calendrier…</section>` : ""}
