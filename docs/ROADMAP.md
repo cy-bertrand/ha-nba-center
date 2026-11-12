@@ -6,7 +6,7 @@ Le développement suit strictement les phases ci-dessous. Chaque phase est inspe
 
 | Phase | Livrable | État |
 |---|---|---|
-| 0 | Audit du dépôt source, cartographie ESPN et plan technique | En cours — inventaire et architecture avancés ; capture brute ESPN/tests et licence à valider |
+| 0 | Audit du dépôt source, cartographie ESPN et plan technique | En cours — licence confirmée, roster capturé ; summary/stats, tests et compatibilité restent à valider |
 | 1 | Carte Lit installable et navigation NBA Dark | À faire |
 | 2 | Calendrier et scores | À faire |
 | 3 | Fiches de match et box scores | À faire |
