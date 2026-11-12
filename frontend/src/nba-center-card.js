@@ -154,7 +154,7 @@ class NBACenterCard extends LitElement {
     this._search = "";
     this._selectedDate = localDateISO();
     this._calendarGames = []; this._calendarLoading = false; this._calendarError = ""; this._calendarStale = false; this._calendarStaleError = ""; this._calendarRequest = 0; this._calendarInitialized = false;
-    this._overlayGame = null; this._overlayDetails = null;
+    this._overlayGame = null; this._overlayDetails = null; this._overlayRequest = 0;
     this._overlayLoading = false; this._overlayError = "";
     this._config = {};
   }
@@ -255,12 +255,23 @@ class NBACenterCard extends LitElement {
     }
   }
   async _openGame(game) {
+    const request = ++this._overlayRequest;
     this._overlayGame = game; this._overlayDetails = null; this._overlayError = ""; this._overlayLoading = true;
-    try { this._overlayDetails = await this.hass.callWS({ type: "nba/game_details", game_id: String(game.id) }); }
-    catch (err) { this._overlayError = err?.message ?? "Résumé du match indisponible."; }
-    finally { this._overlayLoading = false; }
+    try {
+      const details = await this.hass.callWS({ type: "nba/game_details", game_id: String(game.id) });
+      if (request !== this._overlayRequest || String(this._overlayGame?.id) !== String(game.id)) return;
+      this._overlayDetails = details;
+    } catch (err) {
+      if (request !== this._overlayRequest) return;
+      this._overlayError = err?.message ?? "Résumé du match indisponible.";
+    } finally {
+      if (request === this._overlayRequest) this._overlayLoading = false;
+    }
   }
-  _closeOverlay() { this._overlayGame = null; this._overlayDetails = null; this._overlayError = ""; }
+  _closeOverlay() {
+    this._overlayRequest += 1;
+    this._overlayGame = null; this._overlayDetails = null; this._overlayLoading = false; this._overlayError = "";
+  }
   _onOverlayKeydown(event) { if (event.key === "Escape") this._closeOverlay(); }
 
   _boxscorePanel(block) {
