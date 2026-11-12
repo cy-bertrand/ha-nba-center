@@ -51,7 +51,12 @@ var d=[{id:"home",label:"HOME"},{id:"scores",label:"SCORES"},{id:"teams",label:"
     .team-info{min-width:0;flex:1}
     .team-info strong{display:block;font-size:12px}
     .team-info small{display:block;margin-top:3px;color:#8f9db2;font-size:10px}
-    .record{text-align:right;font-size:11px;font-weight:800;color:#dce3ef}\n    .recent{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}\n    .form-chip{display:flex;align-items:center;gap:5px;padding:5px 7px;border:1px solid #2b3b52;border-radius:7px;color:#aab6ca;font-size:9px}\n    .form-chip strong{font-size:9px}\n    .form-chip.win strong{color:#72d5a0}\n    .form-chip.loss strong{color:#ff8b91}
+    .record{text-align:right;font-size:11px;font-weight:800;color:#dce3ef}
+    .recent{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+    .form-chip{display:flex;align-items:center;gap:5px;padding:5px 7px;border:1px solid #2b3b52;border-radius:7px;color:#aab6ca;font-size:9px}
+    .form-chip strong{font-size:9px}
+    .form-chip.win strong{color:#72d5a0}
+    .form-chip.loss strong{color:#ff8b91}
     .leader{display:grid;grid-template-columns:24px 34px minmax(0,1fr) auto;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #ffffff10}
     .leader:last-child{border-bottom:0}
     .rank{color:#8190a7;font-size:10px;font-weight:900}
