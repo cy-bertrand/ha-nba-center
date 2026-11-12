@@ -342,20 +342,23 @@ class NBACenterCard extends LitElement {
   }
 
   _scoresView() {
-    const { rows, state } = this._games();
+    const rows = this._calendarGames;
     const filtered = this._filteredGames(rows);
+    const dateLabel = new Intl.DateTimeFormat("fr-BE", { weekday: "long", day: "2-digit", month: "long", year: "numeric" }).format(new Date(`${this._selectedDate}T12:00:00`));
     return html`
-      <div class="head"><h2>SCORES & CALENDRIER</h2><span class="pill">${rows.length} MATCHS CHARGÉS</span></div>
-      <div class="filters">
-        ${[["all","TOUS"],["in","LIVE"],["pre","À VENIR"],["post","TERMINÉS"]].map(([k,l]) => html`
-          <button class="chip" aria-pressed=${this._filter===k} @click=${() => this._setFilter(k)}>${l}</button>`)}
-        <input type="search" aria-label="Rechercher une équipe" placeholder="Filtrer une équipe…" .value=${this._search} @input=${this._setSearch}>
-      </div>
-      ${filtered.length ? html`<div class="game-list">${filtered.map((g) => this._gameCard(g))}</div>` :
-        html`<section class="empty"><strong>${state?.state==="unavailable" ? "Données NBA indisponibles" : "Aucun match correspondant"}</strong>
-          <p>Vérifie la connexion de l'intégration ou modifie les filtres. Les matchs affichés proviennent du calendrier chargé par Home Assistant.</p></section>`}`;
+      <div class="head"><h2>SCORES & CALENDRIER</h2><span class="pill">${rows.length} MATCHS</span></div>
+      <div class="date-nav"><button aria-label="Jour précédent" @click=${() => this._shiftDate(-1)}>‹</button>
+        <span class="date-label">${dateLabel}</span><input type="date" aria-label="Choisir une date" .value=${this._selectedDate} @change=${this._setDate}>
+        <button aria-label="Jour suivant" @click=${() => this._shiftDate(1)}>›</button>
+        <button @click=${() => { this._selectedDate = new Date().toLocaleDateString("en-CA"); this._loadCalendar(this._selectedDate); }}>AUJOURD&#39;HUI</button></div>
+      <div class="filters">${[["all","TOUS"],["in","LIVE"],["pre","À VENIR"],["post","TERMINÉS"]].map(([k,l]) => html`<button class="chip" aria-pressed=${this._filter===k} @click=${() => this._setFilter(k)}>${l}</button>`)}
+        <input type="search" aria-label="Rechercher une équipe" placeholder="Filtrer une équipe…" .value=${this._search} @input=${this._setSearch}></div>
+      ${this._calendarLoading ? html`<section class="empty">Chargement du calendrier…</section>` : ""}
+      ${this._calendarError ? html`<section class="empty"><strong>Calendrier indisponible</strong><p>${this._calendarError}</p><button @click=${() => this._loadCalendar(this._selectedDate)}>RÉESSAYER</button></section>` : ""}
+      ${!this._calendarLoading && !this._calendarError && filtered.length ? html`<div class="game-list">${filtered.map((g) => this._gameCard(g))}</div>` : ""}
+      ${!this._calendarLoading && !this._calendarError && !filtered.length ? html`<section class="empty"><strong>${rows.length ? "Aucun match correspondant" : "Aucun match programmé"}</strong><p>${rows.length ? "Modifie les filtres ou la recherche." : "Aucune rencontre n&#39;est prévue pour cette date dans le fuseau horaire de Home Assistant."}</p></section>` : ""}
+    `;
   }
-
   _teamsView() {
     const teams = this._teams();
     return html`<div class="head"><h2>TEAMS CENTER</h2><span class="pill">${teams.length} FAVORITES</span></div>
