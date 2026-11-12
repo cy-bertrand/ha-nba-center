@@ -10,6 +10,7 @@ assert.match(bundle, /customElements\.define/, "custom element must be registere
 assert.match(bundle, /window\.customCards/, "Lovelace card metadata must be exposed");
 assert.match(bundle, /SCORES & CALENDRIER/, "scores view must be included");
 assert.match(bundle, /PLAYERS CENTER/, "players view must be included");
+assert.match(bundle, /FORME RÉCENTE/, "favorite team recent form must be included");
 assert.match(bundle, /EASTERN CONFERENCE/, "standings view must be included");
 assert.match(bundle, /Filtrer une équipe/, "interactive team search must be included");
 assert.match(bundle, /sensor\.nba_matchs_du_jour/, "existing NBA sensor default must be mapped");
