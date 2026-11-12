@@ -49,7 +49,7 @@ class NBACenterCard extends HTMLElement {
         h1 { margin:7px 0 3px; font-size:clamp(23px,4vw,32px); line-height:1.1; letter-spacing:-.04em; font-weight:900; }
         .subtitle { color:#9eabc0; font-size:12px; }
         nav { display:flex; gap:5px; overflow-x:auto; padding:10px 12px; background:#0d1420; border-bottom:1px solid #ffffff12; scrollbar-width:thin; }
-        button { border:0; border-radius:9px; background:transparent; color:#8794a9; padding:10px 13px; min-width:74px; cursor:pointer; font:700 10px inherit; letter-spacing:.08em; white-space:nowrap; }
+        button { border:0; border-radius:9px; background:transparent; color:#8794a9; padding:10px 13px; min-width:74px; cursor:pointer; font:inherit; font-size:10px; font-weight:700; letter-spacing:.08em; white-space:nowrap; }
         button[aria-selected="true"] { background:#1b2b43; color:#f5c45e; box-shadow:inset 0 0 0 1px #d9a83d55; }
         button:focus-visible { outline:2px solid #f5c45e; outline-offset:2px; }
         main { padding:22px; min-height:230px; background:linear-gradient(180deg,#0b1019,#0c121d); }
