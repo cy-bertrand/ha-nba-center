@@ -7,8 +7,8 @@ Le développement suit strictement les phases ci-dessous. Chaque phase est inspe
 | Phase | Livrable | État |
 |---|---|---|
 | 0 | Audit du dépôt source, cartographie ESPN et plan technique | Validée comme base d'architecture ; validations d'exécution reportées dans les jalons techniques |
-| 1 | Carte Lit installable et navigation NBA Dark | En cours — cinq vues reliées aux capteurs existants, filtres et recherche ; test Home Assistant réel restant |
-| 2 | Calendrier et scores | À faire |
+| 1 | Carte Lit installable et navigation NBA Dark | Validée par l'utilisateur — installation, chargement et cinq vues confirmés sur Home Assistant réel |
+| 2 | Calendrier et scores + premier overlay Match Center | Préparation documentée sur `phase-2-match-center` ; décisions UX confirmées, implémentation à venir |
 | 3 | Fiches de match et box scores | À faire |
 | 4 | Teams Center | À faire |
 | 5 | Players Center | À faire |
