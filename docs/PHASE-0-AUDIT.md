@@ -218,3 +218,112 @@ L'arbre source ne contient pas de tests automatisés ni de workflow CI. Aucun te
 ## Conclusion provisoire
 
 La base actuelle est conservable, mais elle est conçue pour alimenter des capteurs de favoris et non pour servir un centre NBA complet à la demande. La priorité n'est pas de réécrire les capteurs : c'est d'ajouter une couche de données générique, performante et testable, en maintenant les contrats historiques.
+
+
+## 13. Cartographie ESPN approfondie — état au 12 novembre 2026
+
+La documentation communautaire de référence hoopR décrit plusieurs hôtes ESPN publics sans authentification. Elle précise que le site API v2 est le plus stable pour scores, équipes, effectifs, calendriers, classements et statistiques d'équipe ; le Web API common v3 sert aux statistiques détaillées des joueurs, mais est moins stable ; le Core API v2 expose des ressources approfondies et paginées. Ces endpoints restent non officiels et non garantis par ESPN.
+
+### Matrice fonctionnelle
+
+| Vue NBA Center | Endpoint candidat | Données / usage | État de validation |
+|---|---|---|---|
+| HOME / SCORES | `site.api.../scoreboard?dates=YYYYMMDD` | Matchs d'une date précise ; scoreboard live et programmés | Paramètre documenté par sportsdataverse et catalogues ESPN ; réponse brute live à capturer |
+| GAME DETAILS | `site.api.../summary?event={id}` | Résumé, box score équipes/joueurs, leaders, play-by-play et diffusion selon disponibilité | Endpoint déjà utilisé par l'intégration ; forme `boxscore.players[]` confirmée dans un fixture de schéma observé, mais valeurs explicitement illustratives |
+| TEAMS | `site.api.../teams` | Catalogue des franchises, logos, identifiants | Déjà utilisé au config flow ; wrapper hoopR confirme les champs usuels team_id, abbreviation, display_name, color, logo |
+| TEAM DETAILS | `site.api.../teams/{id}` | Identité, record, coachs et informations équipe | Documenté par hoopR ; échantillon brut à capturer |
+| TEAM ROSTER | `site.api.../teams/{id}/roster` | Liste des joueurs, identifiants, maillots, positions, dates de naissance, statuts | Fixture de forme NBA observé en octobre 2026 ; liste `athletes[]` plate, sans sous-clé `items` |
+| TEAM SCHEDULE | `site.api.../teams/{id}/schedule` | Calendrier complet d'une franchise | Déjà utilisé par l'intégration |
+| PLAYER PROFILE | `site.api.../athletes/{id}` | Bio, taille, poids, position, équipe, statut, draft | Documenté par les wrappers hoopR ; validation NBA brute requise |
+| PLAYER OVERVIEW | `site.web.api.../athletes/{id}/overview` | Vue synthétique, dernières rencontres, prochaine rencontre et actualités selon disponibilité | Documenté par hoopR ; endpoint common v3 moins stable |
+| PLAYER STATS | `site.web.api.../athletes/{id}/stats?season={year}` | Statistiques de saison, catégories, moyennes et totaux | Wrapper hoopR confirme des catégories variables ; réponse vide possible pour certaines saisons/profils |
+| PLAYER GAMELOG | `site.web.api.../athletes/{id}/gamelog?season={year}` | Ligne statistique par match | Fixture de forme observé : `events` est un dictionnaire par identifiant et les lignes sont dans `seasonTypes[].categories[].events[]` |
+| PLAYER SPLITS | `site.web.api.../athletes/{id}/splits?season={year}` | Domicile/extérieur, adversaire et autres répartitions | Documenté par hoopR ; validation brute requise |
+| LEAGUE LEADERS | `site.web.api.../statistics/byathlete` | Classements statistiques par catégorie | Déjà utilisé ; wrapper hoopR confirme un résultat par couple catégorie/joueur, rang et valeur |
+
+Les domaines abrégés du tableau correspondent aux hôtes complets :
+- `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/`
+- `https://site.web.api.espn.com/apis/common/v3/sports/basketball/nba/`
+
+### Détails de box score
+
+Le fixture de forme NBA `nba_summary` documente `boxscore.players` comme un tableau frère de `boxscore.teams`, avec une entrée par équipe. Chaque groupe joueur contient des catégories statistiques, des noms de colonnes et une liste d'athlètes avec leurs valeurs. Le parseur actuel de `_parse_summary` ignore complètement ce bloc.
+
+Un wrapper NBA de box score joueur documente notamment les champs suivants : identifiant/nom du joueur, équipe, minutes, tirs réussis/tentés (2 points, 3 points, lancers francs), rebonds offensifs/défensifs/totaux, passes, interceptions, contres, pertes de balle, fautes, points, titulaire, éjecté, did-not-play, actif, maillot, position et photo. Ce schéma fonctionnel est suffisant pour concevoir le modèle interne du Match Center, mais les noms/valeurs brutes ESPN doivent être vérifiés sur une réponse NBA réelle avant d'écrire le parseur.
+
+### Données joueurs : précautions
+
+- Les catégories de statistiques ne sont pas fixes : les noms et colonnes doivent être lus depuis la réponse ESPN, jamais codés en dur sur la seule base d'un exemple.
+- Les valeurs peuvent être des chaînes, y compris les minutes et pourcentages.
+- Les statistiques de carrière, de saison régulière, de playoffs et de pré-saison doivent rester distinguées.
+- Les historiques de joueurs peuvent être incomplets ou renvoyer 404 selon le profil/saison.
+- Le gamelog est une structure liée par `eventId`, pas une simple liste plate garantie.
+- Les identifiants ESPN joueurs/équipes ne doivent pas être confondus avec d'autres fournisseurs.
+
+### Limite de validation directe
+
+Les pages ESPN JSON ne sont pas accessibles via l'outil de consultation utilisé dans cette session. Les preuves réunies sont donc des documentations de wrappers qui interrogent ESPN et des fixtures de schéma dont les valeurs sont explicitement illustratives. Je ne prétends pas avoir capturé ici une réponse ESPN brute ni testé un appel HTTP live. Un test runtime depuis Home Assistant ou un environnement Python avec accès réseau reste obligatoire avant l'implémentation.
+
+Références consultées :
+- ESPN basketball endpoints / hoopR : https://hoopr.sportsdataverse.org/articles/espn-endpoints.html
+- Catalogue des endpoints ESPN : https://github.com/sejaldua/espn-api/blob/main/references/endpoints.md
+- Documentation scoreboard NBA : https://sportsdataverse-py.sportsdataverse.org/docs/0.0.73/nba/reference/site
+- Schéma fixture summary/roster/gamelog (valeurs illustratives) : https://github.com/machina-sports/sports-skills/blob/main/skills/espn-api/references/shape-fixtures.json
+- Description du box score équipes : https://hoopr.sportsdataverse.org/reference/espn_nba_team_box.html
+- Description des statistiques joueurs : https://hoopr.sportsdataverse.org/reference/espn_nba_player_stats_v3.html
+- Description des leaders NBA : https://hoopr.sportsdataverse.org/reference/espn_nba_leaders.html
+- Catalogue des franchises : https://hoopr.sportsdataverse.org/reference/espn_nba_teams.html
+
+## 14. Choix d'architecture frontend/backend recommandés
+
+### Transport des données
+
+Pour les nouvelles vues interactives, le meilleur ajustement est une **API WebSocket Home Assistant dédiée à l'intégration**, avec commandes typées et réponses JSON. La documentation Home Assistant prévoit explicitement l'extension du WebSocket par une intégration et l'appel depuis JavaScript via `hass.connection.sendMessagePromise`.
+
+Commandes proposées (noms de travail, pas encore implémentés) :
+- `nba/center/scoreboard` : date, éventuels filtres ; renvoie la liste normalisée des matchs ;
+- `nba/center/game` : game_id ; renvoie résumé, box score, leaders et métadonnées ;
+- `nba/center/teams` : renvoie le catalogue de franchises ;
+- `nba/center/team` : team_id ; renvoie profil, roster, record et calendrier paginé ;
+- `nba/center/players/search` : query et filtres ; renvoie des résultats limités ;
+- `nba/center/player` : athlete_id, season ; renvoie bio et statistiques ;
+- `nba/center/player_gamelog` : athlete_id, season, season_type ; renvoie l'historique ;
+- `nba/center/leaders` : season, season_type, category, limit ; renvoie les leaders.
+
+Le service historique `nba.get_game_details` doit rester disponible pour la compatibilité des automatisations et des utilisateurs existants. Il pourra partager la même logique backend que la nouvelle commande WebSocket.
+
+### Ressource Lovelace intégrée
+
+La carte doit être distribuée dans le dossier de l'intégration et servie par Home Assistant avec `async_register_static_paths` et `StaticPathConfig`. La ressource JavaScript doit être enregistrée comme ressource Lovelace de type module, en respectant le mode de dashboard :
+- mode stockage : inscription automatique dans le gestionnaire de ressources Lovelace, si disponible ;
+- mode YAML : documenter l'URL de ressource à ajouter manuellement, car l'intégration ne doit pas réécrire le dashboard de l'utilisateur.
+
+Éviter de charger la carte via `frontend.extra_module_url` comme unique mécanisme : la documentation frontend indique que les ressources Lovelace sont le mécanisme de chargement attendu pour les cartes de dashboard. Le module frontend ne doit contenir aucun appel ESPN direct.
+
+### Lit et dépendances
+
+Home Assistant construit son frontend avec Lit, mais ne fournit pas d'API publique stable pour tous ses composants internes. NBA Center doit donc éviter de dépendre de composants internes non garantis. Utiliser Lit avec un bundle maîtrisé, les primitives HTML accessibles, `ha-card` et les variables CSS de thème documentées ; limiter les dépendances externes.
+
+Références Home Assistant :
+- WebSocket custom commands : https://developers.home-assistant.io/docs/frontend/extending/websocket-api
+- Custom cards et Lit : https://developers.home-assistant.io/docs/frontend/custom-ui/custom-card
+- Register resources : https://developers.home-assistant.io/docs/frontend/custom-ui/registering-resources
+- Enregistrement statique asynchrone : https://developers.home-assistant.io/blog/2024/06/18/async_register_static_paths
+
+## 15. Points de code à intégrer aux tests de non-régression
+
+1. `_parse_leaders` prend la première statistique comme valeur de repli si le nom attendu n'est pas présent. Cela peut associer une mauvaise statistique à un libellé. Le nouveau parseur doit renvoyer une valeur indisponible si la catégorie attendue manque.
+2. `_to_int` transforme une valeur absente ou invalide en zéro. Pour les nouveaux contrats, conserver `None` quand la donnée est absente ; zéro ne doit signifier que zéro confirmé.
+3. `_parse_standings` trie par `playoffSeed`, qui peut être absent ou égal à zéro. Tester le classement hors saison et préserver l'ordre source lorsque les seeds ne sont pas exploitables.
+4. Les appels scoreboard, standings et schedules sont séquentiels et les erreurs des appels principaux font échouer l'actualisation complète. La couche NBA Center doit isoler les ressources et exposer fraîcheur/erreurs partielles.
+5. Le coordinateur charge automatiquement les détails de chaque match des cinq dernières rencontres de toutes les équipes favorites. Cette stratégie ne doit pas être étendue à toutes les franchises ; le chargement du box score complet doit être à la demande.
+6. Les traductions françaises sont identiques dans `strings.json` et `translations/fr.json`. Vérifier la cohérence après toute modification de flux ou de service.
+7. Le blueprint expose une liste statique des 30 équipes ; il faudra vérifier sa cohérence avec le catalogue ESPN actuel, sans le réécrire pendant l'audit.
+
+## 16. Décisions restantes avant clôture de Phase 0
+
+- Capturer depuis un environnement réseau les réponses brutes ESPN de scoreboard (dates différentes), summary d'un match terminé, roster, player profile, player stats, gamelog, splits et leaders.
+- Déterminer si les réponses nécessitent pagination, paramètres de région/langue, ou traitement spécifique par saison.
+- Valider le contrat WebSocket et l'enregistrement de la ressource Lovelace sur les versions Home Assistant prises en charge.
+- Ajouter une suite de tests fixtures et lancer les tests d'intégration.
+- Confirmer la licence GPL-3.0 du dépôt cible.
