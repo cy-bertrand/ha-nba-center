@@ -526,8 +526,8 @@ class NBACenterCard extends LitElement {
               <div class="boxscore-section"><div class="section-kicker">FULL GAME BREAKDOWN</div><h3>BOX SCORE · JOUEURS</h3>
                 <div class="boxscore-grid">${(this._overlayDetails.player_stats ?? []).map((block) => this._boxscorePanel(block))}</div>
                 ${this._teamStatsPanel()}
-                ${this._playByPlayPanel()}
               </div>` : ""}
+            ${this._playByPlayPanel()}
             ${!this._overlayLoading && !this._overlayError && !this._overlayDetails?.error && !this._overlayDetails?.teams?.length && !this._overlayDetails?.has_boxscore ? html`<section class="empty"><p>Le résumé détaillé n’est pas encore disponible pour cette rencontre.</p></section>` : ""}            </div></section></div>` : ""}
         <footer class="footer"><span>NBA CENTER · ${active.label}</span><span>DATA VIA HOME ASSISTANT</span></footer>
       </ha-card>`;
