@@ -13,7 +13,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util
 
 from .scoreboard_utils import async_load_scoreboard, parse_score
-from .game_details import parse_boxscore
+from .game_details import parse_boxscore, parse_plays
 
 from .const import (
     CONF_NOTIFY_END,
@@ -356,7 +356,7 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
     @staticmethod
     def _parse_summary(game_id: str, raw: dict) -> dict[str, Any]:
         """Extrait scores par quart-temps et meilleurs joueurs (tolérant aux manques)."""
-        result: dict[str, Any] = {"game_id": game_id, "teams": [], "final": False, **parse_boxscore(raw)}
+        result: dict[str, Any] = {"game_id": game_id, "teams": [], "final": False, "plays": parse_plays(raw), **parse_boxscore(raw)}
         try:
             comp = (raw.get("header", {}).get("competitions") or [{}])[0]
             result["final"] = bool((comp.get("status", {}).get("type") or {}).get("completed"))
