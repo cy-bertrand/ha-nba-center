@@ -1,7 +1,7 @@
 # Phase 1 — Foundation NBA Center
 
 **Branche :** `phase-1-foundation`  
-**Statut :** en cours — premier incrément de livraison
+**Statut :** en cours — carte Lit et bundle livrés ; validation Home Assistant réelle restante
 
 ## Objectif
 
@@ -23,11 +23,11 @@ Mettre en place la distribution de la ressource frontend par l'intégration Home
 ## Limites explicites
 
 - La source du composant Lit est maintenant présente dans `frontend/src/nba-center-card.js`, avec dépendances épinglées dans `package.json` et build esbuild dans `build.mjs`.
-- Le fichier actuellement servi par Home Assistant reste le shell natif tant que le workflow GitHub Actions n'a pas réussi à produire et committer le bundle Lit. La livraison Lit n'est donc pas encore déclarée terminée.
+- Le workflow GitHub Actions a construit et committé le bundle Lit autonome dans `custom_components/nba/www/nba-center-card.js`.
 - Les onglets contiennent des états d'attente : aucune donnée NBA n'est encore branchée.
 - La ressource doit être ajoutée une fois dans les ressources Lovelace par l'utilisateur ; l'intégration ne modifie pas automatiquement son dashboard.
-- Le shell n'a pas encore été exécuté dans un Home Assistant réel.
-- Aucune suite de tests automatisés n'a été lancée.
+- La carte n'a pas encore été installée ni exécutée dans une instance Home Assistant réelle.
+- Le build Lit et les contrôles statiques du bundle passent dans GitHub Actions ; aucun test d'intégration Home Assistant n'a encore été exécuté.
 
 ## Contrôles à exécuter
 
@@ -37,11 +37,11 @@ Mettre en place la distribution de la ressource frontend par l'intégration Home
 4. Vérifier mode YAML et mode stockage.
 5. Vérifier le rendu mobile, desktop et le thème sombre.
 6. Vérifier que les capteurs, le service `nba.get_game_details`, le blueprint et les événements existants fonctionnent sans changement.
-7. Remplacer le shell natif par le bundle Lit autonome, puis exécuter les contrôles de build et de compatibilité.
+7. Installer la ressource et vérifier la carte dans une instance HA réelle.
 
 ## Critères de sortie Phase 1
 
-- Bundle Lit construit et livré dans le répertoire statique.
+- Bundle Lit construit, autonome et livré dans le répertoire statique.
 - Ressource Lovelace installable et stable.
 - Cinq onglets opérationnels avec gestion d'état, chargement, erreur et vide.
 - Tests frontend et tests Home Assistant exécutés.
