@@ -1,7 +1,7 @@
 # Phase 1 — Foundation NBA Center
 
 **Branche :** `phase-1-foundation`  
-**Statut :** en cours — carte Lit interactive livrée ; validation sur Home Assistant réel restante
+**Statut :** validée par l'utilisateur — installation, chargement et cinq vues confirmés sur Home Assistant réel
 
 ## Réalisé
 
@@ -29,7 +29,7 @@
 - Le scoreboard actuel ne propose pas de sélection de date ; cela relève de Phase 2.
 - Les données joueurs se limitent aux leaders actuels ; les profils et comparaisons relèvent de Phase 5.
 - Les box scores complets et les détails de match relèvent de Phase 3.
-- La carte n'a pas encore été testée dans une instance Home Assistant réelle.
+- L'utilisateur a confirmé que la carte se charge et fonctionne dans son instance Home Assistant ; les cinq vues ont été partagées en captures.
 - Aucun test navigateur / Playwright ni test d'intégration Home Assistant n'a été exécuté.
 - Les anciens dashboards Lovelace restent inchangés et doivent être conservés pendant la validation.
 

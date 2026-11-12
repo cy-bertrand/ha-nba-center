@@ -25,6 +25,11 @@ const DEFAULT_ENTITIES = {
   steals: "sensor.nba_meilleurs_intercepteurs",
   blocks: "sensor.nba_meilleurs_contreurs",
 };
+const localDateISO = (date = new Date(), timeZone) => {
+  const parts = new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(date);
+  const part = (type) => parts.find((item) => item.type === type)?.value;
+  return `${part("year")}-${part("month")}-${part("day")}`;
+};
 const value = (v, fallback = "—") => v === null || v === undefined || v === "" ? fallback : String(v);
 const fmtDate = (v) => {
   if (!v) return "Date à confirmer";
@@ -40,6 +45,10 @@ class NBACenterCard extends LitElement {
     _active: { state: true },
     _filter: { state: true },
     _search: { state: true },
+    _selectedDate: { state: true }, _calendarGames: { state: true },
+    _calendarLoading: { state: true }, _calendarError: { state: true }, _calendarStale: { state: true },
+    _overlayGame: { state: true }, _overlayDetails: { state: true },
+    _overlayLoading: { state: true }, _overlayError: { state: true },
   };
 
   static styles = css`
@@ -113,6 +122,20 @@ class NBACenterCard extends LitElement {
     th{text-align:left;color:#8190a7;font-size:9px;letter-spacing:.08em;padding:8px 7px;border-bottom:1px solid #314158}
     td{padding:9px 7px;border-bottom:1px solid #ffffff0e;color:#d7deea}
     td:first-child{color:#e9bb57;font-weight:900}
+    .date-nav{display:flex;align-items:center;gap:7px;margin-bottom:13px;flex-wrap:wrap}
+    .date-nav button{border:1px solid #2b3b52;background:#101a29;color:#dce3ef;min-width:40px}
+    .date-label{font-weight:800;color:#f2c45f;font-size:12px;margin-right:auto}
+    .game{cursor:pointer;transition:border-color .15s,transform .15s}
+    .game:hover{border-color:#bd9448;transform:translateY(-1px)}
+    .game:focus-visible{outline:2px solid #f2c45f;outline-offset:2px}
+    .overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:18px;background:#02060dcc;backdrop-filter:blur(5px)}
+    .overlay-panel{width:min(720px,100%);max-height:90vh;overflow:auto;border:1px solid #34465f;border-radius:17px;background:#0d1726;color:#f4f6fb;box-shadow:0 24px 70px #000b}
+    .overlay-head{display:flex;justify-content:space-between;align-items:center;padding:17px 19px;border-bottom:1px solid #ffffff16}
+    .overlay-body{padding:18px}.overlay-teams{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;text-align:center}
+    .overlay-team img{width:54px;height:54px;object-fit:contain}.overlay-team strong{display:block;margin-top:7px;font-size:12px}
+    .overlay-score{font-size:24px;font-weight:950;color:#f2c45f}.overlay-close{min-width:38px;padding:8px;border:1px solid #34465f}
+    .top-player{padding:12px 0;border-top:1px solid #ffffff12}.top-player strong{display:block;font-size:12px}.top-player small{color:#aab6ca}
+    @media(max-width:620px){.overlay{padding:8px}.overlay-panel{max-height:94vh}}
     .footer{display:flex;justify-content:space-between;gap:10px;padding:12px 22px;color:#738199;border-top:1px solid #ffffff12;font-size:9px;letter-spacing:.06em}
     @media(max-width:620px){.hero{padding:20px 17px 17px}main{padding:15px}nav{padding:8px 7px}button{min-width:66px;padding:9px 10px}.grid{grid-template-columns:1fr}.game{grid-template-columns:1fr;gap:7px}.status{text-align:left}.matchup{gap:6px}.team-name{font-size:10px}.score{font-size:15px}.footer{padding:11px 15px}.meta{margin-top:11px}}
   `;
@@ -122,6 +145,10 @@ class NBACenterCard extends LitElement {
     this._active = "home";
     this._filter = "all";
     this._search = "";
+    this._selectedDate = localDateISO();
+    this._calendarGames = []; this._calendarLoading = false; this._calendarError = ""; this._calendarStale = false; this._calendarInitialized = false;
+    this._overlayGame = null; this._overlayDetails = null;
+    this._overlayLoading = false; this._overlayError = "";
     this._config = {};
   }
 
@@ -191,9 +218,32 @@ class NBACenterCard extends LitElement {
     return Object.values(teams).sort((a,b) => a.name.localeCompare(b.name));
   }
 
-  _selectView(view) { this._active = view; }
+  _selectView(view) {
+    this._active = view;
+    if (view === "scores") {
+      if (!this._calendarInitialized) { this._selectedDate = localDateISO(new Date(), this.hass?.config?.time_zone); this._calendarInitialized = true; }
+      this._loadCalendar(this._selectedDate);
+    }
+  }
   _setFilter(filter) { this._filter = filter; }
   _setSearch(event) { this._search = event.target.value ?? ""; }
+  _shiftDate(days) { const d = new Date(`${this._selectedDate}T12:00:00`); d.setDate(d.getDate() + days); this._selectedDate = d.toLocaleDateString("en-CA"); this._loadCalendar(this._selectedDate); }
+  _setDate(event) { this._selectedDate = event.target.value; this._loadCalendar(this._selectedDate); }
+  async _loadCalendar(date) {
+    if (!this.hass?.callWS || !date) return;
+    this._calendarLoading = true; this._calendarError = ""; this._calendarStale = false;
+    try { const result = await this.hass.callWS({ type: "nba/scoreboard", date }); this._calendarGames = result.games ?? []; this._calendarStale = Boolean(result.stale); }
+    catch (err) { this._calendarError = err?.message ?? "Impossible de charger le calendrier NBA."; this._calendarGames = []; }
+    finally { this._calendarLoading = false; }
+  }
+  async _openGame(game) {
+    this._overlayGame = game; this._overlayDetails = null; this._overlayError = ""; this._overlayLoading = true;
+    try { this._overlayDetails = await this.hass.callWS({ type: "nba/game_details", game_id: String(game.id) }); }
+    catch (err) { this._overlayError = err?.message ?? "Résumé du match indisponible."; }
+    finally { this._overlayLoading = false; }
+  }
+  _closeOverlay() { this._overlayGame = null; this._overlayDetails = null; this._overlayError = ""; }
+  _onOverlayKeydown(event) { if (event.key === "Escape") this._closeOverlay(); }
 
   _gameStatus(game) {
     if (game.state === "in") return { label: game.clock ? `LIVE · ${game.clock}` : "LIVE", live: true };
@@ -206,7 +256,7 @@ class NBACenterCard extends LitElement {
     const status = this._gameStatus(game);
     const played = game.state === "in" || game.state === "post";
     return html`
-      <article class="game">
+      <article class="game" role="button" tabindex="0" @click=${() => this._openGame(game)} @keydown=${(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); this._openGame(game); } }}>
         <div class="game-main">
           <div class="game-date">${value(game.date_text, fmtDate(game.date))}</div>
           <div class="matchup">
@@ -303,20 +353,24 @@ class NBACenterCard extends LitElement {
   }
 
   _scoresView() {
-    const { rows, state } = this._games();
+    const rows = this._calendarGames;
     const filtered = this._filteredGames(rows);
+    const dateLabel = new Intl.DateTimeFormat("fr-BE", { weekday: "long", day: "2-digit", month: "long", year: "numeric" }).format(new Date(`${this._selectedDate}T12:00:00`));
     return html`
-      <div class="head"><h2>SCORES & CALENDRIER</h2><span class="pill">${rows.length} MATCHS CHARGÉS</span></div>
-      <div class="filters">
-        ${[["all","TOUS"],["in","LIVE"],["pre","À VENIR"],["post","TERMINÉS"]].map(([k,l]) => html`
-          <button class="chip" aria-pressed=${this._filter===k} @click=${() => this._setFilter(k)}>${l}</button>`)}
-        <input type="search" aria-label="Rechercher une équipe" placeholder="Filtrer une équipe…" .value=${this._search} @input=${this._setSearch}>
-      </div>
-      ${filtered.length ? html`<div class="game-list">${filtered.map((g) => this._gameCard(g))}</div>` :
-        html`<section class="empty"><strong>${state?.state==="unavailable" ? "Données NBA indisponibles" : "Aucun match correspondant"}</strong>
-          <p>Vérifie la connexion de l'intégration ou modifie les filtres. Les matchs affichés proviennent du calendrier chargé par Home Assistant.</p></section>`}`;
+      <div class="head"><h2>SCORES & CALENDRIER</h2><span class="pill">${rows.length} MATCHS</span></div>
+      <div class="date-nav"><button aria-label="Jour précédent" @click=${() => this._shiftDate(-1)}>‹</button>
+        <span class="date-label">${dateLabel}</span><input type="date" aria-label="Choisir une date" .value=${this._selectedDate} @change=${this._setDate}>
+        <button aria-label="Jour suivant" @click=${() => this._shiftDate(1)}>›</button>
+        <button @click=${() => { this._selectedDate = new Date().toLocaleDateString("en-CA"); this._loadCalendar(this._selectedDate); }}>AUJOURD&#39;HUI</button></div>
+      ${this._calendarStale ? html`<p class="muted">Données en cache · actualisation ESPN indisponible</p>` : ""}
+      <div class="filters">${[["all","TOUS"],["in","LIVE"],["pre","À VENIR"],["post","TERMINÉS"]].map(([k,l]) => html`<button class="chip" aria-pressed=${this._filter===k} @click=${() => this._setFilter(k)}>${l}</button>`)}
+        <input type="search" aria-label="Rechercher une équipe" placeholder="Filtrer une équipe…" .value=${this._search} @input=${this._setSearch}></div>
+      ${this._calendarLoading ? html`<section class="empty">Chargement du calendrier…</section>` : ""}
+      ${this._calendarError ? html`<section class="empty"><strong>Calendrier indisponible</strong><p>${this._calendarError}</p><button @click=${() => this._loadCalendar(this._selectedDate)}>RÉESSAYER</button></section>` : ""}
+      ${!this._calendarLoading && !this._calendarError && filtered.length ? html`<div class="game-list">${filtered.map((g) => this._gameCard(g))}</div>` : ""}
+      ${!this._calendarLoading && !this._calendarError && !filtered.length ? html`<section class="empty"><strong>${rows.length ? "Aucun match correspondant" : "Aucun match programmé"}</strong><p>${rows.length ? "Modifie les filtres ou la recherche." : "Aucune rencontre n&#39;est prévue pour cette date dans le fuseau horaire de Home Assistant."}</p></section>` : ""}
+    `;
   }
-
   _teamsView() {
     const teams = this._teams();
     return html`<div class="head"><h2>TEAMS CENTER</h2><span class="pill">${teams.length} FAVORITES</span></div>
@@ -351,6 +405,22 @@ class NBACenterCard extends LitElement {
             @click=${() => this._selectView(v.id)}>${v.label}</button>`)}</nav>
         <main>${this.hass ? view[active.id]() : html`
           <section class="empty"><strong>Connexion à Home Assistant…</strong><p>La carte attend les états de l'intégration NBA.</p></section>`}</main>
+        ${this._overlayGame ? html`<div class="overlay" @click=${(event) => { if (event.target === event.currentTarget) this._closeOverlay(); }} @keydown=${this._onOverlayKeydown}>
+          <section class="overlay-panel" role="dialog" aria-modal="true" aria-label="Détails du match">
+            <header class="overlay-head"><h2>MATCH CENTER</h2><button class="overlay-close" aria-label="Fermer" @click=${this._closeOverlay}>✕</button></header>
+            <div class="overlay-body"><div class="overlay-teams">
+              <div class="overlay-team">${this._overlayGame.away?.logo ? html`<img src=${this._overlayGame.away.logo} alt="">` : ""}<strong>${value(this._overlayGame.away?.name)}</strong></div>
+              <div class="overlay-score">${this._overlayGame.state === "pre" ? "VS" : `${value(this._overlayGame.away?.score)} – ${value(this._overlayGame.home?.score)}`}</div>
+              <div class="overlay-team">${this._overlayGame.home?.logo ? html`<img src=${this._overlayGame.home.logo} alt="">` : ""}<strong>${value(this._overlayGame.home?.name)}</strong></div>
+            </div><p class="muted" style="text-align:center">${value(this._overlayGame.date_text)} · ${value(this._overlayGame.detail, this._gameStatus(this._overlayGame).label)}</p>
+            ${this._overlayLoading ? html`<section class="empty">Chargement du résumé…</section>` : ""}
+            ${this._overlayError ? html`<section class="empty"><p>${this._overlayError}</p><button @click=${() => this._openGame(this._overlayGame)}>RÉESSAYER</button></section>` : ""}
+            ${this._overlayDetails?.teams?.length ? html`<div class="grid">${this._overlayDetails.teams.map((team) => html`
+              <section class="panel"><div class="panel-head"><h3>${value(team.abbr, team.name)}</h3><span class="pill">${value(team.score)}</span></div>
+                ${team.quarters?.length ? html`<div class="muted">QUART-TEMPS · ${team.quarters.join(" / ")}</div>` : ""}
+                ${(team.top_players ?? []).map((player) => html`<div class="top-player"><strong>${value(player.player)}</strong><small>${value(player.category)} · ${value(player.value)}</small></div>`)}</section>`)}</div>` : ""}
+            ${!this._overlayLoading && !this._overlayError && !this._overlayDetails?.teams?.length ? html`<section class="empty"><p>Le résumé détaillé n’est pas encore disponible pour cette rencontre.</p></section>` : ""}
+            </div></section></div>` : ""}
         <footer class="footer"><span>NBA CENTER · ${active.label}</span><span>DATA VIA HOME ASSISTANT</span></footer>
       </ha-card>`;
   }

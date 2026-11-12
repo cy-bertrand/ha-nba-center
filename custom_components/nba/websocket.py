@@ -1,0 +1,72 @@
+"""WebSocket API for NBA Center frontend requests."""
+from __future__ import annotations
+
+import voluptuous as vol
+
+from homeassistant.components import websocket_api
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+
+from .const import DOMAIN
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "nba/scoreboard",
+        vol.Required("date"): str,
+    }
+)
+@websocket_api.async_response
+async def websocket_get_scoreboard(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Return the NBA scoreboard for a local Home Assistant date."""
+    coordinators = list(hass.data.get(DOMAIN, {}).values())
+    if not coordinators:
+        connection.send_error(msg["id"], "not_ready", "L'intégration NBA n'est pas chargée.")
+        return
+    try:
+        result = await coordinators[0].async_get_scoreboard_for_local_date(msg["date"])
+    except (ValueError, HomeAssistantError) as err:
+        connection.send_error(msg["id"], "invalid_format", str(err))
+        return
+    except Exception as err:  # noqa: BLE001 - return a recoverable websocket error
+        connection.send_error(msg["id"], "api_error", str(err))
+        return
+    connection.send_result(msg["id"], result)
+
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "nba/game_details",
+        vol.Required("game_id"): str,
+    }
+)
+@websocket_api.async_response
+async def websocket_get_game_details(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Return cached ESPN summary details for one game."""
+    coordinators = list(hass.data.get(DOMAIN, {}).values())
+    if not coordinators:
+        connection.send_error(msg["id"], "not_ready", "L'intégration NBA n'est pas chargée.")
+        return
+    result = await coordinators[0].async_get_game_details(msg["game_id"])
+    if result.get("error"):
+        connection.send_error(msg["id"], "api_error", result["error"])
+        return
+    connection.send_result(msg["id"], result)
+
+
+def async_register(hass: HomeAssistant) -> None:
+    """Register NBA Center websocket commands once per HA instance."""
+    if hass.data.get("nba_center_websocket_registered"):
+        return
+    websocket_api.async_register_command(hass, websocket_get_scoreboard)
+    websocket_api.async_register_command(hass, websocket_get_game_details)
+    hass.data["nba_center_websocket_registered"] = True

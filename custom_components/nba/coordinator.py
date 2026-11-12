@@ -1,8 +1,9 @@
 """Coordinateur : récupère les données ESPN et déclenche les événements."""
 from __future__ import annotations
 
+import asyncio
 import logging
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
@@ -72,6 +73,8 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._leaders: dict[str, list[dict]] = {}
         self._leaders_fetched: datetime | None = None
         self._details_cache: dict[str, dict[str, Any]] = {}
+        self._scoreboard_cache: dict[str, tuple[datetime, dict[str, Any]]] = {}
+        self._scoreboard_lock = asyncio.Lock()
 
     async def _get(self, url: str, params: dict | None = None) -> dict:
         async with self.session.get(url, params=params, timeout=20) as resp:
@@ -310,6 +313,84 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "live": live,
             "recent": recent,
         }
+
+
+    async def async_get_scoreboard_for_local_date(self, local_date: str) -> dict[str, Any]:
+        """Return games for a calendar day in the Home Assistant timezone.
+
+        ESPN indexes games by US calendar date. Query the previous and current
+        ESPN dates, then filter after converting each event to HA local time.
+        """
+        try:
+            selected = date.fromisoformat(local_date)
+        except (TypeError, ValueError) as err:
+            raise ValueError("La date doit respecter le format YYYY-MM-DD") from err
+        if selected.isoformat() != local_date:
+            raise ValueError("La date doit respecter le format YYYY-MM-DD")
+
+        key = selected.isoformat()
+        now = dt_util.utcnow()
+        cached = self._scoreboard_cache.get(key)
+        if cached:
+            fetched_at, payload = cached
+            ttl = 30 if any(game.get("state") == "in" for game in payload["games"]) else 180
+            if (now - fetched_at).total_seconds() < ttl:
+                return payload
+
+        async with self._scoreboard_lock:
+            now = dt_util.utcnow()
+            cached = self._scoreboard_cache.get(key)
+            if cached:
+                fetched_at, payload = cached
+                ttl = 30 if any(game.get("state") == "in" for game in payload["games"]) else 180
+                if (now - fetched_at).total_seconds() < ttl:
+                    return payload
+
+            timezone = dt_util.now().tzinfo
+            source_dates = (selected - timedelta(days=1), selected)
+            results = await asyncio.gather(
+                *(self._get(SCOREBOARD_URL, params={"dates": source_day.strftime("%Y%m%d")})
+                  for source_day in source_dates),
+                return_exceptions=True,
+            )
+            successful = [result for result in results if isinstance(result, dict)]
+            failures = [result for result in results if isinstance(result, Exception)]
+            if failures:
+                cached = self._scoreboard_cache.get(key)
+                if cached:
+                    payload = dict(cached[1])
+                    payload["stale"] = True
+                    payload["error"] = "; ".join(str(err) for err in failures)
+                    return payload
+                errors = "; ".join(str(result) for result in failures)
+                raise UpdateFailed(f"Calendrier ESPN incomplet : {errors}")
+            if not successful:
+                raise UpdateFailed("Impossible de charger le calendrier ESPN.")
+
+            games_by_id: dict[str, dict[str, Any]] = {}
+            for raw in successful:
+                for event in raw.get("events", []):
+                    game = self._parse_game(event)
+                    if not game or not game.get("date"):
+                        continue
+                    parsed = dt_util.parse_datetime(game["date"])
+                    if parsed is None or dt_util.as_local(parsed).date() != selected:
+                        continue
+                    games_by_id[game["id"]] = game
+
+            games = sorted(games_by_id.values(), key=lambda item: item.get("date") or "")
+            payload = {
+                "date": key,
+                "timezone": str(timezone),
+                "updated_at": now.isoformat(),
+                "stale": False,
+                "games": games,
+            }
+            self._scoreboard_cache[key] = (now, payload)
+            for old_key, (fetched, _) in list(self._scoreboard_cache.items()):
+                if (now - fetched).total_seconds() > 86400:
+                    self._scoreboard_cache.pop(old_key, None)
+            return payload
 
     async def async_get_game_details(self, game_id: str) -> dict[str, Any]:
         """Charge les détails d'un match (quart-temps, meilleurs joueurs).
