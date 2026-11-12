@@ -1,7 +1,7 @@
 # Phase 2 — Match Center
 
 **Branche :** `phase-2-match-center`  
-**Statut :** première implémentation compilée et CI réussie ; validation en instance Home Assistant réelle restante
+**Statut :** fonctionnalité Phase 2 validée une première fois dans Home Assistant ; corrections de robustesse frontend intégrées et CI réussie ; revalidation HA de ces dernières corrections restante
 
 ## Décisions produit confirmées
 
@@ -49,6 +49,7 @@ Faire de SCORES un calendrier NBA consultable par date et transformer chaque ren
 ### D. Fuseaux horaires
 
 - Les dates sélectionnées et affichées suivent le fuseau horaire configuré dans Home Assistant.
+- Le raccourci « Aujourd'hui » utilise le même fuseau HA ; le déplacement jour précédent/suivant travaille sur une date ISO sans dépendre du fuseau du navigateur.
 - Attention au décalage entre la date NBA ESPN (calendrier américain) et la date locale européenne : une rencontre disputée le soir aux États-Unis peut apparaître le lendemain en Belgique.
 - La stratégie à valider est de récupérer les journées ESPN adjacentes nécessaires, convertir les dates en heure HA, puis filtrer les événements selon le jour local demandé.
 - Ajouter des fixtures de tests autour du passage minuit et des changements CET/CEST ; ne jamais supposer que `YYYYMMDD` local correspond directement au jour ESPN.
@@ -143,7 +144,7 @@ Ne pas modifier le contrat des capteurs existants sans raison et préserver les 
 
 ## État d'implémentation — 12 novembre 2026
 
-Déjà ajouté sur la branche de travail :
+Déjà intégré sur `main` :
 - Récupération du scoreboard ESPN par dates US adjacentes et filtrage après conversion dans le fuseau local Home Assistant.
 - Cache par date, verrou contre les requêtes simultanées et TTL de 30 secondes en LIVE / 180 secondes hors LIVE.
 - Repli sur le dernier calendrier en cache marqué obsolète si un appel de date adjacent échoue ; sans cache complet, une erreur est remontée plutôt qu'une liste partielle présentée comme complète.
@@ -151,10 +152,14 @@ Déjà ajouté sur la branche de travail :
 - Navigation par date, recherche et filtres dans SCORES.
 - Clic sur les rencontres ouvrant un overlay avec résumé ESPN, quart-temps et leaders disponibles.
 - Contrôles frontend ajoutés pour vérifier les commandes WebSocket et les composants Match Center.
-- Workflow CI étendu à la branche `phase-2-match-center`.
+- Ordre d'affichage NBA vérifié dans les cartes et l'overlay : équipe visiteuse en premier, équipe recevante en second ; les objets internes `home` / `away` restent inchangés.
+- Navigation par date durcie : calcul indépendant du fuseau navigateur, raccourci « Aujourd'hui » basé sur le fuseau HA et protection contre les réponses asynchrones arrivant dans le désordre.
+- En cas de repli sur un cache obsolète, le message d'état peut aussi afficher le détail de l'erreur ESPN.
+- Workflow GitHub Actions exécuté avec succès le 12 novembre 2026 (build frontend et validation de syntaxe Python ; génération du bundle commitée automatiquement).
 
 À confirmer avant livraison :
-- CI GitHub Actions : succès sur la dernière implémentation, compilation Python, vérification JavaScript, build Lit et tests du bundle.
+- Refaire un test dans Home Assistant après les dernières corrections de navigation et de gestion des réponses asynchrones.
 - Validation du paramètre ESPN `dates` sur l'instance réelle, car l'endpoint est non officiel (les références communautaires confirment le format YYYYMMDD).
 - Tests interactifs dans Home Assistant, notamment navigation des dates, overlay mobile et fuseau Europe/Brussels.
-- Cas d'erreur et changements d'heure CET/CEST.
+- Vérifier le comportement en cas de réponse ESPN obsolète/indisponible et les changements d'heure CET/CEST.
+- La couverture automatisée actuelle du frontend reste principalement constituée d'assertions sur le code source et le bundle ; des tests unitaires Python avec fixtures ESPN restent à ajouter.
