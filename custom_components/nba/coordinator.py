@@ -12,6 +12,8 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
+from .scoreboard_utils import is_cache_fresh, parse_score, validate_local_date
+
 from .const import (
     CONF_NOTIFY_END,
     CONF_NOTIFY_START,
@@ -231,7 +233,7 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     "name": team.get("displayName") or team.get("name"),
                     "abbr": team.get("abbreviation"),
                     "logo": logo,
-                    "score": _to_int(c.get("score")),
+                    "score": parse_score(c.get("score")),
                     "winner": c.get("winner", False),
                     "record": (c.get("records") or [{}])[0].get("summary"),
                 }
@@ -321,20 +323,14 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
         ESPN indexes games by US calendar date. Query the previous and current
         ESPN dates, then filter after converting each event to HA local time.
         """
-        try:
-            selected = date.fromisoformat(local_date)
-        except (TypeError, ValueError) as err:
-            raise ValueError("La date doit respecter le format YYYY-MM-DD") from err
-        if selected.isoformat() != local_date:
-            raise ValueError("La date doit respecter le format YYYY-MM-DD")
+        selected = validate_local_date(local_date)
 
         key = selected.isoformat()
         now = dt_util.utcnow()
         cached = self._scoreboard_cache.get(key)
         if cached:
             fetched_at, payload = cached
-            ttl = 30 if any(game.get("state") == "in" for game in payload["games"]) else 180
-            if (now - fetched_at).total_seconds() < ttl:
+            if is_cache_fresh(now, fetched_at, payload["games"]):
                 return payload
 
         async with self._scoreboard_lock:
@@ -342,8 +338,7 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
             cached = self._scoreboard_cache.get(key)
             if cached:
                 fetched_at, payload = cached
-                ttl = 30 if any(game.get("state") == "in" for game in payload["games"]) else 180
-                if (now - fetched_at).total_seconds() < ttl:
+                if is_cache_fresh(now, fetched_at, payload["games"]):
                     return payload
 
             timezone = dt_util.now().tzinfo
@@ -428,7 +423,7 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     "name": (c.get("team") or {}).get("displayName"),
                     "logo": (c.get("team") or {}).get("logos", [{}])[0].get("href")
                     if (c.get("team") or {}).get("logos") else (c.get("team") or {}).get("logo"),
-                    "score": _to_int(c.get("score")),
+                    "score": parse_score(c.get("score")),
                     "winner": c.get("winner", False),
                     "home_away": c.get("homeAway"),
                     "quarters": [_to_int(ls) for ls in (c.get("linescores") or [])],
