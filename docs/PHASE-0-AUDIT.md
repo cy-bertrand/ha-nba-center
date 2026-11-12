@@ -116,3 +116,105 @@ Cet audit est préliminaire : les fichiers centraux ont été consultés, mais l
 ## Décision proposée
 
 Conserver le backend existant comme socle et ajouter une couche de consultation à la demande. Ne pas refactoriser le coordinator en profondeur avant d'avoir documenté les capacités manquantes et les contrats de données. Démarrer la Phase 1 uniquement après validation de cet audit complet et du plan technique.
+
+
+## 8. Inventaire exhaustif du dépôt source
+
+L'arborescence Git source a été récupérée avec l'API GitHub (arbre récursif non tronqué). Elle contient 23 fichiers suivis :
+- 11 fichiers dans `custom_components/nba/` et ses sous-dossiers ;
+- 10 fichiers dans `lovelace/` ;
+- `hacs.json` ;
+- `README.md`.
+
+Aucun dossier de tests, fichier de dépendances séparé, configuration de lint ou workflow GitHub Actions n'apparaît dans cette arborescence.
+
+La comparaison de l'arbre source et de l'arbre cible confirme que tous les fichiers de code, traductions, services, blueprint, cartes et métadonnées ont été repris avec le même identifiant Git de contenu, sauf :
+- `README.md`, remplacé par la présentation NBA Center ;
+- `custom_components/nba/manifest.json`, dont les liens documentation et issue tracker pointent maintenant vers le nouveau dépôt.
+
+Le dépôt cible contient également un fichier `LICENSE` GPL-3.0 qui n'existe pas dans l'arbre source. Il faut confirmer que cette licence est bien intentionnelle avant publication de versions ou diffusion du projet. Ne pas la supprimer ni la remplacer sans décision du propriétaire.
+
+## 9. Constats détaillés sur le code existant
+
+### 9.1 Charge réseau et actualisation
+
+Dans `_async_update_data`, les appels scoreboard, standings et calendriers des équipes favorites sont effectués séquentiellement. Ensuite, le coordinateur récupère les résumés des cinq derniers matchs de chaque équipe favorite, en dédupliquant les identifiants, mais toujours séquentiellement.
+
+Conséquences :
+- le temps de rafraîchissement augmente avec le nombre d'équipes favorites ;
+- une panne d'un scoreboard, standings ou calendrier d'équipe fait échouer le rafraîchissement global ;
+- un premier démarrage ou un redémarrage avec beaucoup d'équipes peut déclencher de nombreuses requêtes summary ;
+- les détails terminés sont mis en cache uniquement en mémoire ; les erreurs de détail ne sont pas mises en cache.
+
+**Orientation recommandée :** ne pas charger les détails historiques automatiquement pour toutes les équipes. Les charger à la demande, les mettre en cache avec une politique explicite, et séparer les erreurs partielles des données principales. Préserver toutefois les attributs existants des capteurs récents.
+
+### 9.2 Détails de match et box score
+
+Le parseur `_parse_summary` lit les équipes, scores par quart-temps et leaders de catégories. Il ne lit pas le bloc `boxscore.players` ni les statistiques individuelles complètes. Le service `nba.get_game_details` n'est donc pas encore un box score complet.
+
+La documentation communautaire des endpoints ESPN décrit le summary comme une réponse contenant le box score des équipes et des joueurs. C'est une piste prometteuse pour construire Game Details sans multiplier les appels, à confirmer avec des réponses réelles et des tests de schéma.
+
+### 9.3 Calendrier
+
+Le scoreboard existant est appelé sans paramètre de date. Il alimente donc la journée par défaut de l'endpoint et ne fournit pas encore un contrat de calendrier arbitraire pour la navigation SCORES.
+
+Des références publiques d'endpoints ESPN documentent le paramètre `dates=YYYYMMDD` et les plages de dates. La logique devra être conçue en fonction du jour demandé et du fuseau horaire Home Assistant, plutôt que de supposer que la journée ESPN par défaut correspond toujours au jour local belge.
+
+### 9.4 Données équipes et joueurs
+
+Le flux de configuration utilise déjà l'endpoint `teams` pour proposer les franchises. L'intégration n'exploite toutefois pas encore un catalogue générique de toutes les équipes pour l'affichage NBA Center : elle récupère les calendriers uniquement pour les équipes favorites.
+
+Les références ESPN recensent également les routes roster, profil d'athlète, statistiques de saison, gamelog et splits. Elles constituent des candidats pour TEAMS et PLAYERS, mais les réponses et champs doivent être échantillonnés et validés avant de figer les contrats internes.
+
+### 9.5 Robustesse des parseurs
+
+- `_parse_leaders` utilise la première valeur disponible en repli lorsque le champ statistique attendu n'est pas trouvé. Ce comportement peut afficher une statistique d'une autre catégorie sous le mauvais libellé. Il faudra privilégier une valeur indisponible plutôt qu'une valeur incorrectement étiquetée.
+- `_parse_standings` utilise `playoffSeed` comme clé de tri. Hors playoffs ou lorsque cette statistique est absente, les rangs peuvent être à zéro ; l'ordre renvoyé par ESPN doit être conservé et testé.
+- Les données de score manquantes sont converties en zéro par `_to_int`. Il faudra distinguer zéro réel et donnée absente dans les nouveaux contrats, surtout pour les matchs non commencés ou les données partielles.
+- Les exceptions des appels principaux remontent au coordinateur et peuvent empêcher la mise à jour de toutes les entités. Des résultats partiels avec état de fraîcheur et erreurs explicites seront préférables.
+
+Ces constats sont des points à corriger dans les phases correspondantes, pas des modifications apportées au code source lors de l'audit.
+
+## 10. Cartographie ESPN préliminaire
+
+Les routes suivantes sont identifiées à partir du code existant et de catalogues publics communautaires :
+- scoreboard : données de matchs, avec prise en charge documentée d'une date ;
+- standings : endpoint déjà utilisé ;
+- teams et teams/{id}/schedule : endpoints déjà utilisés ;
+- teams/{id}/roster : candidat pour les effectifs ;
+- summary?event={id} : candidat pour le box score complet ;
+- common/v3/.../athletes/{id}/overview, /stats, /gamelog et /splits : candidats pour PLAYERS.
+
+Les endpoints ESPN ne constituent pas une API NBA officielle documentée. Les formats peuvent changer ou être indisponibles. Le backend devra contrôler les statuts HTTP, le format JSON, les champs requis et la fraîcheur des données, sans supposer qu'un endpoint fonctionnera indéfiniment.
+
+Références de travail :
+- https://github.com/sejaldua/espn-api/blob/main/references/endpoints.md
+- https://sportsdataverse-py.sportsdataverse.org/docs/0.0.73/nba/reference/site
+- https://sportsapis.dev/espn-api
+
+## 11. Tests et état de validation
+
+L'arbre source ne contient pas de tests automatisés ni de workflow CI. Aucun test Home Assistant n'a été exécuté dans cette session ; la simple comparaison des fichiers ne prouve pas le chargement runtime.
+
+À ajouter avant la clôture de Phase 0 :
+- tests unitaires des parseurs avec réponses ESPN enregistrées ;
+- tests de contrat pour les méthodes backend et le service ;
+- tests des erreurs HTTP, timeouts, données absentes et réponses partielles ;
+- test de chargement de l'intégration sur la version minimale HA annoncée ;
+- test des cartes historiques existantes ;
+- validation du choix de licence GPL-3.0 présent dans le dépôt cible.
+
+## 12. Architecture recommandée pour NBA Center
+
+1. **Conserver le domaine `nba` et les entités historiques** : ne pas casser les installations existantes.
+2. **Ajouter une API de données à la demande** côté intégration : calendrier par date, détail d'un match, équipes, effectifs, profils et statistiques joueurs.
+3. **Centraliser les requêtes ESPN** dans des modules backend spécialisés, tous appelés par le coordinateur ou une couche de service unique.
+4. **Définir un cache par ressource** : TTL court pour scores live, TTL moyen pour calendrier/rosters, TTL long pour historiques et profils ; cache borné et invalidation contrôlée.
+5. **Séparer l'état des données** : `value`, `updated_at`, `is_stale`, `error` ou équivalent ; ne jamais convertir une absence en zéro.
+6. **Transporter les données vers Lit via l'API Home Assistant** : commandes typées, réponses JSON versionnées et erreurs explicites. Aucun appel ESPN depuis le navigateur.
+7. **Servir les fichiers statiques de la carte depuis l'intégration** avec versionnement de ressource et cache busting, sans imposer une carte HACS séparée.
+8. **Tester les vues indépendamment** avec des fixtures JSON : HOME, SCORES, TEAMS, PLAYERS, STATS.
+
+## Conclusion provisoire
+
+La base actuelle est conservable, mais elle est conçue pour alimenter des capteurs de favoris et non pour servir un centre NBA complet à la demande. La priorité n'est pas de réécrire les capteurs : c'est d'ajouter une couche de données générique, performante et testable, en maintenant les contrats historiques.
