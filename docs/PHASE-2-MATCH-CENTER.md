@@ -159,7 +159,14 @@ Déjà intégré sur `main` :
 
 Vérifications restantes :
 - Refaire un test dans Home Assistant après les dernières corrections de navigation et de gestion des réponses asynchrones.
-- Validation du paramètre ESPN `dates` sur l'instance réelle, car l'endpoint est non officiel (les références communautaires confirment le format YYYYMMDD).
+- Vérification de réponses JSON ESPN réelles sur l'instance Home Assistant : l'accès direct à l'endpoint depuis l'environnement de recherche n'a pas abouti. Les références techniques récentes confirment le paramètre `dates=YYYYMMDD` et la structure générale `events → competitions → competitors`, mais ne remplacent pas une fixture capturée depuis l'intégration.
 - Tests interactifs dans Home Assistant, notamment navigation des dates, overlay mobile et fuseau Europe/Brussels, sur la version intégrant les derniers correctifs.
 - Vérifier le comportement en cas de réponse ESPN obsolète/indisponible et les changements d'heure CET/CEST.
 - Tests unitaires Python sans réseau ajoutés pour la validation stricte des dates, le parsing des scores absents/numériques et les TTL du cache (LIVE 30 s, hors LIVE 180 s).\n- Les tests de l'orchestration asynchrone du coordinateur (requêtes ESPN adjacentes, stale fallback, concurrence et changement CET/CEST) restent à compléter avec fixtures ESPN et tests Home Assistant.
+
+
+## Candidat de livraison v0.5.3
+
+Le manifeste de l'intégration est préparé en version **0.5.3**. Cette version regroupe les correctifs de calendrier local, de cache et de robustesse asynchrone de la Phase 2. La CI du code est verte.
+
+**Important :** le tag et la release GitHub v0.5.3 ne sont pas encore publiés. L'environnement GitHub disponible ici permet de pousser les commits, mais pas de créer une release/tag. La publication HACS devra être faite depuis GitHub après la validation finale. La Phase 3 reste bloquée jusqu'au test de cette version dans Home Assistant.
