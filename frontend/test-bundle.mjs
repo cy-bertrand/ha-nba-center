@@ -22,4 +22,10 @@ assert.match(bundle, /sensor\.nba_matchs_du_jour/, "existing NBA sensor default 
 assert.doesNotMatch(bundle, /site\.api\.espn\.com|site\.web\.api\.espn\.com/, "browser bundle must not call ESPN");
 assert.doesNotMatch(bundle, /from\s*["']lit["']/, "Lit imports must be bundled, not external");
 assert.match(source, /config\.entities/, "custom entity mapping must be configurable");
+assert.match(source, /const shiftDateISO =/, "calendar date shifting must be timezone-independent");
+assert.match(source, /localDateISO\(new Date\(\), this\.hass\?\.config\?\.time_zone\)/, "Today shortcut must use the Home Assistant timezone");
+assert.match(source, /request !== this\._calendarRequest/, "stale calendar responses must not overwrite newer navigation");
+assert.match(source, /_calendarStaleError/, "stale cache errors must be exposed to the user");
+assert.match(source, /value\(away\.score\).*value\(home\.score\)/s, "match score must be displayed away first, home second");
+assert.match(source, /this\._overlayGame\.away\?\.name[\s\S]*this\._overlayGame\.home\?\.name/, "Match Center overlay must show away team before home team");
 console.log("NBA Center frontend bundle and feature checks passed.");
