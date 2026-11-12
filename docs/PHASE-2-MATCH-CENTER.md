@@ -1,7 +1,7 @@
 # Phase 2 — Match Center
 
-**Branche :** `phase-2-match-center`  
-**Statut :** fonctionnalité Phase 2 validée une première fois dans Home Assistant ; corrections de robustesse frontend intégrées et CI réussie ; revalidation HA de ces dernières corrections restante
+**Branche :** `main`  
+**Statut :** validation fonctionnelle confirmée par l'utilisateur sur Home Assistant (v0.5.2) ; tests backend ciblés ajoutés ; validation CI de cette dernière série de changements en attente
 
 ## Décisions produit confirmées
 
@@ -157,9 +157,9 @@ Déjà intégré sur `main` :
 - En cas de repli sur un cache obsolète, le message d'état peut aussi afficher le détail de l'erreur ESPN.
 - Workflow GitHub Actions exécuté avec succès le 12 novembre 2026 (build frontend et validation de syntaxe Python ; génération du bundle commitée automatiquement).
 
-À confirmer avant livraison :
+Vérifications restantes :
 - Refaire un test dans Home Assistant après les dernières corrections de navigation et de gestion des réponses asynchrones.
 - Validation du paramètre ESPN `dates` sur l'instance réelle, car l'endpoint est non officiel (les références communautaires confirment le format YYYYMMDD).
 - Tests interactifs dans Home Assistant, notamment navigation des dates, overlay mobile et fuseau Europe/Brussels.
 - Vérifier le comportement en cas de réponse ESPN obsolète/indisponible et les changements d'heure CET/CEST.
-- La couverture automatisée actuelle du frontend reste principalement constituée d'assertions sur le code source et le bundle ; des tests unitaires Python avec fixtures ESPN restent à ajouter.
+- Tests unitaires Python sans réseau ajoutés pour la validation stricte des dates, le parsing des scores absents/numériques et les TTL du cache (LIVE 30 s, hors LIVE 180 s).\n- Les tests de l'orchestration asynchrone du coordinateur (requêtes ESPN adjacentes, stale fallback, concurrence et changement CET/CEST) restent à compléter avec fixtures ESPN et tests Home Assistant.
