@@ -393,6 +393,22 @@ class NBACenterCard extends LitElement {
             @click=${() => this._selectView(v.id)}>${v.label}</button>`)}</nav>
         <main>${this.hass ? view[active.id]() : html`
           <section class="empty"><strong>Connexion à Home Assistant…</strong><p>La carte attend les états de l'intégration NBA.</p></section>`}</main>
+        ${this._overlayGame ? html`<div class="overlay" @click=${(event) => { if (event.target === event.currentTarget) this._closeOverlay(); }} @keydown=${this._onOverlayKeydown}>
+          <section class="overlay-panel" role="dialog" aria-modal="true" aria-label="Détails du match">
+            <header class="overlay-head"><h2>MATCH CENTER</h2><button class="overlay-close" aria-label="Fermer" @click=${this._closeOverlay}>✕</button></header>
+            <div class="overlay-body"><div class="overlay-teams">
+              <div class="overlay-team">${this._overlayGame.away?.logo ? html`<img src=${this._overlayGame.away.logo} alt="">` : ""}<strong>${value(this._overlayGame.away?.name)}</strong></div>
+              <div class="overlay-score">${this._overlayGame.state === "pre" ? "VS" : `${value(this._overlayGame.away?.score)} – ${value(this._overlayGame.home?.score)}`}</div>
+              <div class="overlay-team">${this._overlayGame.home?.logo ? html`<img src=${this._overlayGame.home.logo} alt="">` : ""}<strong>${value(this._overlayGame.home?.name)}</strong></div>
+            </div><p class="muted" style="text-align:center">${value(this._overlayGame.date_text)} · ${value(this._overlayGame.detail, this._gameStatus(this._overlayGame).label)}</p>
+            ${this._overlayLoading ? html`<section class="empty">Chargement du résumé…</section>` : ""}
+            ${this._overlayError ? html`<section class="empty"><p>${this._overlayError}</p><button @click=${() => this._openGame(this._overlayGame)}>RÉESSAYER</button></section>` : ""}
+            ${this._overlayDetails?.teams?.length ? html`<div class="grid">${this._overlayDetails.teams.map((team) => html`
+              <section class="panel"><div class="panel-head"><h3>${value(team.abbr, team.name)}</h3><span class="pill">${value(team.score)}</span></div>
+                ${team.quarters?.length ? html`<div class="muted">QUART-TEMPS · ${team.quarters.join(" / ")}</div>` : ""}
+                ${(team.top_players ?? []).map((player) => html`<div class="top-player"><strong>${value(player.player)}</strong><small>${value(player.category)} · ${value(player.value)}</small></div>`)}</section>`)}</div>` : ""}
+            ${!this._overlayLoading && !this._overlayError && !this._overlayDetails?.teams?.length ? html`<section class="empty"><p>Le résumé détaillé n’est pas encore disponible pour cette rencontre.</p></section>` : ""}
+            </div></section></div>` : ""}
         <footer class="footer"><span>NBA CENTER · ${active.label}</span><span>DATA VIA HOME ASSISTANT</span></footer>
       </ha-card>`;
   }
