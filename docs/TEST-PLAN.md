@@ -1,7 +1,7 @@
 # NBA Center — Plan de tests et critères d'acceptation
 
-**Phase :** préparation Phase 0  
-**Statut :** plan défini ; exécution non réalisée
+**Phase :** plan transversal NBA Center  
+**Statut :** tests Python de validation de date, parsing des scores et TTL calendrier ajoutés ; couverture du coordinateur asynchrone et des autres domaines encore à développer
 
 ## 1. Principes
 
@@ -69,8 +69,8 @@ Sur une instance de test :
 
 ## 5. CI et qualité
 
-À créer au début de l'implémentation :
-- pytest et pytest-homeassistant-custom-component ;
+À compléter au fil de l'implémentation :
+- Tests Python `unittest` sans dépendance supplémentaire pour les règles pures ; ajouter pytest et pytest-homeassistant-custom-component pour les tests d'intégration Home Assistant ;
 - fixtures ESPN par endpoint ;
 - ruff (lint + format check) ;
 - validation JSON/YAML ;
