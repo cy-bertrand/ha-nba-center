@@ -20,7 +20,7 @@
 
 - **HOME** : matchs live, prochaines rencontres, équipes favorites, leader points.
 - **SCORES** : scoreboard disponible, filtres Tous / Live / À venir / Terminés, recherche équipe.
-- **TEAMS** : équipe favorite, dernier match, prochain match.
+- **TEAMS** : équipe favorite, dernier match, prochain match et forme récente sur cinq rencontres.
 - **PLAYERS** : cinq catégories de leaders existantes.
 - **STATS** : classements Est/Ouest et leaders par catégorie.
 
