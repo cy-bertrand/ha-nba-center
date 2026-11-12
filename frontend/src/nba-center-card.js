@@ -30,6 +30,11 @@ const localDateISO = (date = new Date(), timeZone) => {
   const part = (type) => parts.find((item) => item.type === type)?.value;
   return `${part("year")}-${part("month")}-${part("day")}`;
 };
+const shiftDateISO = (isoDate, days) => {
+  const [year, month, day] = isoDate.split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day + days, 12));
+  return [date.getUTCFullYear(), String(date.getUTCMonth() + 1).padStart(2, "0"), String(date.getUTCDate()).padStart(2, "0")].join("-");
+};
 const value = (v, fallback = "—") => v === null || v === undefined || v === "" ? fallback : String(v);
 const fmtDate = (v) => {
   if (!v) return "Date à confirmer";
@@ -146,7 +151,7 @@ class NBACenterCard extends LitElement {
     this._filter = "all";
     this._search = "";
     this._selectedDate = localDateISO();
-    this._calendarGames = []; this._calendarLoading = false; this._calendarError = ""; this._calendarStale = false; this._calendarInitialized = false;
+    this._calendarGames = []; this._calendarLoading = false; this._calendarError = ""; this._calendarStale = false; this._calendarStaleError = ""; this._calendarRequest = 0; this._calendarInitialized = false;
     this._overlayGame = null; this._overlayDetails = null;
     this._overlayLoading = false; this._overlayError = "";
     this._config = {};
@@ -227,14 +232,25 @@ class NBACenterCard extends LitElement {
   }
   _setFilter(filter) { this._filter = filter; }
   _setSearch(event) { this._search = event.target.value ?? ""; }
-  _shiftDate(days) { const d = new Date(`${this._selectedDate}T12:00:00`); d.setDate(d.getDate() + days); this._selectedDate = d.toLocaleDateString("en-CA"); this._loadCalendar(this._selectedDate); }
+  _shiftDate(days) { this._selectedDate = shiftDateISO(this._selectedDate, days); this._loadCalendar(this._selectedDate); }
   _setDate(event) { this._selectedDate = event.target.value; this._loadCalendar(this._selectedDate); }
   async _loadCalendar(date) {
     if (!this.hass?.callWS || !date) return;
-    this._calendarLoading = true; this._calendarError = ""; this._calendarStale = false;
-    try { const result = await this.hass.callWS({ type: "nba/scoreboard", date }); this._calendarGames = result.games ?? []; this._calendarStale = Boolean(result.stale); }
-    catch (err) { this._calendarError = err?.message ?? "Impossible de charger le calendrier NBA."; this._calendarGames = []; }
-    finally { this._calendarLoading = false; }
+    const request = ++this._calendarRequest;
+    this._calendarLoading = true; this._calendarError = ""; this._calendarStale = false; this._calendarStaleError = "";
+    try {
+      const result = await this.hass.callWS({ type: "nba/scoreboard", date });
+      if (request !== this._calendarRequest || date !== this._selectedDate) return;
+      this._calendarGames = result.games ?? [];
+      this._calendarStale = Boolean(result.stale);
+      this._calendarStaleError = result.error ?? "";
+    } catch (err) {
+      if (request !== this._calendarRequest || date !== this._selectedDate) return;
+      this._calendarError = err?.message ?? "Impossible de charger le calendrier NBA.";
+      this._calendarGames = [];
+    } finally {
+      if (request === this._calendarRequest) this._calendarLoading = false;
+    }
   }
   async _openGame(game) {
     this._overlayGame = game; this._overlayDetails = null; this._overlayError = ""; this._overlayLoading = true;
@@ -361,8 +377,8 @@ class NBACenterCard extends LitElement {
       <div class="date-nav"><button aria-label="Jour précédent" @click=${() => this._shiftDate(-1)}>‹</button>
         <span class="date-label">${dateLabel}</span><input type="date" aria-label="Choisir une date" .value=${this._selectedDate} @change=${this._setDate}>
         <button aria-label="Jour suivant" @click=${() => this._shiftDate(1)}>›</button>
-        <button @click=${() => { this._selectedDate = new Date().toLocaleDateString("en-CA"); this._loadCalendar(this._selectedDate); }}>AUJOURD&#39;HUI</button></div>
-      ${this._calendarStale ? html`<p class="muted">Données en cache · actualisation ESPN indisponible</p>` : ""}
+        <button @click=${() => { this._selectedDate = localDateISO(new Date(), this.hass?.config?.time_zone); this._loadCalendar(this._selectedDate); }}>AUJOURD&#39;HUI</button></div>
+      ${this._calendarStale ? html`<p class="muted" role="status">Données en cache · actualisation ESPN indisponible${this._calendarStaleError ? html` · ${this._calendarStaleError}` : ""}</p>` : ""}
       <div class="filters">${[["all","TOUS"],["in","LIVE"],["pre","À VENIR"],["post","TERMINÉS"]].map(([k,l]) => html`<button class="chip" aria-pressed=${this._filter===k} @click=${() => this._setFilter(k)}>${l}</button>`)}
         <input type="search" aria-label="Rechercher une équipe" placeholder="Filtrer une équipe…" .value=${this._search} @input=${this._setSearch}></div>
       ${this._calendarLoading ? html`<section class="empty">Chargement du calendrier…</section>` : ""}
