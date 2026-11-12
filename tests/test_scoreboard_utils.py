@@ -77,7 +77,7 @@ class CalendarFilteringTests(unittest.TestCase):
     def test_filters_local_day_and_sorts_chronologically(self):
         games = [
             {"id": "late", "date": "2026-11-13T02:00:00+01:00"},
-            {"id": "previous", "date": "2026-11-12T23:30:00+00:00"},
+            {"id": "previous", "date": "2026-11-12T22:30:00+00:00"},
             {"id": "early", "date": "2026-11-13T00:30:00+01:00"},
         ]
         result = filter_games_for_local_date(games, self.selected, self.brussels)
