@@ -1,6 +1,6 @@
 # Phase 3 — Detailed Game Center
 
-**Statut :** première tranche backend et frontend intégrée sur `main` ; validation CI et Home Assistant à poursuivre.
+**Statut :** première tranche backend et frontend intégrée sur `main` ; CI verte. Validation fonctionnelle Home Assistant et vérification sur réponses ESPN réelles encore requises.
 
 ## Objectif
 Transformer l'overlay Match Center de la Phase 2 en fiche de match approfondie, sans appels ESPN depuis le navigateur et sans casser le calendrier ni les services existants.
@@ -25,12 +25,12 @@ Transformer l'overlay Match Center de la Phase 2 en fiche de match approfondie, 
 ## Tests
 
 - Tests unitaires backend : fixtures synthétiques couvrant les deux équipes, joueurs, statistiques, titulaires, DNP et valeurs absentes.
-- CI GitHub : build frontend, contrôles Python et tests unitaires ; résultat du dernier workflow à confirmer avant livraison de cette tranche.
+- CI GitHub : workflow `43327044234` terminé avec succès (compilation Python, tests unitaires backend, build Lit, assertions frontend et génération du bundle).
 - Aucun fixture brut ESPN capturé depuis un appel réel n'est encore versionné. Le schéma ESPN reste non officiel et peut varier.
 
 ## Suite de la Phase 3
 
-1. Capturer et anonymiser des réponses `summary` réelles : match terminé, match en direct et réponse partielle.
+1. Capturer et anonymiser des réponses `summary` réelles : match terminé, match en direct et réponse partielle. L'accès direct au endpoint ESPN n'a pas pu être vérifié depuis l'outil de consultation utilisé ; aucune fixture réelle n'est donc revendiquée.
 2. Vérifier les clés et l'ordre des statistiques sur les réponses actuelles d'ESPN.
 3. Ajouter les tests de parsing sur ces fixtures réelles et les cas de structures absentes.
 4. Enrichir le Match Center : cinq majeurs, joueurs DNP, totaux/ratios collectifs, et états de chargement/indisponibilité.
