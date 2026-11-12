@@ -13,5 +13,6 @@
   "after_dependencies": [
     "http",
     "lovelace"
-  ]
+  ],
+  "homeassistant": "2024.7.0"
 }
