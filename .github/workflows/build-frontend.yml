@@ -43,6 +43,7 @@ jobs:
           npm install --package-lock-only --no-audit --no-fund
           npm ci --no-audit --no-fund
           node --check frontend/src/nba-center-card.js
+          npm ls lit esbuild
           npm run build
           npm test
       - name: Commit generated frontend bundle
