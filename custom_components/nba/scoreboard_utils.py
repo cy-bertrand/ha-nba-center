@@ -1,6 +1,7 @@
 """Règles pures du calendrier NBA, isolées pour les tests unitaires.
 
 Ce module reste volontairement indépendant de Home Assistant et du réseau.
+Les règles exposées ici sont couvertes par la suite unittest du dépôt.
 """
 from __future__ import annotations
 
