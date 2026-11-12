@@ -1,13 +1,18 @@
 """Tests unitaires des règles de calendrier NBA (sans réseau ni Home Assistant)."""
+import importlib.util
 import unittest
+from pathlib import Path
 from datetime import date, datetime, timedelta, timezone
 
-from custom_components.nba.scoreboard_utils import (
-    cache_ttl,
-    is_cache_fresh,
-    parse_score,
-    validate_local_date,
-)
+MODULE_PATH = Path(__file__).resolve().parents[1] / "custom_components" / "nba" / "scoreboard_utils.py"
+SPEC = importlib.util.spec_from_file_location("scoreboard_utils", MODULE_PATH)
+scoreboard_utils = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(scoreboard_utils)
+
+cache_ttl = scoreboard_utils.cache_ttl
+is_cache_fresh = scoreboard_utils.is_cache_fresh
+parse_score = scoreboard_utils.parse_score
+validate_local_date = scoreboard_utils.validate_local_date
 
 
 class ValidateDateTests(unittest.TestCase):
