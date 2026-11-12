@@ -1,69 +1,29 @@
-/* NBA Center — initial frontend shell.
- * The shell deliberately makes no ESPN requests and does not assume a data API.
- * Lit bundling is the next implementation task; this first shell validates HA
- * static resource delivery, card registration, navigation and responsive layout.
- */
-const VIEWS = [
-  { id: "home", label: "HOME", icon: "⌂" },
-  { id: "scores", label: "SCORES", icon: "◷" },
-  { id: "teams", label: "TEAMS", icon: "◈" },
-  { id: "players", label: "PLAYERS", icon: "◎" },
-  { id: "stats", label: "STATS", icon: "▤" },
-];
-
-class NBACenterCard extends HTMLElement {
-  constructor() {
-    super();
-    this.attachShadow({ mode: "open" });
-    this._active = "home";
-    this._config = {};
-  }
-
-  setConfig(config) {
-    this._config = config || {};
-    this._render();
-  }
-
-  set hass(hass) {
-    this._hass = hass;
-  }
-
-  getCardSize() {
-    return 6;
-  }
-
-  connectedCallback() {
-    this._render();
-  }
-
-  _render() {
-    if (!this.shadowRoot) return;
-    const active = VIEWS.find((view) => view.id === this._active) || VIEWS[0];
-    this.shadowRoot.innerHTML = `
-      <style>
-        :host { display:block; color:var(--primary-text-color); font-family:var(--paper-font-body1_-_font-family, Roboto, sans-serif); }
-        * { box-sizing:border-box; }
-        .shell { overflow:hidden; border:1px solid var(--divider-color); border-radius:18px; background:#0b1019; color:#f4f6fb; box-shadow:0 12px 32px #0005; }
-        .hero { padding:22px 24px 18px; background:radial-gradient(ellipse at 85% 0%,#263b61 0,transparent 46%),linear-gradient(120deg,#111c2c,#090d15 75%); border-bottom:1px solid #ffffff14; }
-        .eyebrow { color:#f0b84b; font-size:10px; font-weight:800; letter-spacing:.22em; }
-        h1 { margin:7px 0 3px; font-size:clamp(23px,4vw,32px); line-height:1.1; letter-spacing:-.04em; font-weight:900; }
-        .subtitle { color:#9eabc0; font-size:12px; }
-        nav { display:flex; gap:5px; overflow-x:auto; padding:10px 12px; background:#0d1420; border-bottom:1px solid #ffffff12; scrollbar-width:thin; }
-        button { border:0; border-radius:9px; background:transparent; color:#8794a9; padding:10px 13px; min-width:74px; cursor:pointer; font:inherit; font-size:10px; font-weight:700; letter-spacing:.08em; white-space:nowrap; }
-        button[aria-selected="true"] { background:#1b2b43; color:#f5c45e; box-shadow:inset 0 0 0 1px #d9a83d55; }
-        button:focus-visible { outline:2px solid #f5c45e; outline-offset:2px; }
-        main { padding:22px; min-height:230px; background:linear-gradient(180deg,#0b1019,#0c121d); }
-        .section-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; }
-        h2 { margin:0; font-size:18px; letter-spacing:-.02em; }
-        .pill { border:1px solid #2c3b52; border-radius:999px; color:#9eabc0; padding:5px 9px; font-size:10px; }
-        .empty { border:1px dashed #33445e; border-radius:14px; padding:22px; background:#101a29; }
-        .empty strong { display:block; margin-bottom:7px; color:#e9edf5; font-size:14px; }
-        .empty p { margin:0; color:#9eabc0; font-size:12px; line-height:1.6; max-width:620px; }
-        .skeletons { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-top:14px; }
-        .sk { height:54px; border-radius:10px; background:linear-gradient(100deg,#141f30,#1b2a40,#141f30); }
-        footer { display:flex; justify-content:space-between; gap:10px; padding:12px 22px; color:#738199; border-top:1px solid #ffffff12; font-size:10px; }
-        @media(max-width:520px) { .hero{padding:18px 16px 15px} main{padding:16px} nav{padding:8px} button{min-width:65px;padding:9px 10px} .skeletons{grid-template-columns:1fr 1fr} footer{padding:11px 16px} }
-      </style>
+var U=globalThis,H=U.ShadowRoot&&(U.ShadyCSS===void 0||U.ShadyCSS.nativeShadow)&&"adoptedStyleSheets"in Document.prototype&&"replace"in CSSStyleSheet.prototype,k=Symbol(),X=new WeakMap,S=class{constructor(t,e,s){if(this._$cssResult$=!0,s!==k)throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");this.cssText=t,this.t=e}get styleSheet(){let t=this.o,e=this.t;if(H&&t===void 0){let s=e!==void 0&&e.length===1;s&&(t=X.get(e)),t===void 0&&((this.o=t=new CSSStyleSheet).replaceSync(this.cssText),s&&X.set(e,t))}return t}toString(){return this.cssText}},tt=o=>new S(typeof o=="string"?o:o+"",void 0,k),z=(o,...t)=>{let e=o.length===1?o[0]:t.reduce((s,i,r)=>s+(n=>{if(n._$cssResult$===!0)return n.cssText;if(typeof n=="number")return n;throw Error("Value passed to 'css' function must be a 'css' function result: "+n+". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.")})(i)+o[r+1],o[0]);return new S(e,o,k)},et=(o,t)=>{if(H)o.adoptedStyleSheets=t.map(e=>e instanceof CSSStyleSheet?e:e.styleSheet);else for(let e of t){let s=document.createElement("style"),i=U.litNonce;i!==void 0&&s.setAttribute("nonce",i),s.textContent=e.cssText,o.appendChild(s)}},L=H?o=>o:o=>o instanceof CSSStyleSheet?(t=>{let e="";for(let s of t.cssRules)e+=s.cssText;return tt(e)})(o):o;var{is:_t,defineProperty:gt,getOwnPropertyDescriptor:At,getOwnPropertyNames:bt,getOwnPropertySymbols:yt,getPrototypeOf:vt}=Object,M=globalThis,st=M.trustedTypes,xt=st?st.emptyScript:"",St=M.reactiveElementPolyfillSupport,E=(o,t)=>o,B={toAttribute(o,t){switch(t){case Boolean:o=o?xt:null;break;case Object:case Array:o=o==null?o:JSON.stringify(o)}return o},fromAttribute(o,t){let e=o;switch(t){case Boolean:e=o!==null;break;case Number:e=o===null?null:Number(o);break;case Object:case Array:try{e=JSON.parse(o)}catch{e=null}}return e}},ot=(o,t)=>!_t(o,t),it={attribute:!0,type:String,converter:B,reflect:!1,useDefault:!1,hasChanged:ot};Symbol.metadata??=Symbol("metadata"),M.litPropertyMetadata??=new WeakMap;var f=class extends HTMLElement{static addInitializer(t){this._$Ei(),(this.l??=[]).push(t)}static get observedAttributes(){return this.finalize(),this._$Eh&&[...this._$Eh.keys()]}static createProperty(t,e=it){if(e.state&&(e.attribute=!1),this._$Ei(),this.prototype.hasOwnProperty(t)&&((e=Object.create(e)).wrapped=!0),this.elementProperties.set(t,e),!e.noAccessor){let s=Symbol(),i=this.getPropertyDescriptor(t,s,e);i!==void 0&&gt(this.prototype,t,i)}}static getPropertyDescriptor(t,e,s){let{get:i,set:r}=At(this.prototype,t)??{get(){return this[e]},set(n){this[e]=n}};return{get:i,set(n){let l=i?.call(this);r?.call(this,n),this.requestUpdate(t,l,s)},configurable:!0,enumerable:!0}}static getPropertyOptions(t){return this.elementProperties.get(t)??it}static _$Ei(){if(this.hasOwnProperty(E("elementProperties")))return;let t=vt(this);t.finalize(),t.l!==void 0&&(this.l=[...t.l]),this.elementProperties=new Map(t.elementProperties)}static finalize(){if(this.hasOwnProperty(E("finalized")))return;if(this.finalized=!0,this._$Ei(),this.hasOwnProperty(E("properties"))){let e=this.properties,s=[...bt(e),...yt(e)];for(let i of s)this.createProperty(i,e[i])}let t=this[Symbol.metadata];if(t!==null){let e=litPropertyMetadata.get(t);if(e!==void 0)for(let[s,i]of e)this.elementProperties.set(s,i)}this._$Eh=new Map;for(let[e,s]of this.elementProperties){let i=this._$Eu(e,s);i!==void 0&&this._$Eh.set(i,e)}this.elementStyles=this.finalizeStyles(this.styles)}static finalizeStyles(t){let e=[];if(Array.isArray(t)){let s=new Set(t.flat(1/0).reverse());for(let i of s)e.unshift(L(i))}else t!==void 0&&e.push(L(t));return e}static _$Eu(t,e){let s=e.attribute;return s===!1?void 0:typeof s=="string"?s:typeof t=="string"?t.toLowerCase():void 0}constructor(){super(),this._$Ep=void 0,this.isUpdatePending=!1,this.hasUpdated=!1,this._$Em=null,this._$Ev()}_$Ev(){this._$ES=new Promise(t=>this.enableUpdating=t),this._$AL=new Map,this._$E_(),this.requestUpdate(),this.constructor.l?.forEach(t=>t(this))}addController(t){(this._$EO??=new Set).add(t),this.renderRoot!==void 0&&this.isConnected&&t.hostConnected?.()}removeController(t){this._$EO?.delete(t)}_$E_(){let t=new Map,e=this.constructor.elementProperties;for(let s of e.keys())this.hasOwnProperty(s)&&(t.set(s,this[s]),delete this[s]);t.size>0&&(this._$Ep=t)}createRenderRoot(){let t=this.shadowRoot??this.attachShadow(this.constructor.shadowRootOptions);return et(t,this.constructor.elementStyles),t}connectedCallback(){this.renderRoot??=this.createRenderRoot(),this.enableUpdating(!0),this._$EO?.forEach(t=>t.hostConnected?.())}enableUpdating(t){}disconnectedCallback(){this._$EO?.forEach(t=>t.hostDisconnected?.())}attributeChangedCallback(t,e,s){this._$AK(t,s)}_$ET(t,e){let s=this.constructor.elementProperties.get(t),i=this.constructor._$Eu(t,s);if(i!==void 0&&s.reflect===!0){let r=(s.converter?.toAttribute!==void 0?s.converter:B).toAttribute(e,s.type);this._$Em=t,r==null?this.removeAttribute(i):this.setAttribute(i,r),this._$Em=null}}_$AK(t,e){let s=this.constructor,i=s._$Eh.get(t);if(i!==void 0&&this._$Em!==i){let r=s.getPropertyOptions(i),n=typeof r.converter=="function"?{fromAttribute:r.converter}:r.converter?.fromAttribute!==void 0?r.converter:B;this._$Em=i;let l=n.fromAttribute(e,r.type);this[i]=l??this._$Ej?.get(i)??l,this._$Em=null}}requestUpdate(t,e,s,i=!1,r){if(t!==void 0){let n=this.constructor;if(i===!1&&(r=this[t]),s??=n.getPropertyOptions(t),!((s.hasChanged??ot)(r,e)||s.useDefault&&s.reflect&&r===this._$Ej?.get(t)&&!this.hasAttribute(n._$Eu(t,s))))return;this.C(t,e,s)}this.isUpdatePending===!1&&(this._$ES=this._$EP())}C(t,e,{useDefault:s,reflect:i,wrapped:r},n){s&&!(this._$Ej??=new Map).has(t)&&(this._$Ej.set(t,n??e??this[t]),r!==!0||n!==void 0)||(this._$AL.has(t)||(this.hasUpdated||s||(e=void 0),this._$AL.set(t,e)),i===!0&&this._$Em!==t&&(this._$Eq??=new Set).add(t))}async _$EP(){this.isUpdatePending=!0;try{await this._$ES}catch(e){Promise.reject(e)}let t=this.scheduleUpdate();return t!=null&&await t,!this.isUpdatePending}scheduleUpdate(){return this.performUpdate()}performUpdate(){if(!this.isUpdatePending)return;if(!this.hasUpdated){if(this.renderRoot??=this.createRenderRoot(),this._$Ep){for(let[i,r]of this._$Ep)this[i]=r;this._$Ep=void 0}let s=this.constructor.elementProperties;if(s.size>0)for(let[i,r]of s){let{wrapped:n}=r,l=this[i];n!==!0||this._$AL.has(i)||l===void 0||this.C(i,void 0,r,l)}}let t=!1,e=this._$AL;try{t=this.shouldUpdate(e),t?(this.willUpdate(e),this._$EO?.forEach(s=>s.hostUpdate?.()),this.update(e)):this._$EM()}catch(s){throw t=!1,this._$EM(),s}t&&this._$AE(e)}willUpdate(t){}_$AE(t){this._$EO?.forEach(e=>e.hostUpdated?.()),this.hasUpdated||(this.hasUpdated=!0,this.firstUpdated(t)),this.updated(t)}_$EM(){this._$AL=new Map,this.isUpdatePending=!1}get updateComplete(){return this.getUpdateComplete()}getUpdateComplete(){return this._$ES}shouldUpdate(t){return!0}update(t){this._$Eq&&=this._$Eq.forEach(e=>this._$ET(e,this[e])),this._$EM()}updated(t){}firstUpdated(t){}};f.elementStyles=[],f.shadowRootOptions={mode:"open"},f[E("elementProperties")]=new Map,f[E("finalized")]=new Map,St?.({ReactiveElement:f}),(M.reactiveElementVersions??=[]).push("2.1.2");var K=globalThis,rt=o=>o,R=K.trustedTypes,nt=R?R.createPolicy("lit-html",{createHTML:o=>o}):void 0,pt="$lit$",m=`lit$${Math.random().toFixed(9).slice(2)}$`,ut="?"+m,Et=`<${ut}>`,b=document,C=()=>b.createComment(""),P=o=>o===null||typeof o!="object"&&typeof o!="function",Y=Array.isArray,wt=o=>Y(o)||typeof o?.[Symbol.iterator]=="function",D=`[ 	
+\f\r]`,w=/<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g,at=/-->/g,ht=/>/g,g=RegExp(`>|${D}(?:([^\\s"'>=/]+)(${D}*=${D}*(?:[^ 	
+\f\r"'\`<>=]|("|')|))|$)`,"g"),lt=/'/g,dt=/"/g,ft=/^(?:script|style|textarea|title)$/i,F=o=>(t,...e)=>({_$litType$:o,strings:t,values:e}),J=F(1),Mt=F(2),Rt=F(3),y=Symbol.for("lit-noChange"),c=Symbol.for("lit-nothing"),ct=new WeakMap,A=b.createTreeWalker(b,129);function $t(o,t){if(!Y(o)||!o.hasOwnProperty("raw"))throw Error("invalid template strings array");return nt!==void 0?nt.createHTML(t):t}var Ct=(o,t)=>{let e=o.length-1,s=[],i,r=t===2?"<svg>":t===3?"<math>":"",n=w;for(let l=0;l<e;l++){let a=o[l],d,p,h=-1,u=0;for(;u<a.length&&(n.lastIndex=u,p=n.exec(a),p!==null);)u=n.lastIndex,n===w?p[1]==="!--"?n=at:p[1]!==void 0?n=ht:p[2]!==void 0?(ft.test(p[2])&&(i=RegExp("</"+p[2],"g")),n=g):p[3]!==void 0&&(n=g):n===g?p[0]===">"?(n=i??w,h=-1):p[1]===void 0?h=-2:(h=n.lastIndex-p[2].length,d=p[1],n=p[3]===void 0?g:p[3]==='"'?dt:lt):n===dt||n===lt?n=g:n===at||n===ht?n=w:(n=g,i=void 0);let $=n===g&&o[l+1].startsWith("/>")?" ":"";r+=n===w?a+Et:h>=0?(s.push(d),a.slice(0,h)+pt+a.slice(h)+m+$):a+m+(h===-2?l:$)}return[$t(o,r+(o[e]||"<?>")+(t===2?"</svg>":t===3?"</math>":"")),s]},N=class o{constructor({strings:t,_$litType$:e},s){let i;this.parts=[];let r=0,n=0,l=t.length-1,a=this.parts,[d,p]=Ct(t,e);if(this.el=o.createElement(d,s),A.currentNode=this.el.content,e===2||e===3){let h=this.el.content.firstChild;h.replaceWith(...h.childNodes)}for(;(i=A.nextNode())!==null&&a.length<l;){if(i.nodeType===1){if(i.hasAttributes())for(let h of i.getAttributeNames())if(h.endsWith(pt)){let u=p[n++],$=i.getAttribute(h).split(m),O=/([.?@])?(.*)/.exec(u);a.push({type:1,index:r,name:O[2],strings:$,ctor:O[1]==="."?j:O[1]==="?"?V:O[1]==="@"?W:x}),i.removeAttribute(h)}else h.startsWith(m)&&(a.push({type:6,index:r}),i.removeAttribute(h));if(ft.test(i.tagName)){let h=i.textContent.split(m),u=h.length-1;if(u>0){i.textContent=R?R.emptyScript:"";for(let $=0;$<u;$++)i.append(h[$],C()),A.nextNode(),a.push({type:2,index:++r});i.append(h[u],C())}}}else if(i.nodeType===8)if(i.data===ut)a.push({type:2,index:r});else{let h=-1;for(;(h=i.data.indexOf(m,h+1))!==-1;)a.push({type:7,index:r}),h+=m.length-1}r++}}static createElement(t,e){let s=b.createElement("template");return s.innerHTML=t,s}};function v(o,t,e=o,s){if(t===y)return t;let i=s!==void 0?e._$Co?.[s]:e._$Cl,r=P(t)?void 0:t._$litDirective$;return i?.constructor!==r&&(i?._$AO?.(!1),r===void 0?i=void 0:(i=new r(o),i._$AT(o,e,s)),s!==void 0?(e._$Co??=[])[s]=i:e._$Cl=i),i!==void 0&&(t=v(o,i._$AS(o,t.values),i,s)),t}var I=class{constructor(t,e){this._$AV=[],this._$AN=void 0,this._$AD=t,this._$AM=e}get parentNode(){return this._$AM.parentNode}get _$AU(){return this._$AM._$AU}u(t){let{el:{content:e},parts:s}=this._$AD,i=(t?.creationScope??b).importNode(e,!0);A.currentNode=i;let r=A.nextNode(),n=0,l=0,a=s[0];for(;a!==void 0;){if(n===a.index){let d;a.type===2?d=new T(r,r.nextSibling,this,t):a.type===1?d=new a.ctor(r,a.name,a.strings,this,t):a.type===6&&(d=new q(r,this,t)),this._$AV.push(d),a=s[++l]}n!==a?.index&&(r=A.nextNode(),n++)}return A.currentNode=b,i}p(t){let e=0;for(let s of this._$AV)s!==void 0&&(s.strings!==void 0?(s._$AI(t,s,e),e+=s.strings.length-2):s._$AI(t[e])),e++}},T=class o{get _$AU(){return this._$AM?._$AU??this._$Cv}constructor(t,e,s,i){this.type=2,this._$AH=c,this._$AN=void 0,this._$AA=t,this._$AB=e,this._$AM=s,this.options=i,this._$Cv=i?.isConnected??!0}get parentNode(){let t=this._$AA.parentNode,e=this._$AM;return e!==void 0&&t?.nodeType===11&&(t=e.parentNode),t}get startNode(){return this._$AA}get endNode(){return this._$AB}_$AI(t,e=this){t=v(this,t,e),P(t)?t===c||t==null||t===""?(this._$AH!==c&&this._$AR(),this._$AH=c):t!==this._$AH&&t!==y&&this._(t):t._$litType$!==void 0?this.$(t):t.nodeType!==void 0?this.T(t):wt(t)?this.k(t):this._(t)}O(t){return this._$AA.parentNode.insertBefore(t,this._$AB)}T(t){this._$AH!==t&&(this._$AR(),this._$AH=this.O(t))}_(t){this._$AH!==c&&P(this._$AH)?this._$AA.nextSibling.data=t:this.T(b.createTextNode(t)),this._$AH=t}$(t){let{values:e,_$litType$:s}=t,i=typeof s=="number"?this._$AC(t):(s.el===void 0&&(s.el=N.createElement($t(s.h,s.h[0]),this.options)),s);if(this._$AH?._$AD===i)this._$AH.p(e);else{let r=new I(i,this),n=r.u(this.options);r.p(e),this.T(n),this._$AH=r}}_$AC(t){let e=ct.get(t.strings);return e===void 0&&ct.set(t.strings,e=new N(t)),e}k(t){Y(this._$AH)||(this._$AH=[],this._$AR());let e=this._$AH,s,i=0;for(let r of t)i===e.length?e.push(s=new o(this.O(C()),this.O(C()),this,this.options)):s=e[i],s._$AI(r),i++;i<e.length&&(this._$AR(s&&s._$AB.nextSibling,i),e.length=i)}_$AR(t=this._$AA.nextSibling,e){for(this._$AP?.(!1,!0,e);t!==this._$AB;){let s=rt(t).nextSibling;rt(t).remove(),t=s}}setConnected(t){this._$AM===void 0&&(this._$Cv=t,this._$AP?.(t))}},x=class{get tagName(){return this.element.tagName}get _$AU(){return this._$AM._$AU}constructor(t,e,s,i,r){this.type=1,this._$AH=c,this._$AN=void 0,this.element=t,this.name=e,this._$AM=i,this.options=r,s.length>2||s[0]!==""||s[1]!==""?(this._$AH=Array(s.length-1).fill(new String),this.strings=s):this._$AH=c}_$AI(t,e=this,s,i){let r=this.strings,n=!1;if(r===void 0)t=v(this,t,e,0),n=!P(t)||t!==this._$AH&&t!==y,n&&(this._$AH=t);else{let l=t,a,d;for(t=r[0],a=0;a<r.length-1;a++)d=v(this,l[s+a],e,a),d===y&&(d=this._$AH[a]),n||=!P(d)||d!==this._$AH[a],d===c?t=c:t!==c&&(t+=(d??"")+r[a+1]),this._$AH[a]=d}n&&!i&&this.j(t)}j(t){t===c?this.element.removeAttribute(this.name):this.element.setAttribute(this.name,t??"")}},j=class extends x{constructor(){super(...arguments),this.type=3}j(t){this.element[this.name]=t===c?void 0:t}},V=class extends x{constructor(){super(...arguments),this.type=4}j(t){this.element.toggleAttribute(this.name,!!t&&t!==c)}},W=class extends x{constructor(t,e,s,i,r){super(t,e,s,i,r),this.type=5}_$AI(t,e=this){if((t=v(this,t,e,0)??c)===y)return;let s=this._$AH,i=t===c&&s!==c||t.capture!==s.capture||t.once!==s.once||t.passive!==s.passive,r=t!==c&&(s===c||i);i&&this.element.removeEventListener(this.name,this,s),r&&this.element.addEventListener(this.name,this,t),this._$AH=t}handleEvent(t){typeof this._$AH=="function"?this._$AH.call(this.options?.host??this.element,t):this._$AH.handleEvent(t)}},q=class{constructor(t,e,s){this.element=t,this.type=6,this._$AN=void 0,this._$AM=e,this.options=s}get _$AU(){return this._$AM._$AU}_$AI(t){v(this,t)}};var Pt=K.litHtmlPolyfillSupport;Pt?.(N,T),(K.litHtmlVersions??=[]).push("3.3.3");var mt=(o,t,e)=>{let s=e?.renderBefore??t,i=s._$litPart$;if(i===void 0){let r=e?.renderBefore??null;s._$litPart$=i=new T(t.insertBefore(C(),r),r,void 0,e??{})}return i._$AI(o),i};var Z=globalThis,_=class extends f{constructor(){super(...arguments),this.renderOptions={host:this},this._$Do=void 0}createRenderRoot(){let t=super.createRenderRoot();return this.renderOptions.renderBefore??=t.firstChild,t}update(t){let e=this.render();this.hasUpdated||(this.renderOptions.isConnected=this.isConnected),super.update(t),this._$Do=mt(e,this.renderRoot,this.renderOptions)}connectedCallback(){super.connectedCallback(),this._$Do?.setConnected(!0)}disconnectedCallback(){super.disconnectedCallback(),this._$Do?.setConnected(!1)}render(){return y}};_._$litElement$=!0,_.finalized=!0,Z.litElementHydrateSupport?.({LitElement:_});var Nt=Z.litElementPolyfillSupport;Nt?.({LitElement:_});(Z.litElementVersions??=[]).push("4.2.2");var G=[{id:"home",label:"HOME"},{id:"scores",label:"SCORES"},{id:"teams",label:"TEAMS"},{id:"players",label:"PLAYERS"},{id:"stats",label:"STATS"}],Q=class extends _{static properties={hass:{attribute:!1},_active:{state:!0}};static styles=z`
+    :host { display:block; color:var(--primary-text-color); font-family:var(--paper-font-body1_-_font-family,Roboto,sans-serif); }
+    * { box-sizing:border-box; }
+    .shell { overflow:hidden; border:1px solid var(--divider-color); border-radius:18px; background:#0b1019; color:#f4f6fb; box-shadow:0 12px 32px #0005; }
+    .hero { padding:22px 24px 18px; background:radial-gradient(ellipse at 85% 0%,#263b61 0,transparent 46%),linear-gradient(120deg,#111c2c,#090d15 75%); border-bottom:1px solid #ffffff14; }
+    .eyebrow { color:#f0b84b; font-size:10px; font-weight:800; letter-spacing:.22em; }
+    h1 { margin:7px 0 3px; font-size:clamp(23px,4vw,32px); line-height:1.1; letter-spacing:-.04em; font-weight:900; }
+    .subtitle { color:#9eabc0; font-size:12px; }
+    nav { display:flex; gap:5px; overflow-x:auto; padding:10px 12px; background:#0d1420; border-bottom:1px solid #ffffff12; }
+    button { border:0; border-radius:9px; background:transparent; color:#8794a9; padding:10px 13px; min-width:74px; cursor:pointer; font:inherit; font-size:10px; font-weight:700; letter-spacing:.08em; white-space:nowrap; }
+    button[aria-selected="true"] { background:#1b2b43; color:#f5c45e; box-shadow:inset 0 0 0 1px #d9a83d55; }
+    button:focus-visible { outline:2px solid #f5c45e; outline-offset:2px; }
+    main { padding:22px; min-height:230px; background:linear-gradient(180deg,#0b1019,#0c121d); }
+    .section-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; }
+    h2 { margin:0; font-size:18px; letter-spacing:-.02em; }
+    .pill { border:1px solid #2c3b52; border-radius:999px; color:#9eabc0; padding:5px 9px; font-size:10px; }
+    .empty { border:1px dashed #33445e; border-radius:14px; padding:22px; background:#101a29; }
+    .empty strong { display:block; margin-bottom:7px; color:#e9edf5; font-size:14px; }
+    .empty p { margin:0; color:#9eabc0; font-size:12px; line-height:1.6; max-width:620px; }
+    .skeletons { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-top:14px; }
+    .sk { height:54px; border-radius:10px; background:linear-gradient(100deg,#141f30,#1b2a40,#141f30); }
+    footer { display:flex; justify-content:space-between; gap:10px; padding:12px 22px; color:#738199; border-top:1px solid #ffffff12; font-size:10px; }
+    @media(max-width:520px) { .hero{padding:18px 16px 15px} main{padding:16px} nav{padding:8px} button{min-width:65px;padding:9px 10px} .skeletons{grid-template-columns:1fr 1fr} footer{padding:11px 16px} }
+  `;constructor(){super(),this._active="home",this._config={}}setConfig(t){this._config=t??{}}getCardSize(){return 6}_selectView(t){this._active=t}render(){let t=G.find(e=>e.id===this._active)??G[0];return J`
       <ha-card class="shell">
         <header class="hero">
           <div class="eyebrow">THE ASSOCIATION · HOME ASSISTANT</div>
@@ -71,40 +31,25 @@ class NBACenterCard extends HTMLElement {
           <div class="subtitle">Your league. Your teams. One center.</div>
         </header>
         <nav aria-label="NBA Center navigation">
-          ${VIEWS.map((view) => `<button type="button" data-view="${view.id}" aria-selected="${view.id === this._active}">${view.label}</button>`).join("")}
+          ${G.map(e=>J`
+            <button type="button" data-view=${e.id}
+              aria-selected=${e.id===this._active}
+              @click=${()=>this._selectView(e.id)}>${e.label}</button>
+          `)}
         </nav>
         <main>
           <div class="section-head">
-            <h2>${active.label}</h2>
+            <h2>${t.label}</h2>
             <span class="pill">NBA DARK</span>
           </div>
           <section class="empty">
-            <strong>${active.id === "home" ? "Welcome to your NBA Center" : `${active.label} is being prepared`}</strong>
-            <p>${active.id === "home" ? "Your NBA dashboard is ready for the next stage. Live scores, team information and player statistics will be connected through Home Assistant's backend." : "This section will be powered by the centralized NBA data coordinator. No external browser requests are made."}</p>
-            <div class="skeletons" aria-hidden="true"><div class="sk"></div><div class="sk"></div><div class="sk"></div></div>
+            <strong>${t.id==="home"?"Welcome to your NBA Center":`${t.label} is being prepared`}</strong>
+            <p>${t.id==="home"?"Your NBA dashboard is ready for the next stage. Live scores, team information and player statistics will be connected through Home Assistant's backend.":"This section will be powered by the centralized NBA data coordinator. No external browser requests are made."}</p>
+            <div class="skeletons" aria-hidden="true">
+              <div class="sk"></div><div class="sk"></div><div class="sk"></div>
+            </div>
           </section>
         </main>
-        <footer><span>NBA CENTER · ${active.label}</span><span>DATA VIA HOME ASSISTANT</span></footer>
-      </ha-card>`;
-    this.shadowRoot.querySelectorAll("button[data-view]").forEach((button) => {
-      button.addEventListener("click", () => {
-        this._active = button.dataset.view;
-        this._render();
-      });
-    });
-  }
-}
-
-if (!customElements.get("nba-center-card")) {
-  customElements.define("nba-center-card", NBACenterCard);
-}
-
-window.customCards = window.customCards || [];
-if (!window.customCards.some((card) => card.type === "nba-center-card")) {
-  window.customCards.push({
-    type: "nba-center-card",
-    name: "NBA Center",
-    description: "NBA Dark dashboard for Home Assistant",
-    preview: true,
-  });
-}
+        <footer><span>NBA CENTER · ${t.label}</span><span>DATA VIA HOME ASSISTANT</span></footer>
+      </ha-card>
+    `}};customElements.get("nba-center-card")||customElements.define("nba-center-card",Q);window.customCards=window.customCards??[];window.customCards.some(o=>o.type==="nba-center-card")||window.customCards.push({type:"nba-center-card",name:"NBA Center",description:"NBA Dark dashboard for Home Assistant",preview:!0});
