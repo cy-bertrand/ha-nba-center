@@ -25,6 +25,7 @@ const DEFAULT_ENTITIES = {
   steals: "sensor.nba_meilleurs_intercepteurs",
   blocks: "sensor.nba_meilleurs_contreurs",
 };
+const localDateISO = (date = new Date()) => `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`;
 const value = (v, fallback = "—") => v === null || v === undefined || v === "" ? fallback : String(v);
 const fmtDate = (v) => {
   if (!v) return "Date à confirmer";
@@ -140,7 +141,7 @@ class NBACenterCard extends LitElement {
     this._active = "home";
     this._filter = "all";
     this._search = "";
-    this._selectedDate = new Date().toLocaleDateString("en-CA");
+    this._selectedDate = localDateISO();
     this._calendarGames = []; this._calendarLoading = false; this._calendarError = "";
     this._overlayGame = null; this._overlayDetails = null;
     this._overlayLoading = false; this._overlayError = "";
