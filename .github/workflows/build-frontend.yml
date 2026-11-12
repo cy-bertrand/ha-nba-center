@@ -42,6 +42,7 @@ jobs:
         run: |
           npm install --package-lock-only --no-audit --no-fund
           npm ci --no-audit --no-fund
+          npm ls lit esbuild
           node --check frontend/src/nba-center-card.js
           npm ls lit esbuild
           npm run build
