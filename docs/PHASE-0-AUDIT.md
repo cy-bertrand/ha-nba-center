@@ -327,3 +327,52 @@ Références Home Assistant :
 - Valider le contrat WebSocket et l'enregistrement de la ressource Lovelace sur les versions Home Assistant prises en charge.
 - Ajouter une suite de tests fixtures et lancer les tests d'intégration.
 - Confirmer la licence GPL-3.0 du dépôt cible.
+
+
+## 17. Vérification supplémentaire des réponses ESPN et compatibilité Home Assistant
+
+### Capture JSON réellement consultée : roster
+
+Une réponse JSON ESPN a pu être ouverte directement pour :
+`https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams/2/roster`
+
+La réponse consultée est datée du **1er mai 2026** (elle ne constitue donc pas une photographie de l'effectif au 12 novembre 2026). Elle confirme notamment :
+- `athletes[]` est bien un tableau plat ;
+- chaque joueur expose `id`, `firstName`, `lastName`, `fullName`, `displayName`, `height`, `weight`, `age`, `dateOfBirth`, `jersey`, `position`, `headshot.href`, `experience.years`, `status`, `injuries[]` ;
+- les informations d'équipe peuvent apparaître sous `teams[]` sous forme de références ESPN, pas nécessairement comme un objet équipe directement exploitable ;
+- les liens ESPN du joueur proposent des relations playercard, stats, splits, gamelog, bio et overview ;
+- des champs comme `contracts` sont présents dans cette réponse, mais ne doivent pas être récupérés ni exposés par NBA Center sans besoin explicite.
+
+Cela permet de confirmer la forme générale du roster et les champs de profil de base. La réponse étant datée, le roster ne doit pas être utilisé comme effectif actuel sans rechargement.
+
+### Limites d'accès aux autres routes ESPN
+
+Les tentatives d'ouverture directe du scoreboard à date, du summary d'un événement, du profil joueur, des stats et du gamelog ont échoué dans l'outil de consultation. Ce résultat indique une limite d'accès de cet outil, et **ne prouve pas que les routes ESPN sont indisponibles**. Le résumé d'un match et les endpoints joueurs doivent donc rester des hypothèses à valider par une exécution HTTP depuis Home Assistant.
+
+### Ressources JavaScript : décision prudente
+
+La documentation actuelle Home Assistant confirme que :
+- `async_register_static_paths([StaticPathConfig(...)])` est la méthode asynchrone prévue pour servir les fichiers statiques ; l'ancienne méthode synchrone est dépréciée et a été retirée en 2025.7 ;
+- les ressources Lovelace sont des modules JavaScript ;
+- en mode YAML, la ressource doit être ajoutée explicitement dans `lovelace.resources` ;
+- les commandes WebSocket d'intégration se déclarent avec `@websocket_api.websocket_command`, s'enregistrent via `websocket_api.async_register_command`, et les appels asynchrones utilisent `@websocket_api.async_response` ;
+- le frontend peut appeler ces commandes avec `hass.callWS()` ou `hass.connection.sendMessagePromise()`.
+
+**Décision de compatibilité proposée :** augmenter la version minimale Home Assistant du nouveau dépôt à **2024.6.0** au minimum pour utiliser `async_register_static_paths` sans retomber sur une API statique dépréciée. À confirmer au moment de l'implémentation et selon les dépendances réelles.
+
+**Décision d'enregistrement Lovelace :**
+- servir le bundle depuis un chemin propre à l'intégration, par exemple `/nba-center/nba-center-card.js` ;
+- prendre en charge le mode YAML avec une instruction de ressource manuelle documentée ;
+- en mode stockage, l'auto-enregistrement pourra être étudié, mais il repose sur des API Lovelace internes non garanties comme stables. Ne pas le promettre comme comportement garanti sans test sur plusieurs versions de Home Assistant.
+- éviter de modifier automatiquement le dashboard de l'utilisateur.
+
+### Références officielles Home Assistant
+
+- WebSocket API custom commands : https://developers.home-assistant.io/docs/frontend/extending/websocket-api
+- WebSocket API contributor docs : https://contributors.home-assistant.io/frontend/extending/websocket-api/
+- Register resources : https://contributors.home-assistant.io/frontend/custom-ui/resources/
+- async_register_static_paths : https://contributors.home-assistant.io/blog/2024/06/18/async_register_static_paths/
+
+## 18. Licence
+
+L'utilisateur a confirmé le **12 novembre 2026** que le dépôt `ha-nba-center` doit conserver la licence **GNU GPL-3.0**. Le fichier `LICENSE` existant est donc conservé. Cette décision concerne le nouveau dépôt ; le dépôt source `ha-nba` n'est pas modifié.
