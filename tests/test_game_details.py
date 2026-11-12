@@ -69,6 +69,19 @@ class BoxscoreParsingTests(unittest.TestCase):
         self.assertEqual(plays[0]["home_score"], "98")
         self.assertFalse(plays[1]["scoring"])
 
+
+    def test_play_parser_tolerates_scalar_nested_fields(self):
+        plays = parse_plays({"plays": [
+            {"id": 9, "period": 3, "clock": "00:12", "type": "Timeout", "team": "2"},
+            None,
+            "invalid",
+        ]})
+        self.assertEqual(len(plays), 1)
+        self.assertEqual(plays[0]["period"], "3")
+        self.assertEqual(plays[0]["clock"], "00:12")
+        self.assertEqual(plays[0]["type"], "Timeout")
+        self.assertIsNone(plays[0]["team_id"])
+
     def test_missing_plays_is_empty(self):
         self.assertEqual(parse_plays({}), [])
 
