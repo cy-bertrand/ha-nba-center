@@ -1,68 +1,56 @@
 # Phase 1 — Foundation NBA Center
 
 **Branche :** `phase-1-foundation`  
-**Statut :** en cours — carte Lit et bundle livrés ; validation Home Assistant réelle restante
+**Statut :** en cours — carte Lit interactive livrée ; validation sur Home Assistant réel restante
 
-## Objectif
+## Réalisé
 
-Mettre en place la distribution de la ressource frontend par l'intégration Home Assistant et créer le shell visuel NBA Dark avec les cinq espaces de navigation.
+- Enregistrement idempotent de la ressource JavaScript par Home Assistant.
+- Compatibilité minimale alignée sur Home Assistant 2024.7 (API `StaticPathConfig` et `async_register_static_paths`).
+- Bundle Lit autonome généré avec esbuild et livré dans `custom_components/nba/www/`.
+- Interface NBA Dark responsive avec cinq vues.
+- Consommation des entités et attributs Home Assistant existants : scoreboard, classements, leaders et capteurs des équipes favorites.
+- Filtres de scores par état et recherche textuelle par équipe.
+- Fiches des équipes favorites et tableaux de classements.
+- Validation de la configuration YAML et surcharge facultative des entity_id.
+- Aucun appel ESPN depuis le navigateur ; les données restent centralisées dans le coordinateur Python.
+- Documentation d'installation et de configuration.
 
-## Réalisé dans ce premier incrément
+## Fonctionnalités présentes par vue
 
-- Création de `custom_components/nba/frontend.py`.
-- Enregistrement du fichier statique via `hass.http.async_register_static_paths` et `StaticPathConfig`.
-- Enregistrement de la ressource pendant le setup de l'intégration, sans bloquer les capteurs historiques si l'enregistrement échoue.
-- Ajout de `http` et `lovelace` dans `after_dependencies`.
-- Création du shell de secours `custom_components/nba/www/nba-center-card.js` et de la source Lit `frontend/src/nba-center-card.js`.
-- Ajout de `package.json`, `build.mjs` et d'un workflow GitHub Actions pour construire et committer le bundle Lit.
-- Déclaration du custom element `nba-center-card`.
-- Structure visuelle NBA Dark, responsive et cinq onglets : HOME, SCORES, TEAMS, PLAYERS, STATS.
-- Navigation locale, styles dans le shadow DOM et annonce dans `window.customCards`.
-- Documentation de l'installation en mode YAML et stockage dans `docs/FRONTEND-INSTALLATION.md`.
+- **HOME** : matchs live, prochaines rencontres, équipes favorites, leader points.
+- **SCORES** : scoreboard disponible, filtres Tous / Live / À venir / Terminés, recherche équipe.
+- **TEAMS** : équipe favorite, dernier match, prochain match.
+- **PLAYERS** : cinq catégories de leaders existantes.
+- **STATS** : classements Est/Ouest et leaders par catégorie.
 
-## Limites explicites
+## Limites connues
 
-- La source du composant Lit est maintenant présente dans `frontend/src/nba-center-card.js`, avec dépendances épinglées dans `package.json` et build esbuild dans `build.mjs`.
-- Le workflow GitHub Actions a construit et committé le bundle Lit autonome dans `custom_components/nba/www/nba-center-card.js`.
-- Les onglets contiennent des états d'attente : aucune donnée NBA n'est encore branchée.
-- La ressource doit être ajoutée une fois dans les ressources Lovelace par l'utilisateur ; l'intégration ne modifie pas automatiquement son dashboard.
-- La carte n'a pas encore été installée ni exécutée dans une instance Home Assistant réelle.
-- Le build Lit et les contrôles statiques du bundle passent dans GitHub Actions ; aucun test d'intégration Home Assistant n'a encore été exécuté.
+- Le scoreboard actuel ne propose pas de sélection de date ; cela relève de Phase 2.
+- Les données joueurs se limitent aux leaders actuels ; les profils et comparaisons relèvent de Phase 5.
+- Les box scores complets et les détails de match relèvent de Phase 3.
+- La carte n'a pas encore été testée dans une instance Home Assistant réelle.
+- Aucun test navigateur / Playwright ni test d'intégration Home Assistant n'a été exécuté.
+- Les anciens dashboards Lovelace restent inchangés et doivent être conservés pendant la validation.
 
-## Contrôles automatisés exécutés
+## CI et contrôles
 
-Workflow GitHub Actions : [run 43302534529](https://github.com/cy-bertrand/ha-nba-center/actions/runs/43302534529) — **succès**.
+Le workflow GitHub Actions exécute :
+- `python -m compileall -q custom_components/nba`
+- `npm ci`
+- `npm run build`
+- `npm test` (bundle Lit, cinq vues, contrôles des fonctionnalités et absence d'appels ESPN dans le frontend).
 
-- `python -m compileall -q custom_components/nba` : réussi.
-- `npm ci`, `npm run build` : réussis.
-- `npm test` : réussi (présence du custom element et des métadonnées Lovelace, Lit embarqué, aucune dépendance Lit externe, aucun endpoint ESPN dans le bundle).
+Les résultats sont consultables dans l'onglet Actions du dépôt. Les tests statiques ne remplacent pas le test en instance HA.
 
-Ces contrôles sont statiques. Ils ne remplacent pas un démarrage réel de Home Assistant ni un test navigateur.
+## Installation
 
-## Contrôles à exécuter
+Voir `docs/FRONTEND-INSTALLATION.md`.
 
-1. Vérifier le chargement Python de l'intégration avec la nouvelle fonction frontend.
-2. Vérifier l'accès HTTP à `/nba-center/nba-center-card.js`.
-3. Vérifier la détection de `custom:nba-center-card` et l'affichage des cinq onglets.
-4. Vérifier mode YAML et mode stockage.
-5. Vérifier le rendu mobile, desktop et le thème sombre.
-6. Vérifier que les capteurs, le service `nba.get_game_details`, le blueprint et les événements existants fonctionnent sans changement.
-7. Installer la ressource et vérifier la carte dans une instance HA réelle.
+## Critères de sortie
 
-## Critères de sortie Phase 1
-
-- Bundle Lit construit, autonome et livré dans le répertoire statique.
-- Ressource Lovelace installable et stable.
-- Cinq onglets opérationnels avec gestion d'état, chargement, erreur et vide.
-- Tests frontend et tests Home Assistant exécutés.
-- Aucun changement de comportement des fonctionnalités historiques.
-- Documentation et compte rendu mis à jour, puis validation utilisateur.
-
-## Fichiers touchés
-
-- `custom_components/nba/__init__.py`
-- `custom_components/nba/manifest.json`
-- `custom_components/nba/frontend.py`
-- `custom_components/nba/www/nba-center-card.js`
-- `docs/FRONTEND-INSTALLATION.md`
-
+- Installation et chargement de la ressource confirmés dans Home Assistant 2024.7+.
+- Les cinq vues affichent les données de l'intégration sans entités mal associées.
+- Vérification desktop et mobile.
+- Capteurs, service `nba.get_game_details`, événements et blueprint historiques non régressés.
+- Rapport final, puis validation explicite de l'utilisateur avant Phase 2.
