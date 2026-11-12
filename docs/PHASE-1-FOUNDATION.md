@@ -29,7 +29,7 @@ Mettre en place la distribution de la ressource frontend par l'intégration Home
 - La carte n'a pas encore été installée ni exécutée dans une instance Home Assistant réelle.
 - Le build Lit et les contrôles statiques du bundle passent dans GitHub Actions ; aucun test d'intégration Home Assistant n'a encore été exécuté.
 
-## Contrôles à exécuter
+## Contrôles automatisés exécutés\n\nWorkflow GitHub Actions : [run 43302534529](https://github.com/cy-bertrand/ha-nba-center/actions/runs/43302534529) — **succès**.\n\n- `python -m compileall -q custom_components/nba` : réussi.\n- `npm ci`, `npm run build` : réussis.\n- `npm test` : réussi (présence du custom element et des métadonnées Lovelace, Lit embarqué, aucune dépendance Lit externe, aucun endpoint ESPN dans le bundle).\n\nCes contrôles sont statiques. Ils ne remplacent pas un démarrage réel de Home Assistant ni un test navigateur.\n\n## Contrôles à exécuter
 
 1. Vérifier le chargement Python de l'intégration avec la nouvelle fonction frontend.
 2. Vérifier l'accès HTTP à `/nba-center/nba-center-card.js`.
