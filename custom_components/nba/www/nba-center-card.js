@@ -241,8 +241,8 @@ var k=globalThis,z=k.ShadowRoot&&(k.ShadyCSS===void 0||k.ShadyCSS.nativeShadow)&
               <div class="boxscore-section"><div class="section-kicker">FULL GAME BREAKDOWN</div><h3>BOX SCORE · JOUEURS</h3>
                 <div class="boxscore-grid">${(this._overlayDetails.player_stats??[]).map(e=>this._boxscorePanel(e))}</div>
                 ${this._teamStatsPanel()}
-                ${this._playByPlayPanel()}
               </div>`:""}
+            ${this._playByPlayPanel()}
             ${!this._overlayLoading&&!this._overlayError&&!this._overlayDetails?.error&&!this._overlayDetails?.teams?.length&&!this._overlayDetails?.has_boxscore?o`<section class="empty"><p>Le résumé détaillé n’est pas encore disponible pour cette rencontre.</p></section>`:""}            </div></section></div>`:""}
         <footer class="footer"><span>NBA CENTER · ${t.label}</span><span>DATA VIA HOME ASSISTANT</span></footer>
       </ha-card>`}static getStubConfig(){return{title:"NBA CENTER",subtitle:"Your league. Your teams. One center."}}};customElements.get("nba-center-card")||customElements.define("nba-center-card",et);window.customCards=window.customCards??[];window.customCards.some(r=>r.type==="nba-center-card")||window.customCards.push({type:"nba-center-card",name:"NBA Center",description:"NBA Dark dashboard \u2014 scores, teams, players and stats",preview:!0});
