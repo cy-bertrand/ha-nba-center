@@ -1,5 +1,6 @@
 """Tests unitaires des règles de calendrier NBA (sans réseau ni Home Assistant)."""
 import importlib.util
+import asyncio
 import unittest
 from pathlib import Path
 from datetime import date, datetime, timedelta, timezone
@@ -16,6 +17,7 @@ parse_score = scoreboard_utils.parse_score
 validate_local_date = scoreboard_utils.validate_local_date
 event_local_date = scoreboard_utils.event_local_date
 filter_games_for_local_date = scoreboard_utils.filter_games_for_local_date
+async_load_scoreboard = scoreboard_utils.async_load_scoreboard
 
 
 class ValidateDateTests(unittest.TestCase):
@@ -98,6 +100,75 @@ class CalendarFilteringTests(unittest.TestCase):
             {"date": "2026-11-13T01:00:00+01:00"},
         ]
         self.assertEqual(filter_games_for_local_date(games, self.selected, self.brussels), [])
+
+
+
+class CalendarCoordinatorFlowTests(unittest.IsolatedAsyncioTestCase):
+    def setUp(self):
+        self.now = datetime(2026, 11, 12, 20, 0, tzinfo=timezone.utc)
+        self.cache = {}
+        self.lock = asyncio.Lock()
+        self.brussels = ZoneInfo("Europe/Brussels")
+        self.calls = []
+
+    async def fetch(self, day):
+        self.calls.append(day)
+        return {"events": []}
+
+    @staticmethod
+    def parse_event(event):
+        return event
+
+    async def load(self, fetch=None):
+        class TestUpdateFailed(Exception):
+            pass
+        return await async_load_scoreboard(
+            "2026-11-13",
+            now_factory=lambda: self.now,
+            local_timezone=self.brussels,
+            fetch_scoreboard=fetch or self.fetch,
+            parse_event=self.parse_event,
+            cache=self.cache,
+            lock=self.lock,
+            update_failed=TestUpdateFailed,
+        )
+
+    async def test_requests_previous_and_current_espn_dates(self):
+        result = await self.load()
+        self.assertEqual(self.calls, ["20261112", "20261113"])
+        self.assertEqual(result["date"], "2026-11-13")
+        self.assertFalse(result["stale"])
+
+    async def test_partial_failure_without_cache_raises_instead_of_partial_results(self):
+        async def failing_fetch(day):
+            if day == "20261112":
+                raise RuntimeError("ESPN timeout")
+            return {"events": []}
+        with self.assertRaisesRegex(Exception, "ESPN timeout"):
+            await self.load(failing_fetch)
+
+    async def test_failure_with_cache_returns_marked_stale_payload(self):
+        old_payload = {"date": "2026-11-13", "stale": False, "games": []}
+        self.cache["2026-11-13"] = (self.now - timedelta(seconds=200), old_payload)
+
+        async def failing_fetch(day):
+            if day == "20261112":
+                raise RuntimeError("ESPN unavailable")
+            return {"events": []}
+        result = await self.load(failing_fetch)
+        self.assertTrue(result["stale"])
+        self.assertIn("ESPN unavailable", result["error"])
+        self.assertFalse(old_payload["stale"])
+
+    async def test_concurrent_requests_share_one_fetch_pair(self):
+        results = await asyncio.gather(self.load(), self.load())
+        self.assertEqual(len(self.calls), 2)
+        self.assertEqual(results[0], results[1])
+
+    async def test_cache_prunes_entries_older_than_one_day(self):
+        self.cache["2026-11-01"] = (self.now - timedelta(days=2), {"games": []})
+        await self.load()
+        self.assertNotIn("2026-11-01", self.cache)
 
 
 class CalendarCacheTests(unittest.TestCase):

@@ -12,7 +12,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .scoreboard_utils import filter_games_for_local_date, is_cache_fresh, parse_score, validate_local_date
+from .scoreboard_utils import async_load_scoreboard, parse_score
 
 from .const import (
     CONF_NOTIFY_END,
@@ -318,70 +318,18 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
 
     async def async_get_scoreboard_for_local_date(self, local_date: str) -> dict[str, Any]:
-        """Return games for a calendar day in the Home Assistant timezone.
-
-        ESPN indexes games by US calendar date. Query the previous and current
-        ESPN dates, then filter after converting each event to HA local time.
-        """
-        selected = validate_local_date(local_date)
-
-        key = selected.isoformat()
-        now = dt_util.utcnow()
-        cached = self._scoreboard_cache.get(key)
-        if cached:
-            fetched_at, payload = cached
-            if is_cache_fresh(now, fetched_at, payload["games"]):
-                return payload
-
-        async with self._scoreboard_lock:
-            now = dt_util.utcnow()
-            cached = self._scoreboard_cache.get(key)
-            if cached:
-                fetched_at, payload = cached
-                if is_cache_fresh(now, fetched_at, payload["games"]):
-                    return payload
-
-            timezone = dt_util.now().tzinfo
-            source_dates = (selected - timedelta(days=1), selected)
-            results = await asyncio.gather(
-                *(self._get(SCOREBOARD_URL, params={"dates": source_day.strftime("%Y%m%d")})
-                  for source_day in source_dates),
-                return_exceptions=True,
-            )
-            successful = [result for result in results if isinstance(result, dict)]
-            failures = [result for result in results if isinstance(result, Exception)]
-            if failures:
-                cached = self._scoreboard_cache.get(key)
-                if cached:
-                    payload = dict(cached[1])
-                    payload["stale"] = True
-                    payload["error"] = "; ".join(str(err) for err in failures)
-                    return payload
-                errors = "; ".join(str(result) for result in failures)
-                raise UpdateFailed(f"Calendrier ESPN incomplet : {errors}")
-            if not successful:
-                raise UpdateFailed("Impossible de charger le calendrier ESPN.")
-
-            parsed_games = [
-                game
-                for raw in successful
-                for event in raw.get("events", [])
-                if (game := self._parse_game(event)) is not None
-            ]
-            games = filter_games_for_local_date(parsed_games, selected, timezone)
-
-            payload = {
-                "date": key,
-                "timezone": str(timezone),
-                "updated_at": now.isoformat(),
-                "stale": False,
-                "games": games,
-            }
-            self._scoreboard_cache[key] = (now, payload)
-            for old_key, (fetched, _) in list(self._scoreboard_cache.items()):
-                if (now - fetched).total_seconds() > 86400:
-                    self._scoreboard_cache.pop(old_key, None)
-            return payload
+        """Return games for a calendar day in the Home Assistant timezone."""
+        timezone = dt_util.now().tzinfo
+        return await async_load_scoreboard(
+            local_date,
+            now_factory=dt_util.utcnow,
+            local_timezone=timezone,
+            fetch_scoreboard=lambda day: self._get(SCOREBOARD_URL, params={"dates": day}),
+            parse_event=self._parse_game,
+            cache=self._scoreboard_cache,
+            lock=self._scoreboard_lock,
+            update_failed=UpdateFailed,
+        )
 
     async def async_get_game_details(self, game_id: str) -> dict[str, Any]:
         """Charge les détails d'un match (quart-temps, meilleurs joueurs).
