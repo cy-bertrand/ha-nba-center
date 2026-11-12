@@ -13,7 +13,8 @@ Mettre en place la distribution de la ressource frontend par l'intégration Home
 - Enregistrement du fichier statique via `hass.http.async_register_static_paths` et `StaticPathConfig`.
 - Enregistrement de la ressource pendant le setup de l'intégration, sans bloquer les capteurs historiques si l'enregistrement échoue.
 - Ajout de `http` et `lovelace` dans `after_dependencies`.
-- Création de `custom_components/nba/www/nba-center-card.js`.
+- Création du shell de secours `custom_components/nba/www/nba-center-card.js` et de la source Lit `frontend/src/nba-center-card.js`.
+- Ajout de `package.json`, `build.mjs` et d'un workflow GitHub Actions pour construire et committer le bundle Lit.
 - Déclaration du custom element `nba-center-card`.
 - Structure visuelle NBA Dark, responsive et cinq onglets : HOME, SCORES, TEAMS, PLAYERS, STATS.
 - Navigation locale, styles dans le shadow DOM et annonce dans `window.customCards`.
@@ -21,7 +22,8 @@ Mettre en place la distribution de la ressource frontend par l'intégration Home
 
 ## Limites explicites
 
-- Le composant livré est pour l'instant un Web Component natif. Il **n'est pas encore le composant Lit demandé**. Le bundling Lit et la chaîne de build sont le prochain jalon de cette phase.
+- La source du composant Lit est maintenant présente dans `frontend/src/nba-center-card.js`, avec dépendances épinglées dans `package.json` et build esbuild dans `build.mjs`.
+- Le fichier actuellement servi par Home Assistant reste le shell natif tant que le workflow GitHub Actions n'a pas réussi à produire et committer le bundle Lit. La livraison Lit n'est donc pas encore déclarée terminée.
 - Les onglets contiennent des états d'attente : aucune donnée NBA n'est encore branchée.
 - La ressource doit être ajoutée une fois dans les ressources Lovelace par l'utilisateur ; l'intégration ne modifie pas automatiquement son dashboard.
 - Le shell n'a pas encore été exécuté dans un Home Assistant réel.
