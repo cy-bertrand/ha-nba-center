@@ -1,56 +1,79 @@
-"""Normalisation pure des box scores ESPN NBA."""
+"""Normalisation pure des box scores et actions ESPN NBA."""
 from __future__ import annotations
 
 from typing import Any
 
 
 def _text(value: Any) -> str | None:
-    if value is None:
-        return None
-    return str(value)
+    return None if value is None else str(value)
 
+
+def _mapping(value: Any) -> dict[str, Any]:
+    return value if isinstance(value, dict) else {}
+
+
+def _coordinate(value: Any) -> dict[str, float] | None:
+    coordinate = _mapping(value)
+    x, y = coordinate.get("x"), coordinate.get("y")
+    # ESPN uses large negative sentinels when no shot location exists.
+    if not isinstance(x, (int, float)) or not isinstance(y, (int, float)):
+        return None
+    if abs(x) > 10000 or abs(y) > 10000:
+        return None
+    return {"x": x, "y": y}
 
 
 def parse_plays(raw: dict[str, Any]) -> list[dict[str, Any]]:
-    """Normalise les actions du match depuis summary.plays, sans extrapolation."""
+    """Normalise summary.plays while retaining useful event context."""
     plays: list[dict[str, Any]] = []
     for item in raw.get("plays") or []:
         if not isinstance(item, dict):
             continue
-        period = item.get("period")
-        period = period if isinstance(period, dict) else {}
-        clock = item.get("clock")
-        clock = clock if isinstance(clock, dict) else {}
-        play_type = item.get("type")
-        team = item.get("team")
-        team = team if isinstance(team, dict) else {}
+        period = _mapping(item.get("period"))
+        clock = _mapping(item.get("clock"))
+        play_type = _mapping(item.get("type"))
+        team = _mapping(item.get("team"))
+        participants = []
+        for participant in item.get("participants") or []:
+            athlete = _mapping(_mapping(participant).get("athlete"))
+            athlete_id = _text(athlete.get("id"))
+            if athlete_id:
+                participants.append(athlete_id)
         plays.append({
             "id": _text(item.get("id")),
+            "sequence_number": _text(item.get("sequenceNumber")),
             "text": item.get("text") or item.get("shortText"),
+            "short_description": item.get("shortDescription"),
             "period": _text(period.get("number", item.get("periodNumber", item.get("period")))),
+            "period_display": period.get("displayValue"),
             "clock": clock.get("displayValue") or clock.get("value") or _text(item.get("clock")),
-            "type": (play_type.get("text") or play_type.get("description")) if isinstance(play_type, dict) else _text(play_type),
+            "type": play_type.get("text") or play_type.get("description") or _text(item.get("type")),
             "team_id": _text(team.get("id")),
             "score_value": _text(item.get("scoreValue")),
             "home_score": _text(item.get("homeScore")),
             "away_score": _text(item.get("awayScore")),
             "scoring": bool(item.get("scoringPlay", False)),
             "shooting": bool(item.get("shootingPlay", False)),
+            "participants": participants,
+            "wallclock": item.get("wallclock"),
+            "points_attempted": _text(item.get("pointsAttempted")),
+            "coordinate": _coordinate(item.get("coordinate")),
         })
     return plays
 
 
 def parse_boxscore(raw: dict[str, Any]) -> dict[str, Any]:
-    """Normalise les statistiques d'équipe et les lignes individuelles ESPN.
+    """Normalise team and player statistics without inventing missing values.
 
-    ESPN expose boxscore.players comme un tableau par équipe ; chaque bloc
-    statistics contient les en-têtes names et les lignes athletes associées.
-    Les valeurs restent des chaînes (ex. 8-14, 35:42) pour ne rien déduire.
+    ESPN's names/labels are display headers; keys are stable technical stat IDs.
+    The legacy stats map remains keyed by display header for UI compatibility.
     """
-    boxscore = raw.get("boxscore") or {}
+    boxscore = _mapping(raw.get("boxscore"))
     teams: dict[str, dict[str, Any]] = {}
     for block in boxscore.get("teams") or []:
-        team = block.get("team") or {}
+        if not isinstance(block, dict):
+            continue
+        team = _mapping(block.get("team"))
         team_id = _text(team.get("id"))
         if not team_id:
             continue
@@ -65,49 +88,82 @@ def parse_boxscore(raw: dict[str, Any]) -> dict[str, Any]:
                     "value": _text(stat.get("displayValue", stat.get("value"))),
                 }
                 for stat in block.get("statistics") or []
-                if stat.get("name") and stat.get("displayValue", stat.get("value")) is not None
+                if isinstance(stat, dict) and stat.get("name")
+                and stat.get("displayValue", stat.get("value")) is not None
             ],
         }
 
     player_blocks: list[dict[str, Any]] = []
     for block in boxscore.get("players") or []:
-        team = block.get("team") or {}
+        if not isinstance(block, dict):
+            continue
+        team = _mapping(block.get("team"))
         team_id = _text(team.get("id"))
         if not team_id:
             continue
         team_meta = teams.get(team_id, {})
         rows: list[dict[str, Any]] = []
+        totals: list[dict[str, Any]] = []
         for group in block.get("statistics") or []:
+            if not isinstance(group, dict):
+                continue
             names = group.get("names") or group.get("labels") or []
+            keys = group.get("keys") or names
+            labels = group.get("labels") or names
+            descriptions = group.get("descriptions") or []
             for athlete_row in group.get("athletes") or []:
-                athlete = athlete_row.get("athlete") or {}
+                if not isinstance(athlete_row, dict):
+                    continue
+                athlete = _mapping(athlete_row.get("athlete"))
                 values = athlete_row.get("stats") or []
+                count = max(len(names), len(keys), len(values))
                 stats = {
-                    str(name): _text(values[index]) if index < len(values) else None
-                    for index, name in enumerate(names)
+                    str(names[i]): _text(values[i]) if i < len(values) else None
+                    for i in range(len(names))
                 }
+                stats_by_key = {
+                    str(keys[i]): _text(values[i]) if i < len(values) else None
+                    for i in range(len(keys))
+                }
+                stat_labels = {
+                    str(keys[i]): {
+                        "label": _text(labels[i]) if i < len(labels) else str(names[i] if i < len(names) else keys[i]),
+                        "description": _text(descriptions[i]) if i < len(descriptions) else None,
+                    }
+                    for i in range(count) if i < len(keys)
+                }
+                position = _mapping(athlete.get("position"))
+                headshot = athlete.get("headshot")
                 rows.append({
                     "id": _text(athlete.get("id")),
                     "name": athlete.get("displayName") or athlete.get("fullName"),
                     "short_name": athlete.get("shortName"),
                     "jersey": athlete.get("jersey"),
-                    "position": (athlete_row.get("athlete") or {}).get("position", {}).get("abbreviation")
-                        if isinstance((athlete_row.get("athlete") or {}).get("position"), dict)
-                        else athlete_row.get("position"),
-                    "headshot": (athlete.get("headshot") or {}).get("href")
-                        if isinstance(athlete.get("headshot"), dict) else athlete.get("headshot"),
+                    "position": position.get("abbreviation") or athlete_row.get("position"),
+                    "headshot": _mapping(headshot).get("href") if isinstance(headshot, dict) else headshot,
                     "starter": athlete_row.get("starter"),
                     "active": athlete_row.get("active"),
                     "did_not_play": athlete_row.get("didNotPlay", athlete_row.get("did_not_play")),
                     "ejected": athlete_row.get("ejected"),
                     "reason": athlete_row.get("reason"),
                     "stats": stats,
+                    "stats_by_key": stats_by_key,
+                    "stat_labels": stat_labels,
                 })
+            total_values = group.get("totals") or []
+            if total_values:
+                totals = [
+                    {"key": _text(keys[i]) if i < len(keys) else None,
+                     "label": _text(labels[i]) if i < len(labels) else (_text(names[i]) if i < len(names) else None),
+                     "value": _text(total_values[i])}
+                    for i in range(len(total_values))
+                ]
         player_blocks.append({
             "team_id": team_id,
             "team": team_meta.get("name") or team.get("displayName"),
             "abbr": team_meta.get("abbr") or team.get("abbreviation"),
             "players": rows,
+            "totals": totals,
         })
 
     return {
