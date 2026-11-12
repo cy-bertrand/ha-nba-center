@@ -24,7 +24,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Set up Python\n        uses: actions/setup-python@v5\n        with:\n          python-version: '3.13'\n      - name: Validate Python syntax\n        run: python -m compileall -q custom_components/nba\n      - name: Build bundled Lit card
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Validate Python syntax
+        run: python -m compileall -q custom_components/nba
+      - name: Build bundled Lit card
         run: |
           npm install --package-lock-only --no-audit --no-fund
           npm ci --no-audit --no-fund
