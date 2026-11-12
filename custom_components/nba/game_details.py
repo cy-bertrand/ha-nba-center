@@ -10,6 +10,33 @@ def _text(value: Any) -> str | None:
     return str(value)
 
 
+
+def parse_plays(raw: dict[str, Any]) -> list[dict[str, Any]]:
+    """Normalise les actions du match depuis summary.plays, sans extrapolation."""
+    plays: list[dict[str, Any]] = []
+    for item in raw.get("plays") or []:
+        if not isinstance(item, dict):
+            continue
+        period = item.get("period") or {}
+        clock = item.get("clock") or {}
+        play_type = item.get("type") or {}
+        team = item.get("team") or {}
+        plays.append({
+            "id": _text(item.get("id")),
+            "text": item.get("text") or item.get("shortText"),
+            "period": _text(period.get("number", item.get("periodNumber"))),
+            "clock": clock.get("displayValue") or clock.get("value") or _text(item.get("clock")),
+            "type": play_type.get("text") or play_type.get("description") if isinstance(play_type, dict) else _text(play_type),
+            "team_id": _text(team.get("id")),
+            "score_value": _text(item.get("scoreValue")),
+            "home_score": _text(item.get("homeScore")),
+            "away_score": _text(item.get("awayScore")),
+            "scoring": bool(item.get("scoringPlay", False)),
+            "shooting": bool(item.get("shootingPlay", False)),
+        })
+    return plays
+
+
 def parse_boxscore(raw: dict[str, Any]) -> dict[str, Any]:
     """Normalise les statistiques d'équipe et les lignes individuelles ESPN.
 

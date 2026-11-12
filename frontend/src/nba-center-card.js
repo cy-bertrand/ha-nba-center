@@ -54,6 +54,7 @@ class NBACenterCard extends LitElement {
     _calendarLoading: { state: true }, _calendarError: { state: true }, _calendarStale: { state: true },
     _overlayGame: { state: true }, _overlayDetails: { state: true },
     _overlayLoading: { state: true }, _overlayError: { state: true },
+    _showAllPlays: { state: true }, _scoringOnly: { state: true },
   };
 
   static styles = css`
@@ -141,7 +142,15 @@ class NBACenterCard extends LitElement {
     .overlay-score{font-size:24px;font-weight:950;color:#f2c45f}.overlay-close{min-width:38px;padding:8px;border:1px solid #34465f}
     .top-player{padding:12px 0;border-top:1px solid #ffffff12}.top-player strong{display:block;font-size:12px}.top-player small{color:#aab6ca}
     .boxscore-section{margin-top:22px}.section-kicker{color:#e8b74e;font-size:9px;font-weight:900;letter-spacing:.2em;margin-bottom:5px}.boxscore-section>h3{margin:0 0 12px}
-    .boxscore-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.boxscore-panel{padding:10px;min-width:0}.player-table-wrap{overflow-x:auto;max-width:100%}.player-table{width:100%;border-collapse:collapse;font-size:10px;white-space:nowrap}.player-table th,.player-table td{padding:8px 6px;text-align:right;border-bottom:1px solid #ffffff10;font-variant-numeric:tabular-nums}.player-table th:first-child,.player-table td:first-child{text-align:left;position:sticky;left:0;background:#111d2c}.player-table th{color:#94a5bc;font-size:8px;letter-spacing:.08em}.player-table tr.starter td{background-color:#17263a}.player-table tr.dnp td{color:#75849a}.player-cell{display:flex;align-items:center;gap:6px;min-width:112px;white-space:normal}.player-cell img{width:25px;height:25px;object-fit:contain;border-radius:50%}.player-cell small{display:block;color:#91a0b5;font-size:8px;margin-top:2px}.team-stats-panel{margin-top:12px}.team-stats-panel table{width:100%;border-collapse:collapse;font-size:10px}.team-stats-panel th,.team-stats-panel td{padding:8px;text-align:right;border-bottom:1px solid #ffffff10}.team-stats-panel th:first-child,.team-stats-panel td:first-child{text-align:left;color:#aab6ca}
+    .boxscore-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.boxscore-panel{padding:10px;min-width:0}.player-table-wrap{overflow-x:auto;max-width:100%}.player-table{width:100%;border-collapse:collapse;font-size:10px;white-space:nowrap}.player-table th,.player-table td{padding:8px 6px;text-align:right;border-bottom:1px solid #ffffff10;font-variant-numeric:tabular-nums}.player-table th:first-child,.player-table td:first-child{text-align:left;position:sticky;left:0;background:#111d2c}.player-table th{color:#94a5bc;font-size:8px;letter-spacing:.08em}.player-table tr.starter td{background-color:#17263a}.player-table tr.dnp td{color:#75849a}
+    .playbyplay-panel{margin-top:12px}.play-controls{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
+    .play-list{list-style:none;padding:0;margin:0;display:grid;gap:5px}
+    .play-row{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 9px;border:1px solid #ffffff0d;border-radius:8px;background:#0d1725}
+    .play-row.scoring{border-color:#8a6b35;background:#1b2430}
+    .play-clock{font-size:10px;font-weight:900;color:#f0c05b}.play-clock small{display:block;color:#94a5bc;font-size:9px;margin-top:3px}
+    .play-copy{font-size:10px;line-height:1.45;color:#dce3ef}.play-copy small{display:block;color:#f0c05b;font-size:8px;font-weight:900;letter-spacing:.1em;margin-top:3px}
+    .play-score{font-size:10px;font-weight:900;color:#aab6ca;font-variant-numeric:tabular-nums}
+    .play-more{display:block;margin:10px auto 0;border:1px solid #2b3b52;background:#101a29;color:#e8bb58}.player-cell{display:flex;align-items:center;gap:6px;min-width:112px;white-space:normal}.player-cell img{width:25px;height:25px;object-fit:contain;border-radius:50%}.player-cell small{display:block;color:#91a0b5;font-size:8px;margin-top:2px}.team-stats-panel{margin-top:12px}.team-stats-panel table{width:100%;border-collapse:collapse;font-size:10px}.team-stats-panel th,.team-stats-panel td{padding:8px;text-align:right;border-bottom:1px solid #ffffff10}.team-stats-panel th:first-child,.team-stats-panel td:first-child{text-align:left;color:#aab6ca}
     @media(max-width:620px){.overlay{padding:8px}.overlay-panel{max-height:94vh}.boxscore-grid{grid-template-columns:1fr}.player-table th,.player-table td{padding:7px 5px}}
     .footer{display:flex;justify-content:space-between;gap:10px;padding:12px 22px;color:#738199;border-top:1px solid #ffffff12;font-size:9px;letter-spacing:.06em}
     @media(max-width:620px){.hero{padding:20px 17px 17px}main{padding:15px}nav{padding:8px 7px}button{min-width:66px;padding:9px 10px}.grid{grid-template-columns:1fr}.game{grid-template-columns:1fr;gap:7px}.status{text-align:left}.matchup{gap:6px}.team-name{font-size:10px}.score{font-size:15px}.footer{padding:11px 15px}.meta{margin-top:11px}}
@@ -257,6 +266,7 @@ class NBACenterCard extends LitElement {
   async _openGame(game) {
     const request = ++this._overlayRequest;
     this._overlayGame = game; this._overlayDetails = null; this._overlayError = ""; this._overlayLoading = true;
+    this._showAllPlays = false; this._scoringOnly = false;
     try {
       const details = await this.hass.callWS({ type: "nba/game_details", game_id: String(game.id) });
       if (request !== this._overlayRequest || String(this._overlayGame?.id) !== String(game.id)) return;
@@ -308,6 +318,30 @@ class NBACenterCard extends LitElement {
             return html`<tr><td>${label}</td>${teams.map((team) => html`<td>${value((team.statistics ?? []).find((stat) => stat.name === key)?.value)}</td>`)}</tr>`;
           })}</tbody>
         </table></div>
+      </section>`;
+  }
+
+
+  _playByPlayPanel() {
+    const plays = this._overlayDetails?.plays ?? [];
+    if (!plays.length) return "";
+    const filtered = this._scoringOnly ? plays.filter((play) => play.scoring) : plays;
+    const ordered = [...filtered].reverse();
+    const rows = this._showAllPlays ? ordered : ordered.slice(0, 12);
+    return html`
+      <section class="panel playbyplay-panel">
+        <div class="panel-head"><h3>FIL DU MATCH</h3><span class="pill">${plays.length} ACTIONS</span></div>
+        <div class="play-controls">
+          <button class="chip" aria-pressed=${!this._scoringOnly} @click=${() => { this._scoringOnly = false; this._showAllPlays = false; }}>TOUTES</button>
+          <button class="chip" aria-pressed=${this._scoringOnly} @click=${() => { this._scoringOnly = true; this._showAllPlays = false; }}>POINTS SEULEMENT</button>
+        </div>
+        <ol class="play-list">${rows.map((play) => html`
+          <li class="play-row ${play.scoring ? "scoring" : ""}">
+            <span class="play-clock">Q${value(play.period)}<small>${value(play.clock)}</small></span>
+            <span class="play-copy">${value(play.text, play.type || "Action")}${play.scoring ? html`<small>MARQUE · +${value(play.score_value, "?")} PT</small>` : ""}</span>
+            <span class="play-score">${play.away_score != null || play.home_score != null ? `${value(play.away_score)}–${value(play.home_score)}` : ""}</span>
+          </li>`)}</ol>
+        ${ordered.length > 12 ? html`<button class="chip play-more" @click=${() => { this._showAllPlays = !this._showAllPlays; }}>${this._showAllPlays ? "RÉDUIRE" : `VOIR LES ${ordered.length} ACTIONS`}</button>` : ""}
       </section>`;
   }
 
@@ -489,6 +523,7 @@ class NBACenterCard extends LitElement {
               <div class="boxscore-section"><div class="section-kicker">FULL GAME BREAKDOWN</div><h3>BOX SCORE · JOUEURS</h3>
                 <div class="boxscore-grid">${(this._overlayDetails.player_stats ?? []).map((block) => this._boxscorePanel(block))}</div>
                 ${this._teamStatsPanel()}
+                ${this._playByPlayPanel()}
               </div>` : ""}
             ${!this._overlayLoading && !this._overlayError && !this._overlayDetails?.teams?.length && !this._overlayDetails?.has_boxscore ? html`<section class="empty"><p>Le résumé détaillé n’est pas encore disponible pour cette rencontre.</p></section>` : ""}            </div></section></div>` : ""}
         <footer class="footer"><span>NBA CENTER · ${active.label}</span><span>DATA VIA HOME ASSISTANT</span></footer>

@@ -32,3 +32,7 @@ assert.match(source, /_calendarStaleError/, "stale cache errors must be exposed 
 assert.match(source, /value\(away\.score\).*value\(home\.score\)/s, "match score must be displayed away first, home second");
 assert.match(source, /this\._overlayGame\.away\?\.name[\s\S]*this\._overlayGame\.home\?\.name/, "Match Center overlay must show away team before home team");
 console.log("NBA Center frontend bundle and feature checks passed.");
+
+if (!source.includes("_playByPlayPanel") || !source.includes("POINTS SEULEMENT") || !bundle.includes("FIL DU MATCH")) {
+  throw new Error("Play-by-play UI is missing from source or bundle");
+}
