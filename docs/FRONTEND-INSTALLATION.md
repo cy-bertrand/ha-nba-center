@@ -62,7 +62,7 @@ Les identifiants ci-dessus sont les valeurs par défaut attendues à partir des 
 
 - **HOME** : matchs en direct, prochaines rencontres, équipes favorites et leaders en points.
 - **SCORES** : matchs chargés par le coordinateur, filtres Tous / Live / À venir / Terminés et recherche par équipe.
-- **TEAMS** : fiches des équipes favorites, dernier et prochain match.
+- **TEAMS** : fiches des équipes favorites, dernier et prochain match, forme récente sur cinq rencontres.
 - **PLAYERS** : leaders en points, rebonds, passes, interceptions et contres.
 - **STATS** : classements Est/Ouest et leaders statistiques.
 
