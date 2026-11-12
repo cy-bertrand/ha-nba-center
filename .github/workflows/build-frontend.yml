@@ -4,10 +4,18 @@ on:
   push:
     branches:
       - phase-1-foundation
-    paths-ignore:
-      - custom_components/nba/www/nba-center-card.js
-      - package-lock.json
+    paths:
+      - 'frontend/**'
+      - 'custom_components/nba/**/*.py'
+      - 'custom_components/nba/manifest.json'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'build.mjs'
   workflow_dispatch:
+
+concurrency:
+  group: nba-center-frontend-${{ github.ref }}
+  cancel-in-progress: false
 
 permissions:
   contents: write
