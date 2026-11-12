@@ -1,4 +1,4 @@
-var d=[{id:"home",label:"HOME"},{id:"scores",label:"SCORES"},{id:"teams",label:"TEAMS"},{id:"players",label:"PLAYERS"},{id:"stats",label:"STATS"}],o={points:["POINTS","marque"],rebounds:["REBONDS","rebon"],assists:["PASSES","passe"],steals:["INTERCEPTIONS","inter"],blocks:["CONTRES","contr"]},p={games:"sensor.nba_matchs_du_jour",east:"sensor.nba_classement_est",west:"sensor.nba_classement_ouest",points:"sensor.nba_meilleurs_marqueurs",rebounds:"sensor.nba_meilleurs_rebondeurs",assists:"sensor.nba_meilleurs_passeurs",steals:"sensor.nba_meilleurs_intercepteurs",blocks:"sensor.nba_meilleurs_contreurs"},n=(r,e="\u2014")=>r==null||r===""?e:String(r),m=r=>{if(!r)return"Date \xE0 confirmer";let e=new Date(r);return Number.isNaN(e.getTime())?n(r):new Intl.DateTimeFormat(void 0,{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}).format(e)},c=class extends LitElement{static properties={hass:{attribute:!1},_active:{state:!0},_filter:{state:!0},_search:{state:!0}};static styles=css`
+var d=[{id:"home",label:"HOME"},{id:"scores",label:"SCORES"},{id:"teams",label:"TEAMS"},{id:"players",label:"PLAYERS"},{id:"stats",label:"STATS"}],o={points:["POINTS","marque"],rebounds:["REBONDS","rebon"],assists:["PASSES","passe"],steals:["INTERCEPTIONS","inter"],blocks:["CONTRES","contr"]},c={games:"sensor.nba_matchs_du_jour",east:"sensor.nba_classement_est",west:"sensor.nba_classement_ouest",points:"sensor.nba_meilleurs_marqueurs",rebounds:"sensor.nba_meilleurs_rebondeurs",assists:"sensor.nba_meilleurs_passeurs",steals:"sensor.nba_meilleurs_intercepteurs",blocks:"sensor.nba_meilleurs_contreurs"},n=(r,e="\u2014")=>r==null||r===""?e:String(r),m=r=>{if(!r)return"Date \xE0 confirmer";let e=new Date(r);return Number.isNaN(e.getTime())?n(r):new Intl.DateTimeFormat(void 0,{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}).format(e)},p=class extends LitElement{static properties={hass:{attribute:!1},_active:{state:!0},_filter:{state:!0},_search:{state:!0}};static styles=css`
     :host{display:block;color:var(--primary-text-color);font-family:var(--paper-font-body1_-_font-family,Roboto,sans-serif)}
     *{box-sizing:border-box}
     .shell{overflow:hidden;border:1px solid var(--divider-color);border-radius:18px;background:#090e17;color:#f4f6fb;box-shadow:0 12px 32px #0005}
@@ -51,7 +51,7 @@ var d=[{id:"home",label:"HOME"},{id:"scores",label:"SCORES"},{id:"teams",label:"
     .team-info{min-width:0;flex:1}
     .team-info strong{display:block;font-size:12px}
     .team-info small{display:block;margin-top:3px;color:#8f9db2;font-size:10px}
-    .record{text-align:right;font-size:11px;font-weight:800;color:#dce3ef}
+    .record{text-align:right;font-size:11px;font-weight:800;color:#dce3ef}\n    .recent{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}\n    .form-chip{display:flex;align-items:center;gap:5px;padding:5px 7px;border:1px solid #2b3b52;border-radius:7px;color:#aab6ca;font-size:9px}\n    .form-chip strong{font-size:9px}\n    .form-chip.win strong{color:#72d5a0}\n    .form-chip.loss strong{color:#ff8b91}
     .leader{display:grid;grid-template-columns:24px 34px minmax(0,1fr) auto;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #ffffff10}
     .leader:last-child{border-bottom:0}
     .rank{color:#8190a7;font-size:10px;font-weight:900}
@@ -66,74 +66,81 @@ var d=[{id:"home",label:"HOME"},{id:"scores",label:"SCORES"},{id:"teams",label:"
     td:first-child{color:#e9bb57;font-weight:900}
     .footer{display:flex;justify-content:space-between;gap:10px;padding:12px 22px;color:#738199;border-top:1px solid #ffffff12;font-size:9px;letter-spacing:.06em}
     @media(max-width:620px){.hero{padding:20px 17px 17px}main{padding:15px}nav{padding:8px 7px}button{min-width:66px;padding:9px 10px}.grid{grid-template-columns:1fr}.game{grid-template-columns:1fr;gap:7px}.status{text-align:left}.matchup{gap:6px}.team-name{font-size:10px}.score{font-size:15px}.footer{padding:11px 15px}.meta{margin-top:11px}}
-  `;constructor(){super(),this._active="home",this._filter="all",this._search="",this._config={}}setConfig(e){if(!e||typeof e!="object"||Array.isArray(e))throw new Error("Configuration NBA Center invalide : un objet YAML est attendu.");this._config={title:"NBA CENTER",subtitle:"Your league. Your teams. One center.",...e,entities:{...p,...e.entities??{}}}}getCardSize(){return 8}get _states(){return this.hass?.states??{}}_state(e){return e?this._states[e]:void 0}_find(e){return Object.values(this._states).find(e)}_entity(e,s){return this._state(this._config.entities?.[e])??this._find(s)}_games(){let e=this._entity("games",s=>Array.isArray(s.attributes?.games)&&!s.attributes?.team_id);return{state:e,rows:e?.attributes?.games??[]}}_standings(e){let s=this._entity(e,t=>{if(!Array.isArray(t.attributes?.standings))return!1;let a=t.entity_id.toLowerCase();return e==="east"?a.includes("classement_est")||a.includes("eastern"):a.includes("classement_ouest")||a.includes("western")});return{state:s,rows:s?.attributes?.standings??[]}}_leaders(e){let s=o[e][1],t=this._entity(e,a=>Array.isArray(a.attributes?.leaders)&&(a.attributes?.category??"").toLowerCase().includes(s));return{state:t,rows:t?.attributes?.leaders??[]}}_teams(){let e={};for(let s of Object.values(this._states)){let t=s.attributes??{};if(!s.entity_id.startsWith("sensor.")||!t.team_id)continue;let a=String(t.team_id),i=(t.friendly_name??s.entity_id).toLowerCase(),l=e[a]??={id:a,name:(t.friendly_name??a).replace(/ (dernier match|prochain match|match en cours|derniers matchs)$/i,""),logo:t.team_logo};l.logo??=t.team_logo,i.includes("dernier match")&&(l.last=t),i.includes("prochain match")&&(l.next=t),i.includes("match en cours")&&(l.live=t),Array.isArray(t.games)&&(l.recent=t.games)}return Object.values(e).sort((s,t)=>s.name.localeCompare(t.name))}_selectView(e){this._active=e}_setFilter(e){this._filter=e}_setSearch(e){this._search=e.target.value??""}_gameStatus(e){return e.state==="in"?{label:e.clock?`LIVE \xB7 ${e.clock}`:"LIVE",live:!0}:e.state==="post"?{label:e.detail||"TERMIN\xC9",live:!1}:{label:e.time||"\xC0 VENIR",live:!1}}_gameCard(e){let s=e.home??{},t=e.away??{},a=this._gameStatus(e),i=e.state==="in"||e.state==="post";return html`
+  `;constructor(){super(),this._active="home",this._filter="all",this._search="",this._config={}}setConfig(e){if(!e||typeof e!="object"||Array.isArray(e))throw new Error("Configuration NBA Center invalide : un objet YAML est attendu.");this._config={title:"NBA CENTER",subtitle:"Your league. Your teams. One center.",...e,entities:{...c,...e.entities??{}}}}getCardSize(){return 8}get _states(){return this.hass?.states??{}}_state(e){return e?this._states[e]:void 0}_find(e){return Object.values(this._states).find(e)}_entity(e,a){return this._state(this._config.entities?.[e])??this._find(a)}_games(){let e=this._entity("games",a=>Array.isArray(a.attributes?.games)&&!a.attributes?.team_id);return{state:e,rows:e?.attributes?.games??[]}}_standings(e){let a=this._entity(e,t=>{if(!Array.isArray(t.attributes?.standings))return!1;let s=t.entity_id.toLowerCase();return e==="east"?s.includes("classement_est")||s.includes("eastern"):s.includes("classement_ouest")||s.includes("western")});return{state:a,rows:a?.attributes?.standings??[]}}_leaders(e){let a=o[e][1],t=this._entity(e,s=>Array.isArray(s.attributes?.leaders)&&(s.attributes?.category??"").toLowerCase().includes(a));return{state:t,rows:t?.attributes?.leaders??[]}}_teams(){let e={};for(let a of Object.values(this._states)){let t=a.attributes??{};if(!a.entity_id.startsWith("sensor.")||!t.team_id)continue;let s=String(t.team_id),i=(t.friendly_name??a.entity_id).toLowerCase(),l=e[s]??={id:s,name:(t.friendly_name??s).replace(/ (dernier match|prochain match|match en cours|derniers matchs)$/i,""),logo:t.team_logo};l.logo??=t.team_logo,i.includes("dernier match")&&(l.last=t),i.includes("prochain match")&&(l.next=t),i.includes("match en cours")&&(l.live=t),Array.isArray(t.games)&&(l.recent=t.games)}return Object.values(e).sort((a,t)=>a.name.localeCompare(t.name))}_selectView(e){this._active=e}_setFilter(e){this._filter=e}_setSearch(e){this._search=e.target.value??""}_gameStatus(e){return e.state==="in"?{label:e.clock?`LIVE \xB7 ${e.clock}`:"LIVE",live:!0}:e.state==="post"?{label:e.detail||"TERMIN\xC9",live:!1}:{label:e.time||"\xC0 VENIR",live:!1}}_gameCard(e){let a=e.home??{},t=e.away??{},s=this._gameStatus(e),i=e.state==="in"||e.state==="post";return html`
       <article class="game">
         <div class="game-main">
           <div class="game-date">${n(e.date_text,m(e.date))}</div>
           <div class="matchup">
             <div class="side away"><span class="team-name">${n(t.abbr,t.name)}</span>
               ${t.logo?html`<img class="logo" src=${t.logo} alt="" loading="lazy">`:""}</div>
-            <div class="score ${i?"":"pending"}">${i?`${n(t.score)} \u2013 ${n(s.score)}`:"VS"}</div>
-            <div class="side">${s.logo?html`<img class="logo" src=${s.logo} alt="" loading="lazy">`:""}
-              <span class="team-name">${n(s.abbr,s.name)}</span></div>
+            <div class="score ${i?"":"pending"}">${i?`${n(t.score)} \u2013 ${n(a.score)}`:"VS"}</div>
+            <div class="side">${a.logo?html`<img class="logo" src=${a.logo} alt="" loading="lazy">`:""}
+              <span class="team-name">${n(a.abbr,a.name)}</span></div>
           </div>
         </div>
-        <div class="status ${a.live?"live":""}">${a.label}</div>
-      </article>`}_filteredGames(e){let s=this._search.trim().toLowerCase();return e.filter(t=>{let a=this._filter==="all"||t.state===this._filter,i=`${t.home?.name??""} ${t.home?.abbr??""} ${t.away?.name??""} ${t.away?.abbr??""}`.toLowerCase();return a&&(!s||i.includes(s))})}_leaderPanel(e,s=5){let t=this._leaders(e).rows;return html`
+        <div class="status ${s.live?"live":""}">${s.label}</div>
+      </article>`}_filteredGames(e){let a=this._search.trim().toLowerCase();return e.filter(t=>{let s=this._filter==="all"||t.state===this._filter,i=`${t.home?.name??""} ${t.home?.abbr??""} ${t.away?.name??""} ${t.away?.abbr??""}`.toLowerCase();return s&&(!a||i.includes(a))})}_leaderPanel(e,a=5){let t=this._leaders(e).rows;return html`
       <section class="panel">
         <div class="panel-head"><h3>${o[e][0]}</h3><span class="pill">SAISON</span></div>
-        ${t.length?html`<div class="leader-list">${t.slice(0,s).map((a,i)=>html`
-          <div class="leader"><span class="rank">${n(a.rank,i+1)}</span>
-            ${a.headshot?html`<img class="avatar" src=${a.headshot} alt="" loading="lazy">`:html`<div class="avatar"></div>`}
-            <div class="player">${n(a.player)}<small>${n(a.team)}</small></div>
-            <span class="stat">${n(a.value)}</span>
+        ${t.length?html`<div class="leader-list">${t.slice(0,a).map((s,i)=>html`
+          <div class="leader"><span class="rank">${n(s.rank,i+1)}</span>
+            ${s.headshot?html`<img class="avatar" src=${s.headshot} alt="" loading="lazy">`:html`<div class="avatar"></div>`}
+            <div class="player">${n(s.player)}<small>${n(s.team)}</small></div>
+            <span class="stat">${n(s.value)}</span>
           </div>`)}</div>`:html`<p class="muted">Données de classement indisponibles.</p>`}
-      </section>`}_standingsTable(e,s){let t=this._standings(e).rows;return html`
+      </section>`}_standingsTable(e,a){let t=this._standings(e).rows;return html`
       <section class="panel">
-        <div class="panel-head"><h3>${s}</h3><span class="pill">${t.length} ÉQUIPES</span></div>
+        <div class="panel-head"><h3>${a}</h3><span class="pill">${t.length} ÉQUIPES</span></div>
         ${t.length?html`<div class="table-wrap"><table>
           <thead><tr><th>#</th><th>ÉQUIPE</th><th>V</th><th>D</th><th>%</th><th>GB</th></tr></thead>
-          <tbody>${t.slice(0,15).map((a,i)=>html`
-            <tr><td>${n(a.rank,i+1)}</td><td>${n(a.abbr,a.team)}</td><td>${n(a.wins)}</td>
-            <td>${n(a.losses)}</td><td>${n(a.pct)}</td><td>${n(a.gb)}</td></tr>`)}</tbody>
+          <tbody>${t.slice(0,15).map((s,i)=>html`
+            <tr><td>${n(s.rank,i+1)}</td><td>${n(s.abbr,s.team)}</td><td>${n(s.wins)}</td>
+            <td>${n(s.losses)}</td><td>${n(s.pct)}</td><td>${n(s.gb)}</td></tr>`)}</tbody>
         </table></div>`:html`<p class="muted">Classement indisponible.</p>`}
-      </section>`}_teamPanel(e){let s=e.last,t=e.next;return html`
+      </section>`}_teamPanel(e){let a=e.last,t=e.next;return html`
       <section class="panel">
         <div class="team-row">
           ${e.logo?html`<img class="logo large" src=${e.logo} alt="" loading="lazy">`:""}
           <div class="team-info"><strong>${e.name}</strong><small>Équipe favorite · ${e.id}</small></div>
           ${e.live?.state==="in"?html`<span class="pill accent">LIVE</span>`:""}
         </div>
-        <div class="team-row"><div class="team-info"><small>DERNIER MATCH</small><strong>${n(s?.name,"Donn\xE9e indisponible")}</strong></div>
-          <div class="record">${n(s?.away?.score)} – ${n(s?.home?.score)}</div></div>
+        <div class="team-row"><div class="team-info"><small>DERNIER MATCH</small><strong>${n(a?.name,"Donn\xE9e indisponible")}</strong></div>
+          <div class="record">${n(a?.away?.score)} – ${n(a?.home?.score)}</div></div>
         <div class="team-row"><div class="team-info"><small>PROCHAIN MATCH</small><strong>${n(t?.name,"Calendrier indisponible")}</strong>
           <small>${n(t?.date_text,"")}</small></div></div>
-      </section>`}_homeView(){let{rows:e}=this._games(),s=e.filter(i=>i.state==="in"),t=e.filter(i=>i.state==="pre").slice(0,4),a=this._teams();return html`
+        ${e.recent?.length?html`
+          <div class="muted" style="margin-top:10px">FORME RÉCENTE</div>
+          <div class="recent">${e.recent.slice(0,5).map(s=>html`
+            <span class="form-chip ${s.result==="V"?"win":"loss"}">
+              <strong>${n(s.result)}</strong><span>${n(s.opp_abbr)}</span>
+              <span>${n(s.team_score)}–${n(s.opp_score)}</span>
+            </span>`)}</div>`:""}
+      </section>`}_homeView(){let{rows:e}=this._games(),a=e.filter(i=>i.state==="in"),t=e.filter(i=>i.state==="pre").slice(0,4),s=this._teams();return html`
       <div class="head"><h2>TABLEAU DE BORD</h2><span class="pill">NBA DARK</span></div>
       <div class="grid">
-        <section class="panel"><div class="panel-head"><h3>EN DIRECT</h3><span class="pill">${s.length} MATCHS</span></div>
-          ${s.length?html`<div class="game-list">${s.map(i=>this._gameCard(i))}</div>`:html`<p class="muted">Aucun match en direct actuellement.</p>`}</section>
+        <section class="panel"><div class="panel-head"><h3>EN DIRECT</h3><span class="pill">${a.length} MATCHS</span></div>
+          ${a.length?html`<div class="game-list">${a.map(i=>this._gameCard(i))}</div>`:html`<p class="muted">Aucun match en direct actuellement.</p>`}</section>
         <section class="panel"><div class="panel-head"><h3>À VENIR</h3><span class="pill">${t.length} MATCHS</span></div>
           ${t.length?html`<div class="game-list">${t.map(i=>this._gameCard(i))}</div>`:html`<p class="muted">Aucun prochain match dans le calendrier chargé.</p>`}</section>
-        <section class="panel"><div class="panel-head"><h3>ÉQUIPES FAVORITES</h3><span class="pill">${a.length}</span></div>
-          ${a.length?html`<div class="team-list">${a.slice(0,6).map(i=>html`
+        <section class="panel"><div class="panel-head"><h3>ÉQUIPES FAVORITES</h3><span class="pill">${s.length}</span></div>
+          ${s.length?html`<div class="team-list">${s.slice(0,6).map(i=>html`
             <div class="team-row">${i.logo?html`<img class="logo" src=${i.logo} alt="">`:""}
               <div class="team-info"><strong>${i.name}</strong><small>${i.id}</small></div>
               <span class="muted">${n(i.next?.date_text,"\u2014")}</span></div>`)}</div>`:html`<p class="muted">Choisis tes équipes favorites dans la configuration de l'intégration NBA.</p>`}</section>
         ${this._leaderPanel("points",5)}
-      </div>`}_scoresView(){let{rows:e,state:s}=this._games(),t=this._filteredGames(e);return html`
+      </div>`}_scoresView(){let{rows:e,state:a}=this._games(),t=this._filteredGames(e);return html`
       <div class="head"><h2>SCORES & CALENDRIER</h2><span class="pill">${e.length} MATCHS CHARGÉS</span></div>
       <div class="filters">
-        ${[["all","TOUS"],["in","LIVE"],["pre","\xC0 VENIR"],["post","TERMIN\xC9S"]].map(([a,i])=>html`
-          <button class="chip" aria-pressed=${this._filter===a} @click=${()=>this._setFilter(a)}>${i}</button>`)}
+        ${[["all","TOUS"],["in","LIVE"],["pre","\xC0 VENIR"],["post","TERMIN\xC9S"]].map(([s,i])=>html`
+          <button class="chip" aria-pressed=${this._filter===s} @click=${()=>this._setFilter(s)}>${i}</button>`)}
         <input type="search" aria-label="Rechercher une équipe" placeholder="Filtrer une équipe…" .value=${this._search} @input=${this._setSearch}>
       </div>
-      ${t.length?html`<div class="game-list">${t.map(a=>this._gameCard(a))}</div>`:html`<section class="empty"><strong>${s?.state==="unavailable"?"Donn\xE9es NBA indisponibles":"Aucun match correspondant"}</strong>
+      ${t.length?html`<div class="game-list">${t.map(s=>this._gameCard(s))}</div>`:html`<section class="empty"><strong>${a?.state==="unavailable"?"Donn\xE9es NBA indisponibles":"Aucun match correspondant"}</strong>
           <p>Vérifie la connexion de l'intégration ou modifie les filtres. Les matchs affichés proviennent du calendrier chargé par Home Assistant.</p></section>`}`}_teamsView(){let e=this._teams();return html`<div class="head"><h2>TEAMS CENTER</h2><span class="pill">${e.length} FAVORITES</span></div>
-      ${e.length?html`<div class="grid">${e.map(s=>this._teamPanel(s))}</div>`:html`<section class="empty"><strong>Aucune équipe favorite détectée</strong><p>Sélectionne tes équipes favorites dans Paramètres → Appareils et services → NBA. Les fiches sont alimentées par les capteurs existants.</p></section>`}`}_playersView(){return html`<div class="head"><h2>PLAYERS CENTER</h2><span class="pill">LEADERS NBA</span></div>
+      ${e.length?html`<div class="grid">${e.map(a=>this._teamPanel(a))}</div>`:html`<section class="empty"><strong>Aucune équipe favorite détectée</strong><p>Sélectionne tes équipes favorites dans Paramètres → Appareils et services → NBA. Les fiches sont alimentées par les capteurs existants.</p></section>`}`}_playersView(){return html`<div class="head"><h2>PLAYERS CENTER</h2><span class="pill">LEADERS NBA</span></div>
       <div class="grid">${Object.keys(o).map(e=>this._leaderPanel(e,10))}</div>`}_statsView(){return html`<div class="head"><h2>STATS CENTER</h2><span class="pill">SAISON</span></div>
       <div class="grid">${this._standingsTable("east","EASTERN CONFERENCE")}${this._standingsTable("west","WESTERN CONFERENCE")}</div>
-      <div class="grid" style="margin-top:12px">${Object.keys(o).map(e=>this._leaderPanel(e,5))}</div>`}render(){let e=d.find(t=>t.id===this._active)??d[0],s={home:()=>this._homeView(),scores:()=>this._scoresView(),teams:()=>this._teamsView(),players:()=>this._playersView(),stats:()=>this._statsView()};return html`
+      <div class="grid" style="margin-top:12px">${Object.keys(o).map(e=>this._leaderPanel(e,5))}</div>`}render(){let e=d.find(t=>t.id===this._active)??d[0],a={home:()=>this._homeView(),scores:()=>this._scoresView(),teams:()=>this._teamsView(),players:()=>this._playersView(),stats:()=>this._statsView()};return html`
       <ha-card class="shell">
         <header class="hero"><div class="eyebrow">THE ASSOCIATION · HOME ASSISTANT</div>
           <h1>${this._config.title}</h1><div class="subtitle">${this._config.subtitle}</div>
@@ -143,7 +150,7 @@ var d=[{id:"home",label:"HOME"},{id:"scores",label:"SCORES"},{id:"teams",label:"
         <nav aria-label="NBA Center navigation">${d.map(t=>html`
           <button type="button" data-view=${t.id} aria-selected=${t.id===this._active}
             @click=${()=>this._selectView(t.id)}>${t.label}</button>`)}</nav>
-        <main>${this.hass?s[e.id]():html`
+        <main>${this.hass?a[e.id]():html`
           <section class="empty"><strong>Connexion à Home Assistant…</strong><p>La carte attend les états de l'intégration NBA.</p></section>`}</main>
         <footer class="footer"><span>NBA CENTER · ${e.label}</span><span>DATA VIA HOME ASSISTANT</span></footer>
-      </ha-card>`}static getStubConfig(){return{title:"NBA CENTER",subtitle:"Your league. Your teams. One center."}}};customElements.get("nba-center-card")||customElements.define("nba-center-card",c);window.customCards=window.customCards??[];window.customCards.some(r=>r.type==="nba-center-card")||window.customCards.push({type:"nba-center-card",name:"NBA Center",description:"NBA Dark dashboard \u2014 scores, teams, players and stats",preview:!0});
+      </ha-card>`}static getStubConfig(){return{title:"NBA CENTER",subtitle:"Your league. Your teams. One center."}}};customElements.get("nba-center-card")||customElements.define("nba-center-card",p);window.customCards=window.customCards??[];window.customCards.some(r=>r.type==="nba-center-card")||window.customCards.push({type:"nba-center-card",name:"NBA Center",description:"NBA Dark dashboard \u2014 scores, teams, players and stats",preview:!0});
