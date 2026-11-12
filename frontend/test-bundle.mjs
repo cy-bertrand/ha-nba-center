@@ -17,6 +17,9 @@ assert.match(bundle, /Filtrer une équipe/, "interactive team search must be inc
 assert.match(bundle, /nba\/scoreboard/, "date-based scoreboard websocket command must be used");
 assert.match(bundle, /nba\/game_details/, "game details websocket command must be used");
 assert.match(bundle, /MATCH CENTER/, "interactive match overlay must be included");
+assert.match(bundle, /BOX SCORE · JOUEURS/, "full player box score view must be included");
+assert.match(bundle, /COMPARAISON DES ÉQUIPES/, "team statistics comparison must be included");
+assert.match(bundle, /player-table/, "responsive player statistics table must be included");
 assert.match(bundle, /type="date"/, "calendar date picker must be included");
 assert.match(bundle, /sensor\.nba_matchs_du_jour/, "existing NBA sensor default must be mapped");
 assert.doesNotMatch(bundle, /site\.api\.espn\.com|site\.web\.api\.espn\.com/, "browser bundle must not call ESPN");
