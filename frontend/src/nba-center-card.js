@@ -140,7 +140,9 @@ class NBACenterCard extends LitElement {
     .overlay-team img{width:54px;height:54px;object-fit:contain}.overlay-team strong{display:block;margin-top:7px;font-size:12px}
     .overlay-score{font-size:24px;font-weight:950;color:#f2c45f}.overlay-close{min-width:38px;padding:8px;border:1px solid #34465f}
     .top-player{padding:12px 0;border-top:1px solid #ffffff12}.top-player strong{display:block;font-size:12px}.top-player small{color:#aab6ca}
-    @media(max-width:620px){.overlay{padding:8px}.overlay-panel{max-height:94vh}}
+    .boxscore-section{margin-top:22px}.section-kicker{color:#e8b74e;font-size:9px;font-weight:900;letter-spacing:.2em;margin-bottom:5px}.boxscore-section>h3{margin:0 0 12px}
+    .boxscore-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.boxscore-panel{padding:10px;min-width:0}.player-table-wrap{overflow-x:auto;max-width:100%}.player-table{width:100%;border-collapse:collapse;font-size:10px;white-space:nowrap}.player-table th,.player-table td{padding:8px 6px;text-align:right;border-bottom:1px solid #ffffff10;font-variant-numeric:tabular-nums}.player-table th:first-child,.player-table td:first-child{text-align:left;position:sticky;left:0;background:#111d2c}.player-table th{color:#94a5bc;font-size:8px;letter-spacing:.08em}.player-table tr.starter td{background-color:#17263a}.player-table tr.dnp td{color:#75849a}.player-cell{display:flex;align-items:center;gap:6px;min-width:112px;white-space:normal}.player-cell img{width:25px;height:25px;object-fit:contain;border-radius:50%}.player-cell small{display:block;color:#91a0b5;font-size:8px;margin-top:2px}.team-stats-panel{margin-top:12px}.team-stats-panel table{width:100%;border-collapse:collapse;font-size:10px}.team-stats-panel th,.team-stats-panel td{padding:8px;text-align:right;border-bottom:1px solid #ffffff10}.team-stats-panel th:first-child,.team-stats-panel td:first-child{text-align:left;color:#aab6ca}
+    @media(max-width:620px){.overlay{padding:8px}.overlay-panel{max-height:94vh}.boxscore-grid{grid-template-columns:1fr}.player-table th,.player-table td{padding:7px 5px}}
     .footer{display:flex;justify-content:space-between;gap:10px;padding:12px 22px;color:#738199;border-top:1px solid #ffffff12;font-size:9px;letter-spacing:.06em}
     @media(max-width:620px){.hero{padding:20px 17px 17px}main{padding:15px}nav{padding:8px 7px}button{min-width:66px;padding:9px 10px}.grid{grid-template-columns:1fr}.game{grid-template-columns:1fr;gap:7px}.status{text-align:left}.matchup{gap:6px}.team-name{font-size:10px}.score{font-size:15px}.footer{padding:11px 15px}.meta{margin-top:11px}}
   `;
@@ -260,6 +262,43 @@ class NBACenterCard extends LitElement {
   }
   _closeOverlay() { this._overlayGame = null; this._overlayDetails = null; this._overlayError = ""; }
   _onOverlayKeydown(event) { if (event.key === "Escape") this._closeOverlay(); }
+
+  _boxscorePanel(block) {
+    const players = block.players ?? [];
+    const preferred = ["MIN", "FG", "3PT", "FT", "OREB", "DREB", "REB", "AST", "STL", "BLK", "TO", "PF", "+/-", "PTS"];
+    const available = new Set(players.flatMap((player) => Object.keys(player.stats ?? {})));
+    const columns = preferred.filter((key) => available.has(key));
+    const rows = [...players].sort((a, b) => Number(Boolean(b.starter)) - Number(Boolean(a.starter)));
+    return html`
+      <section class="panel boxscore-panel">
+        <div class="panel-head"><h3>${value(block.abbr, block.team)}</h3><span class="pill">${players.length} JOUEURS</span></div>
+        ${rows.length ? html`<div class="table-wrap player-table-wrap"><table class="player-table">
+          <thead><tr><th>JOUEUR</th>${columns.map((key) => html`<th>${key}</th>`)}</tr></thead>
+          <tbody>${rows.map((player) => html`
+            <tr class="${player.starter ? "starter" : ""} ${player.did_not_play ? "dnp" : ""}">
+              <td><span class="player-cell">${player.headshot ? html`<img src=${player.headshot} alt="" loading="lazy">` : ""}<span>${value(player.name)}<small>${player.position ? `${player.position} · ` : ""}${player.did_not_play ? value(player.reason, "DNP") : player.starter ? "TITULAIRE" : ""}</small></span></span></td>
+              ${columns.map((key) => html`<td>${value(player.stats?.[key])}</td>`)}
+            </tr>`)}
+          </tbody>
+        </table></div>` : html`<p class="muted">Statistiques individuelles indisponibles.</p>`}
+      </section>`;
+  }
+
+  _teamStatsPanel() {
+    const teams = this._overlayDetails?.team_stats ?? [];
+    if (!teams.length) return "";
+    const keys = [...new Set(teams.flatMap((team) => (team.statistics ?? []).map((stat) => stat.name)))];
+    return html`
+      <section class="panel team-stats-panel">
+        <div class="panel-head"><h3>COMPARAISON DES ÉQUIPES</h3><span class="pill">TEAM STATS</span></div>
+        <div class="table-wrap"><table><thead><tr><th>STATISTIQUE</th>${teams.map((team) => html`<th>${value(team.abbr, team.name)}</th>`)}</tr></thead>
+          <tbody>${keys.map((key) => {
+            const label = teams.flatMap((team) => team.statistics ?? []).find((stat) => stat.name === key)?.label ?? key;
+            return html`<tr><td>${label}</td>${teams.map((team) => html`<td>${value((team.statistics ?? []).find((stat) => stat.name === key)?.value)}</td>`)}</tr>`;
+          })}</tbody>
+        </table></div>
+      </section>`;
+  }
 
   _gameStatus(game) {
     if (game.state === "in") return { label: game.clock ? `LIVE · ${game.clock}` : "LIVE", live: true };
@@ -435,8 +474,12 @@ class NBACenterCard extends LitElement {
               <section class="panel"><div class="panel-head"><h3>${value(team.abbr, team.name)}</h3><span class="pill">${value(team.score)}</span></div>
                 ${team.quarters?.length ? html`<div class="muted">QUART-TEMPS · ${team.quarters.join(" / ")}</div>` : ""}
                 ${(team.top_players ?? []).map((player) => html`<div class="top-player"><strong>${value(player.player)}</strong><small>${value(player.category)} · ${value(player.value)}</small></div>`)}</section>`)}</div>` : ""}
-            ${!this._overlayLoading && !this._overlayError && !this._overlayDetails?.teams?.length ? html`<section class="empty"><p>Le résumé détaillé n’est pas encore disponible pour cette rencontre.</p></section>` : ""}
-            </div></section></div>` : ""}
+            ${this._overlayDetails?.has_boxscore ? html`
+              <div class="boxscore-section"><div class="section-kicker">FULL GAME BREAKDOWN</div><h3>BOX SCORE · JOUEURS</h3>
+                <div class="boxscore-grid">${(this._overlayDetails.player_stats ?? []).map((block) => this._boxscorePanel(block))}</div>
+                ${this._teamStatsPanel()}
+              </div>` : ""}
+            ${!this._overlayLoading && !this._overlayError && !this._overlayDetails?.teams?.length && !this._overlayDetails?.has_boxscore ? html`<section class="empty"><p>Le résumé détaillé n’est pas encore disponible pour cette rencontre.</p></section>` : ""}            </div></section></div>` : ""}
         <footer class="footer"><span>NBA CENTER · ${active.label}</span><span>DATA VIA HOME ASSISTANT</span></footer>
       </ha-card>`;
   }
