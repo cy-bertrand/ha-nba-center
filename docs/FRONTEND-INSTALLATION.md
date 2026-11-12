@@ -35,6 +35,6 @@ type: custom:nba-center-card
 
 ## État de ce premier socle
 
-Le shell initial valide la livraison du fichier statique, l'enregistrement du custom element, le style NBA Dark, les cinq onglets et l'adaptation mobile. La source Lit et la chaîne de build sont en place ; le bundle servi sera remplacé après succès du workflow GitHub Actions. Les vues utilisent encore des contenus d'attente.
+Le bundle Lit autonome est construit et livré par GitHub Actions. La carte expose les cinq onglets et le style NBA Dark ; les vues utilisent encore des contenus d'attente.
 
 **Limitation connue :** ce shell initial est un Web Component natif, pas encore le bundle Lit final. Le passage à Lit et la chaîne de build sont le prochain incrément de Phase 1. Aucune donnée ESPN n'est demandée depuis le navigateur.
