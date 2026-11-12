@@ -36,3 +36,7 @@ console.log("NBA Center frontend bundle and feature checks passed.");
 if (!source.includes("_playByPlayPanel") || !source.includes("POINTS SEULEMENT") || !bundle.includes("FIL DU MATCH")) {
   throw new Error("Play-by-play UI is missing from source or bundle");
 }
+
+if (!source.includes("aria-label=\"Actualiser les détails du match\"") || !bundle.includes("RÉESSAYER")) {
+  throw new Error("Match detail refresh/error state is missing");
+}
