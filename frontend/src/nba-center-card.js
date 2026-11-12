@@ -25,7 +25,11 @@ const DEFAULT_ENTITIES = {
   steals: "sensor.nba_meilleurs_intercepteurs",
   blocks: "sensor.nba_meilleurs_contreurs",
 };
-const localDateISO = (date = new Date()) => `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`;
+const localDateISO = (date = new Date(), timeZone) => {
+  const parts = new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(date);
+  const part = (type) => parts.find((item) => item.type === type)?.value;
+  return `${part("year")}-${part("month")}-${part("day")}`;
+};
 const value = (v, fallback = "—") => v === null || v === undefined || v === "" ? fallback : String(v);
 const fmtDate = (v) => {
   if (!v) return "Date à confirmer";
@@ -142,7 +146,7 @@ class NBACenterCard extends LitElement {
     this._filter = "all";
     this._search = "";
     this._selectedDate = localDateISO();
-    this._calendarGames = []; this._calendarLoading = false; this._calendarError = "";
+    this._calendarGames = []; this._calendarLoading = false; this._calendarError = ""; this._calendarInitialized = false;
     this._overlayGame = null; this._overlayDetails = null;
     this._overlayLoading = false; this._overlayError = "";
     this._config = {};
@@ -214,7 +218,13 @@ class NBACenterCard extends LitElement {
     return Object.values(teams).sort((a,b) => a.name.localeCompare(b.name));
   }
 
-  _selectView(view) { this._active = view; if (view === "scores") this._loadCalendar(this._selectedDate); }
+  _selectView(view) {
+    this._active = view;
+    if (view === "scores") {
+      if (!this._calendarInitialized) { this._selectedDate = localDateISO(new Date(), this.hass?.config?.time_zone); this._calendarInitialized = true; }
+      this._loadCalendar(this._selectedDate);
+    }
+  }
   _setFilter(filter) { this._filter = filter; }
   _setSearch(event) { this._search = event.target.value ?? ""; }
   _shiftDate(days) { const d = new Date(`${this._selectedDate}T12:00:00`); d.setDate(d.getDate() + days); this._selectedDate = d.toLocaleDateString("en-CA"); this._loadCalendar(this._selectedDate); }
