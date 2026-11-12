@@ -354,9 +354,18 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 return_exceptions=True,
             )
             successful = [result for result in results if isinstance(result, dict)]
+            failures = [result for result in results if isinstance(result, Exception)]
+            if failures:
+                cached = self._scoreboard_cache.get(key)
+                if cached:
+                    payload = dict(cached[1])
+                    payload["stale"] = True
+                    payload["error"] = "; ".join(str(err) for err in failures)
+                    return payload
+                errors = "; ".join(str(result) for result in failures)
+                raise UpdateFailed(f"Calendrier ESPN incomplet : {errors}")
             if not successful:
-                errors = "; ".join(str(result) for result in results)
-                raise UpdateFailed(f"Impossible de charger le calendrier ESPN : {errors}")
+                raise UpdateFailed("Impossible de charger le calendrier ESPN.")
 
             games_by_id: dict[str, dict[str, Any]] = {}
             for raw in successful:
