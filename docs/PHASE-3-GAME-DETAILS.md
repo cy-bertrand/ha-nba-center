@@ -18,16 +18,16 @@ Transformer l'overlay Match Center de la Phase 2 en fiche de match approfondie, 
 
 ## Fichiers modifiés / créés
 
-- `custom_components/nba/game_details.py` : nouveau parseur pur des box scores.
-- `custom_components/nba/coordinator.py` : intégration des statistiques au résumé ESPN.
-- `tests/test_game_details.py` : tests unitaires du parsing des statistiques équipes/joueurs, DNP et valeurs manquantes.
+- `custom_components/nba/game_details.py` : nouveaux parseurs purs des box scores et actions Play-by-Play.
+- `custom_components/nba/coordinator.py` : intégration des statistiques et des actions au résumé ESPN.
+- `tests/test_game_details.py` : tests unitaires du parsing des statistiques équipes/joueurs, DNP, valeurs manquantes et actions Play-by-Play.
 - `frontend/src/nba-center-card.js` : tableaux joueurs et comparaison équipes dans le Match Center.
-- `frontend/test-bundle.mjs` : assertions de présence du nouveau box score.
+- `frontend/test-bundle.mjs` : assertions de présence du nouveau box score et du Play-by-Play.
 
 ## Tests
 
 - Tests unitaires backend : fixtures synthétiques couvrant les deux équipes, joueurs, statistiques, titulaires, DNP et valeurs absentes.
-- CI GitHub : workflow `43327044234` terminé avec succès (compilation Python, tests unitaires backend, build Lit, assertions frontend et génération du bundle).
+- CI GitHub : workflow `43327946269` terminé avec succès (compilation Python, tests unitaires backend, build Lit, assertions frontend et génération du bundle).
 - Aucun fixture brut ESPN capturé depuis un appel réel n'est encore versionné. Le schéma ESPN reste non officiel et peut varier.
 - Le Play-by-Play repose à ce stade sur les champs facultatifs observés dans les exemples de schéma disponibles ; il doit être confirmé sur une réponse ESPN réelle avant de considérer l'affichage comme validé.
 
