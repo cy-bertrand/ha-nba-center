@@ -12,6 +12,8 @@ Transformer l'overlay Match Center de la Phase 2 en fiche de match approfondie, 
 - Les statistiques brutes sont conservées sous forme de chaînes (par exemple `10-20`, `38:12`) ; aucune valeur manquante n'est transformée en zéro.
 - Le Match Center affiche les box scores des deux équipes, les titulaires en premier, les statistiques disponibles et une comparaison des statistiques collectives.
 - Les tableaux sont défilables horizontalement et adaptés aux petits écrans.
+- Une première timeline Play-by-Play est ajoutée : chronologie inversée (actions récentes en haut), filtre « points seulement », score associé quand fourni et affichage progressif des actions.
+- Le parseur `summary.plays` conserve texte, quart-temps, horloge, type, équipe, score et indicateur de panier sans reconstituer les champs absents.
 - Le service historique `nba.get_game_details` et la commande WebSocket `nba/game_details` conservent leur contrat externe ; les nouveaux champs sont ajoutés à la réponse.
 
 ## Fichiers modifiés / créés
@@ -27,6 +29,7 @@ Transformer l'overlay Match Center de la Phase 2 en fiche de match approfondie, 
 - Tests unitaires backend : fixtures synthétiques couvrant les deux équipes, joueurs, statistiques, titulaires, DNP et valeurs absentes.
 - CI GitHub : workflow `43327044234` terminé avec succès (compilation Python, tests unitaires backend, build Lit, assertions frontend et génération du bundle).
 - Aucun fixture brut ESPN capturé depuis un appel réel n'est encore versionné. Le schéma ESPN reste non officiel et peut varier.
+- Le Play-by-Play repose à ce stade sur les champs facultatifs observés dans les exemples de schéma disponibles ; il doit être confirmé sur une réponse ESPN réelle avant de considérer l'affichage comme validé.
 
 ## Suite de la Phase 3
 
@@ -34,7 +37,7 @@ Transformer l'overlay Match Center de la Phase 2 en fiche de match approfondie, 
 2. Vérifier les clés et l'ordre des statistiques sur les réponses actuelles d'ESPN.
 3. Ajouter les tests de parsing sur ces fixtures réelles et les cas de structures absentes.
 4. Enrichir le Match Center : cinq majeurs, joueurs DNP, totaux/ratios collectifs, et états de chargement/indisponibilité.
-5. Étudier le play-by-play : structure, pagination/volume, fréquence de rafraîchissement et disponibilité pour les matchs live. Ne pas l'afficher tant que son contrat n'est pas vérifié.
+5. Vérifier le Play-by-Play sur des réponses réelles : structure, ordre chronologique, pagination/volume, fréquence de rafraîchissement et disponibilité en direct. La première interface est intégrée mais reste expérimentale tant que le schéma réel n'est pas confirmé.
 6. Tester la fiche de match sur Home Assistant desktop et mobile, avec matchs terminés et live.
 7. Publier une version candidate et demander la validation de l'utilisateur avant de clôturer la Phase 3.
 
