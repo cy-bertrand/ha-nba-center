@@ -1,4 +1,7 @@
-"""Règles pures du calendrier NBA, isolées pour les tests unitaires."""
+"""Règles pures du calendrier NBA, isolées pour les tests unitaires.
+
+Ce module reste volontairement indépendant de Home Assistant et du réseau.
+"""
 from __future__ import annotations
 
 from datetime import date, datetime
