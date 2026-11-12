@@ -43,8 +43,8 @@ Chaque phase fera l'objet d'une validation avant le démarrage de la suivante.
 ## État actuel
 
 - [x] Dépôt public créé.
-- [ ] Reprise du code source sans historique.
-- [ ] Audit technique Phase 0.
-- [ ] Validation du plan technique.
+- [x] Reprise des 23 fichiers suivis du code source sans historique.
+- [x] Inventaire et audit technique documentaire Phase 0 (validation finale en attente).
+- [x] Proposition d'architecture, contrats de données et plan de tests documentés (validation utilisateur en attente).
 
-Voir `docs/ROADMAP.md` et `docs/PHASE-0-AUDIT.md`.
+Voir [`docs/ROADMAP.md`](docs/ROADMAP.md), [`docs/PHASE-0-AUDIT.md`](docs/PHASE-0-AUDIT.md), [`docs/ESPN-DATA-MAP.md`](docs/ESPN-DATA-MAP.md), [`docs/DATA-CONTRACTS.md`](docs/DATA-CONTRACTS.md) et [`docs/TEST-PLAN.md`](docs/TEST-PLAN.md).
