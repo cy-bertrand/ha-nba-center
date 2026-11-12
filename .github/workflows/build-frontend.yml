@@ -38,7 +38,9 @@ jobs:
         with:
           python-version: '3.13'
       - name: Validate Python syntax
-        run: python -m compileall -q custom_components/nba
+        run: |
+          python -m compileall -q custom_components/nba
+          python -m unittest discover -s tests -v
       - name: Build bundled Lit card
         run: |
           npm install --package-lock-only --no-audit --no-fund
