@@ -33,6 +33,8 @@
 ### Métadonnées
 - `hacs.json`
 
+Le dépôt cible contient aussi un fichier `LICENSE` GNU GPL version 3, absent du dépôt source. Son maintien doit être confirmé par le propriétaire avant de considérer la question de licence comme réglée.
+
 Le `README.md` racine a été remplacé par la présentation du projet NBA Center. Les métadonnées de documentation et de suivi d'incidents dans le manifest ont été redirigées vers le nouveau dépôt. Le domaine d'intégration, le nom, le codeowner, le flux de configuration, le type IoT et la version source `0.4.1` sont conservés.
 
 ## Préservation fonctionnelle
@@ -41,18 +43,18 @@ Aucune logique Python métier n'a été réécrite lors de cet import. Le domain
 
 ## Vérifications effectuées
 
-- Dépôt cible public, branche par défaut `main).
+- Dépôt cible public, branche par défaut `main`.
 - Fichiers Python centraux présents après import.
 - Manifest vérifié et liens du dépôt mis à jour.
 - Fichiers de traduction, métadonnées de service, blueprint et cartes Lovelace connues importés.
 
 ## À faire avant de clore la Phase 0
 
-- Comparer exhaustivement l'arborescence Git source et cible, y compris fichiers cachés et workflows.
-- Examiner l'intégralité de `coordinator.py`, `sensor.py`, `__init__.py` et des cartes.
+- Valider la comparaison exhaustive des arbres Git source et cible (23 fichiers suivis dans le source ; code et cartes identiques hors README et manifest adaptés).
+- Faire valider le choix de licence GPL-3.0 présent uniquement dans le dépôt cible.
 - Vérifier la présence de tests et les exécuter dans un environnement Home Assistant adapté.
 - Valider le chargement de l'intégration importée dans Home Assistant.
-- Documenter des exemples de réponses ESPN et les limites des endpoints.
+- Documenter et tester des exemples de réponses ESPN pour chaque ressource.
 - Faire valider le plan technique avant toute implémentation de la Phase 1.
 
 **Important :** l'import constitue une base de travail, pas une preuve de compatibilité d'exécution. Aucun test d'intégration Home Assistant n'a encore été exécuté.
