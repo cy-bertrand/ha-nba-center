@@ -139,7 +139,7 @@ class NBACenterCard extends LitElement {
     .overlay-head{display:flex;justify-content:space-between;align-items:center;padding:17px 19px;border-bottom:1px solid #ffffff16}
     .overlay-body{padding:18px}.overlay-teams{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;text-align:center}
     .overlay-team img{width:54px;height:54px;object-fit:contain}.overlay-team strong{display:block;margin-top:7px;font-size:12px}
-    .overlay-score{font-size:24px;font-weight:950;color:#f2c45f}.overlay-close{min-width:38px;padding:8px;border:1px solid #34465f}
+    .overlay-score{font-size:24px;font-weight:950;color:#f2c45f}.overlay-actions{display:flex;align-items:center;gap:7px}.overlay-refresh{min-width:0;padding:8px 10px;border:1px solid #34465f;color:#e8bb58;font-size:9px}.overlay-refresh:disabled{opacity:.55;cursor:wait}.overlay-close{min-width:38px;padding:8px;border:1px solid #34465f}
     .top-player{padding:12px 0;border-top:1px solid #ffffff12}.top-player strong{display:block;font-size:12px}.top-player small{color:#aab6ca}
     .boxscore-section{margin-top:22px}.section-kicker{color:#e8b74e;font-size:9px;font-weight:900;letter-spacing:.2em;margin-bottom:5px}.boxscore-section>h3{margin:0 0 12px}
     .boxscore-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.boxscore-panel{padding:10px;min-width:0}.player-table-wrap{overflow-x:auto;max-width:100%}.player-table{width:100%;border-collapse:collapse;font-size:10px;white-space:nowrap}.player-table th,.player-table td{padding:8px 6px;text-align:right;border-bottom:1px solid #ffffff10;font-variant-numeric:tabular-nums}.player-table th:first-child,.player-table td:first-child{text-align:left;position:sticky;left:0;background:#111d2c}.player-table th{color:#94a5bc;font-size:8px;letter-spacing:.08em}.player-table tr.starter td{background-color:#17263a}.player-table tr.dnp td{color:#75849a}
@@ -507,14 +507,17 @@ class NBACenterCard extends LitElement {
           <section class="empty"><strong>Connexion à Home Assistant…</strong><p>La carte attend les états de l'intégration NBA.</p></section>`}</main>
         ${this._overlayGame ? html`<div class="overlay" @click=${(event) => { if (event.target === event.currentTarget) this._closeOverlay(); }} @keydown=${this._onOverlayKeydown}>
           <section class="overlay-panel" role="dialog" aria-modal="true" aria-label="Détails du match">
-            <header class="overlay-head"><h2>MATCH CENTER</h2><button class="overlay-close" aria-label="Fermer" @click=${this._closeOverlay}>✕</button></header>
+            <header class="overlay-head"><h2>MATCH CENTER</h2><div class="overlay-actions">
+              <button class="overlay-refresh" ?disabled=${this._overlayLoading} @click=${() => this._openGame(this._overlayGame)} aria-label="Actualiser les détails du match">${this._overlayLoading ? "CHARGEMENT…" : "↻ ACTUALISER"}</button>
+              <button class="overlay-close" aria-label="Fermer" @click=${this._closeOverlay}>✕</button>
+            </div></header>
             <div class="overlay-body"><div class="overlay-teams">
               <div class="overlay-team">${this._overlayGame.away?.logo ? html`<img src=${this._overlayGame.away.logo} alt="">` : ""}<strong>${value(this._overlayGame.away?.name)}</strong></div>
               <div class="overlay-score">${this._overlayGame.state === "pre" ? "VS" : `${value(this._overlayGame.away?.score)} – ${value(this._overlayGame.home?.score)}`}</div>
               <div class="overlay-team">${this._overlayGame.home?.logo ? html`<img src=${this._overlayGame.home.logo} alt="">` : ""}<strong>${value(this._overlayGame.home?.name)}</strong></div>
             </div><p class="muted" style="text-align:center">${value(this._overlayGame.date_text)} · ${value(this._overlayGame.detail, this._gameStatus(this._overlayGame).label)}</p>
             ${this._overlayLoading ? html`<section class="empty">Chargement du résumé…</section>` : ""}
-            ${this._overlayError ? html`<section class="empty"><p>${this._overlayError}</p><button @click=${() => this._openGame(this._overlayGame)}>RÉESSAYER</button></section>` : ""}
+            ${(this._overlayError || this._overlayDetails?.error) ? html`<section class="empty"><p>${value(this._overlayError || this._overlayDetails?.error, "Détails du match indisponibles.")}</p><button @click=${() => this._openGame(this._overlayGame)}>RÉESSAYER</button></section>` : ""}
             ${this._overlayDetails?.teams?.length ? html`<div class="grid">${this._overlayDetails.teams.map((team) => html`
               <section class="panel"><div class="panel-head"><h3>${value(team.abbr, team.name)}</h3><span class="pill">${value(team.score)}</span></div>
                 ${team.quarters?.length ? html`<div class="muted">QUART-TEMPS · ${team.quarters.join(" / ")}</div>` : ""}
@@ -525,7 +528,7 @@ class NBACenterCard extends LitElement {
                 ${this._teamStatsPanel()}
                 ${this._playByPlayPanel()}
               </div>` : ""}
-            ${!this._overlayLoading && !this._overlayError && !this._overlayDetails?.teams?.length && !this._overlayDetails?.has_boxscore ? html`<section class="empty"><p>Le résumé détaillé n’est pas encore disponible pour cette rencontre.</p></section>` : ""}            </div></section></div>` : ""}
+            ${!this._overlayLoading && !this._overlayError && !this._overlayDetails?.error && !this._overlayDetails?.teams?.length && !this._overlayDetails?.has_boxscore ? html`<section class="empty"><p>Le résumé détaillé n’est pas encore disponible pour cette rencontre.</p></section>` : ""}            </div></section></div>` : ""}
         <footer class="footer"><span>NBA CENTER · ${active.label}</span><span>DATA VIA HOME ASSISTANT</span></footer>
       </ha-card>`;
   }
