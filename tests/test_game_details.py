@@ -8,6 +8,7 @@ SPEC = importlib.util.spec_from_file_location("game_details", MODULE_PATH)
 module = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(module)
 parse_boxscore = module.parse_boxscore
+parse_plays = module.parse_plays
 
 
 class BoxscoreParsingTests(unittest.TestCase):
@@ -48,6 +49,28 @@ class BoxscoreParsingTests(unittest.TestCase):
         self.assertTrue(bos["players"][0]["starter"])
         self.assertTrue(bos["players"][1]["did_not_play"])
         self.assertEqual(bos["players"][1]["reason"], "Coach's Decision")
+
+
+    def test_parses_play_by_play_and_scoring_state(self):
+        raw = {"plays": [
+            {"id": "p1", "period": {"number": 4}, "clock": {"displayValue": "02:14"},
+             "type": {"text": "3PT Made"}, "text": "Player makes 3-pt jump shot",
+             "team": {"id": "2"}, "scoreValue": 3, "homeScore": 98, "awayScore": 101,
+             "scoringPlay": True},
+            {"id": "p2", "period": {"number": 4}, "clock": {"displayValue": "01:59"},
+             "text": "Defensive rebound", "scoringPlay": False},
+        ]}
+        plays = parse_plays(raw)
+        self.assertEqual(len(plays), 2)
+        self.assertEqual(plays[0]["period"], "4")
+        self.assertEqual(plays[0]["clock"], "02:14")
+        self.assertEqual(plays[0]["type"], "3PT Made")
+        self.assertTrue(plays[0]["scoring"])
+        self.assertEqual(plays[0]["home_score"], "98")
+        self.assertFalse(plays[1]["scoring"])
+
+    def test_missing_plays_is_empty(self):
+        self.assertEqual(parse_plays({}), [])
 
     def test_missing_boxscore_is_empty_not_an_error(self):
         self.assertEqual(parse_boxscore({}), {
