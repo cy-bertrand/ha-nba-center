@@ -55,3 +55,14 @@ def event_local_date(raw: str | None, local_timezone: tzinfo) -> date | None:
     if parsed.tzinfo is None:
         return None
     return parsed.astimezone(local_timezone).date()
+
+
+def filter_games_for_local_date(games: list[dict[str, Any]], selected: date, local_timezone: tzinfo) -> list[dict[str, Any]]:
+    """Filtre, déduplique et trie les matchs pour une date locale HA."""
+    games_by_id: dict[str, dict[str, Any]] = {}
+    for game in games:
+        game_id = game.get("id")
+        if game_id is None or event_local_date(game.get("date"), local_timezone) != selected:
+            continue
+        games_by_id[str(game_id)] = game
+    return sorted(games_by_id.values(), key=lambda item: item.get("date") or "")

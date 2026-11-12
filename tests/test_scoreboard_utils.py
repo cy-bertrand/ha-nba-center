@@ -15,6 +15,7 @@ is_cache_fresh = scoreboard_utils.is_cache_fresh
 parse_score = scoreboard_utils.parse_score
 validate_local_date = scoreboard_utils.validate_local_date
 event_local_date = scoreboard_utils.event_local_date
+filter_games_for_local_date = scoreboard_utils.filter_games_for_local_date
 
 
 class ValidateDateTests(unittest.TestCase):
@@ -65,6 +66,38 @@ class EventTimezoneTests(unittest.TestCase):
         self.assertIsNone(event_local_date("not-a-date", self.brussels))
         self.assertIsNone(event_local_date("2026-11-12T23:30:00", self.brussels))
         self.assertIsNone(event_local_date(None, self.brussels))
+
+
+
+class CalendarFilteringTests(unittest.TestCase):
+    def setUp(self):
+        self.brussels = ZoneInfo("Europe/Brussels")
+        self.selected = date(2026, 11, 13)
+
+    def test_filters_local_day_and_sorts_chronologically(self):
+        games = [
+            {"id": "late", "date": "2026-11-13T02:00:00+01:00"},
+            {"id": "previous", "date": "2026-11-12T23:30:00+00:00"},
+            {"id": "early", "date": "2026-11-13T00:30:00+01:00"},
+        ]
+        result = filter_games_for_local_date(games, self.selected, self.brussels)
+        self.assertEqual([game["id"] for game in result], ["early", "late"])
+
+    def test_duplicate_ids_keep_last_payload(self):
+        games = [
+            {"id": "same", "date": "2026-11-13T01:00:00+01:00", "score": 10},
+            {"id": "same", "date": "2026-11-13T01:00:00+01:00", "score": 11},
+        ]
+        result = filter_games_for_local_date(games, self.selected, self.brussels)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]["score"], 11)
+
+    def test_invalid_dates_and_missing_ids_are_skipped(self):
+        games = [
+            {"id": "bad", "date": "not-a-date"},
+            {"date": "2026-11-13T01:00:00+01:00"},
+        ]
+        self.assertEqual(filter_games_for_local_date(games, self.selected, self.brussels), [])
 
 
 class CalendarCacheTests(unittest.TestCase):

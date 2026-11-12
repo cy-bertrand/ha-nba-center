@@ -12,7 +12,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .scoreboard_utils import event_local_date, is_cache_fresh, parse_score, validate_local_date
+from .scoreboard_utils import filter_games_for_local_date, is_cache_fresh, parse_score, validate_local_date
 
 from .const import (
     CONF_NOTIFY_END,
@@ -362,17 +362,14 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
             if not successful:
                 raise UpdateFailed("Impossible de charger le calendrier ESPN.")
 
-            games_by_id: dict[str, dict[str, Any]] = {}
-            for raw in successful:
-                for event in raw.get("events", []):
-                    game = self._parse_game(event)
-                    if not game or not game.get("date"):
-                        continue
-                    if event_local_date(game["date"], timezone) != selected:
-                        continue
-                    games_by_id[game["id"]] = game
+            parsed_games = [
+                game
+                for raw in successful
+                for event in raw.get("events", [])
+                if (game := self._parse_game(event)) is not None
+            ]
+            games = filter_games_for_local_date(parsed_games, selected, timezone)
 
-            games = sorted(games_by_id.values(), key=lambda item: item.get("date") or "")
             payload = {
                 "date": key,
                 "timezone": str(timezone),
