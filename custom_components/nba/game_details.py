@@ -1,6 +1,7 @@
 """Normalisation pure des box scores et actions ESPN NBA."""
 from __future__ import annotations
 
+import re
 from typing import Any
 
 
@@ -23,9 +24,49 @@ def _coordinate(value: Any) -> dict[str, float] | None:
     return {"x": x, "y": y}
 
 
+def _score(value: Any) -> int | None:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _classify_play(play_type: str | None, short_description: str | None,
+                   text: str | None) -> str:
+    """Classify common ESPN play-by-play events for consistent UI treatment."""
+    combined = " ".join(filter(None, (play_type, short_description, text))).lower()
+    if "end game" in combined or "end of game" in combined:
+        return "game_end"
+    if "end period" in (play_type or "").lower() or re.search(r"end of (the )?[1-4](st|nd|rd|th)", combined):
+        return "period_end"
+    if "foul" in combined:
+        return "foul"
+    if "rebound" in combined:
+        return "rebound"
+    if "substitution" in combined:
+        return "substitution"
+    if "turnover" in combined:
+        return "turnover"
+    if "timeout" in combined:
+        return "timeout"
+    if "jumpball" in combined or "jump ball" in combined:
+        return "jump_ball"
+    if "violation" in combined or "goaltending" in combined:
+        return "violation"
+    if "challenge" in combined:
+        return "challenge"
+    if "missed" in combined:
+        return "missed_shot"
+    if "point" in combined or "made" in (play_type or "").lower():
+        return "score"
+    return "other"
+
+
 def parse_plays(raw: dict[str, Any]) -> list[dict[str, Any]]:
-    """Normalise summary.plays while retaining useful event context."""
+    """Normalise summary.plays and derive score/event markers without losing source data."""
     plays: list[dict[str, Any]] = []
+    previous_home: int | None = None
+    previous_away: int | None = None
     for item in raw.get("plays") or []:
         if not isinstance(item, dict):
             continue
@@ -33,32 +74,52 @@ def parse_plays(raw: dict[str, Any]) -> list[dict[str, Any]]:
         clock = _mapping(item.get("clock"))
         play_type = _mapping(item.get("type"))
         team = _mapping(item.get("team"))
+        type_text = play_type.get("text") or play_type.get("description") or _text(item.get("type"))
+        text = item.get("text") or item.get("shortText")
+        short_description = item.get("shortDescription")
+        home = _score(item.get("homeScore"))
+        away = _score(item.get("awayScore"))
+        score_changed = (
+            (home is not None and previous_home is not None and home != previous_home)
+            or (away is not None and previous_away is not None and away != previous_away)
+        )
         participants = []
         for participant in item.get("participants") or []:
             athlete = _mapping(_mapping(participant).get("athlete"))
             athlete_id = _text(athlete.get("id"))
             if athlete_id:
                 participants.append(athlete_id)
+        category = _classify_play(type_text, short_description, text)
         plays.append({
             "id": _text(item.get("id")),
             "sequence_number": _text(item.get("sequenceNumber")),
-            "text": item.get("text") or item.get("shortText"),
-            "short_description": item.get("shortDescription"),
+            "text": text,
+            "short_description": short_description,
             "period": _text(period.get("number", item.get("periodNumber", item.get("period")))),
             "period_display": period.get("displayValue"),
             "clock": clock.get("displayValue") or clock.get("value") or _text(item.get("clock")),
-            "type": play_type.get("text") or play_type.get("description") or _text(item.get("type")),
+            "type": type_text,
             "team_id": _text(team.get("id")),
             "score_value": _text(item.get("scoreValue")),
             "home_score": _text(item.get("homeScore")),
             "away_score": _text(item.get("awayScore")),
             "scoring": bool(item.get("scoringPlay", False)),
+            "score_changed": score_changed,
+            "action_category": category,
+            "is_period_end": category == "period_end",
+            "is_game_end": category == "game_end",
             "shooting": bool(item.get("shootingPlay", False)),
             "participants": participants,
             "wallclock": item.get("wallclock"),
             "points_attempted": _text(item.get("pointsAttempted")),
             "coordinate": _coordinate(item.get("coordinate")),
         })
+        # ESPN normally provides a score snapshot on each play. Keep the last
+        # valid snapshot so sparse events do not reset score-change detection.
+        if home is not None:
+            previous_home = home
+        if away is not None:
+            previous_away = away
     return plays
 
 
@@ -81,6 +142,7 @@ def parse_boxscore(raw: dict[str, Any]) -> dict[str, Any]:
             "team_id": team_id,
             "name": team.get("displayName") or team.get("name"),
             "abbr": team.get("abbreviation"),
+            "home_away": team.get("homeAway"),
             "statistics": [
                 {
                     "name": stat.get("name"),
