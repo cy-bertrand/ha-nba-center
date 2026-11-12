@@ -4,7 +4,8 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "build": "node build.mjs"
+    "build": "node build.mjs",
+    "test": "node frontend/test-bundle.mjs"
   },
   "devDependencies": {
     "esbuild": "0.25.5",
