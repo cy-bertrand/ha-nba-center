@@ -11,6 +11,7 @@ Transformer l'overlay Match Center de la Phase 2 en fiche de match approfondie, 
 - Les données joueurs sont associées à leur équipe, avec nom, numéro, position, portrait, statut titulaire/actif, DNP/raison et statistiques par clé ESPN.
 - Les statistiques brutes sont conservées sous forme de chaînes (par exemple `10-20`, `38:12`) ; aucune valeur manquante n'est transformée en zéro.
 - Le Match Center affiche les box scores des deux équipes, les titulaires en premier, les statistiques disponibles et une comparaison des statistiques collectives.
+- Un bouton d'actualisation manuelle permet de recharger les détails d'un match ; les erreurs renvoyées par le backend sont désormais visibles avec une action de nouvelle tentative.
 - Les tableaux sont défilables horizontalement et adaptés aux petits écrans.
 - Une première timeline Play-by-Play est ajoutée : chronologie inversée (actions récentes en haut), filtre « points seulement », score associé quand fourni et affichage progressif des actions.
 - Le parseur `summary.plays` conserve texte, quart-temps, horloge, type, équipe, score et indicateur de panier sans reconstituer les champs absents.
@@ -21,10 +22,12 @@ Transformer l'overlay Match Center de la Phase 2 en fiche de match approfondie, 
 - `custom_components/nba/game_details.py` : nouveaux parseurs purs des box scores et actions Play-by-Play.
 - `custom_components/nba/coordinator.py` : intégration des statistiques et des actions au résumé ESPN.
 - `tests/test_game_details.py` : tests unitaires du parsing des statistiques équipes/joueurs, DNP, valeurs manquantes et actions Play-by-Play.
-- `frontend/src/nba-center-card.js` : tableaux joueurs et comparaison équipes dans le Match Center.
-- `frontend/test-bundle.mjs` : assertions de présence du nouveau box score et du Play-by-Play.
+- `frontend/src/nba-center-card.js` : tableaux joueurs, comparaison équipes, actualisation manuelle et affichage des erreurs dans le Match Center.
+- `frontend/test-bundle.mjs` : assertions de présence du box score, du Play-by-Play et des contrôles d'actualisation/erreur.
 
 ## Tests
+
+- La vérification ESPN en direct n'a pas encore fourni de fixture vérifiable dans cet environnement ; aucune compatibilité réelle n'est affirmée à ce stade.
 
 - Tests unitaires backend : fixtures synthétiques couvrant les deux équipes, joueurs, statistiques, titulaires, DNP et valeurs absentes.
 - CI GitHub : workflow `43327946269` terminé avec succès (compilation Python, tests unitaires backend, build Lit, assertions frontend et génération du bundle).
