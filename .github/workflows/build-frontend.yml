@@ -7,6 +7,8 @@ on:
       - phase-2-match-center
     paths:
       - 'frontend/**'
+      - 'tests/**'
+      - '.github/workflows/**'
       - 'custom_components/nba/**/*.py'
       - 'custom_components/nba/manifest.json'
       - 'package.json'

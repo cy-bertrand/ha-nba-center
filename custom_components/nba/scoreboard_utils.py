@@ -5,7 +5,7 @@ Les règles exposées ici sont couvertes par la suite unittest du dépôt.
 """
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date, datetime, tzinfo
 from typing import Any
 
 
@@ -41,3 +41,17 @@ def is_cache_fresh(now: datetime, fetched_at: datetime, games: list[dict[str, An
     """Indique si une entrée de cache est encore dans sa fenêtre de validité."""
     age = (now - fetched_at).total_seconds()
     return 0 <= age < cache_ttl(games)
+
+
+def event_local_date(raw: str | None, local_timezone: tzinfo) -> date | None:
+    """Convertit une date ESPN avec fuseau en date du fuseau Home Assistant."""
+    if not raw:
+        return None
+    try:
+        parsed = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+    except (TypeError, ValueError):
+        return None
+    # Une date sans offset est ambiguë : ne pas lui inventer un fuseau.
+    if parsed.tzinfo is None:
+        return None
+    return parsed.astimezone(local_timezone).date()

@@ -12,7 +12,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .scoreboard_utils import is_cache_fresh, parse_score, validate_local_date
+from .scoreboard_utils import event_local_date, is_cache_fresh, parse_score, validate_local_date
 
 from .const import (
     CONF_NOTIFY_END,
@@ -368,8 +368,7 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     game = self._parse_game(event)
                     if not game or not game.get("date"):
                         continue
-                    parsed = dt_util.parse_datetime(game["date"])
-                    if parsed is None or dt_util.as_local(parsed).date() != selected:
+                    if event_local_date(game["date"], timezone) != selected:
                         continue
                     games_by_id[game["id"]] = game
 

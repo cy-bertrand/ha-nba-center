@@ -3,6 +3,7 @@ import importlib.util
 import unittest
 from pathlib import Path
 from datetime import date, datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 MODULE_PATH = Path(__file__).resolve().parents[1] / "custom_components" / "nba" / "scoreboard_utils.py"
 SPEC = importlib.util.spec_from_file_location("scoreboard_utils", MODULE_PATH)
@@ -13,6 +14,7 @@ cache_ttl = scoreboard_utils.cache_ttl
 is_cache_fresh = scoreboard_utils.is_cache_fresh
 parse_score = scoreboard_utils.parse_score
 validate_local_date = scoreboard_utils.validate_local_date
+event_local_date = scoreboard_utils.event_local_date
 
 
 class ValidateDateTests(unittest.TestCase):
@@ -40,6 +42,29 @@ class ScoreParsingTests(unittest.TestCase):
 
     def test_real_zero_is_preserved(self):
         self.assertEqual(parse_score("0"), 0)
+
+
+class EventTimezoneTests(unittest.TestCase):
+    def setUp(self):
+        self.brussels = ZoneInfo("Europe/Brussels")
+
+    def test_us_evening_game_maps_to_next_local_day(self):
+        self.assertEqual(
+            event_local_date("2026-11-12T23:30:00Z", self.brussels),
+            date(2026, 11, 13),
+        )
+
+    def test_cet_and_cest_offsets_are_respected(self):
+        # Just before and after the spring DST transition in Brussels.
+        self.assertEqual(event_local_date("2026-03-29T00:30:00Z", self.brussels), date(2026, 3, 29))
+        self.assertEqual(event_local_date("2026-03-29T01:30:00Z", self.brussels), date(2026, 3, 29))
+        self.assertEqual(event_local_date("2026-10-25T00:30:00Z", self.brussels), date(2026, 10, 25))
+        self.assertEqual(event_local_date("2026-10-25T01:30:00Z", self.brussels), date(2026, 10, 25))
+
+    def test_invalid_or_timezone_naive_date_is_rejected(self):
+        self.assertIsNone(event_local_date("not-a-date", self.brussels))
+        self.assertIsNone(event_local_date("2026-11-12T23:30:00", self.brussels))
+        self.assertIsNone(event_local_date(None, self.brussels))
 
 
 class CalendarCacheTests(unittest.TestCase):
