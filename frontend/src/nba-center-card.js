@@ -382,6 +382,18 @@ class NBACenterCard extends LitElement {
     }
   }
 
+  async _loadPlayerPlayoffSeason(playerId, seasonYear) {
+    if (!playerId || !Number.isInteger(seasonYear)) return;
+    this._playerSelectedPlayoffSeason = String(seasonYear); this._playerPlayoffLoading = true;
+    const request = this._playerRequest;
+    try {
+      const result = await this.hass.callWS({ type: "nba/player_data", player_id: String(playerId), postseason_year: seasonYear });
+      if (request !== this._playerRequest || !this._playerOverlay) return;
+      this._playerData = { ...this._playerData, postseason_stats: result.postseason_stats, postseason_gamelog: result.postseason_gamelog };
+    } catch (err) { if (request === this._playerRequest) this._playerError = err?.message ?? "Statistiques playoffs indisponibles."; }
+    finally { if (request === this._playerRequest) this._playerPlayoffLoading = false; }
+  }
+
   _closePlayer() {
     this._playerRequest += 1;
     this._playerOverlay = null; this._playerData = null; this._playerLoading = false; this._playerError = "";
@@ -501,6 +513,7 @@ class NBACenterCard extends LitElement {
             </section>
             <section class="panel player-postseason-panel">
               <div class="panel-head"><h3>STATISTIQUES PLAYOFFS</h3><span class="pill">${value(postseason.season, "POSTSEASON")}</span></div>
+              ${seasonHistory.length ? html`<div class="filters player-season-picker"><label class="muted" for="player-playoff-season-select">SAISON PLAYOFFS</label><select id="player-playoff-season-select" aria-label="Choisir la saison des playoffs" .value=${String(this._playerSelectedPlayoffSeason || selectedSeason?.year || seasonHistory[0]?.year || "")} @change=${(event) => this._loadPlayerPlayoffSeason(player.id, Number(event.target.value))}>${seasonHistory.map((item) => html`<option value=${String(item.year)}>${item.display_name}${seasonTeamLabel(item) ? ` · ${seasonTeamLabel(item)}` : ""}</option>`)}</select>${this._playerPlayoffLoading ? html`<span class="muted">Chargement…</span>` : ""}</div>` : ""}
               ${postseasonStats.length ? html`
                 <div class="player-stat-grid player-season-highlights">${postseasonQuick.map(([label,item]) => html`<div><small>${label} / MATCH</small><strong>${statLabel(item)}</strong></div>`)}</div>
                 ${postseasonDetailed.length ? html`<div class="table-wrap"><table><thead><tr><th>STATISTIQUE</th><th>VALEUR</th></tr></thead><tbody>${postseasonDetailed.map((item) => html`<tr><td>${value(translateStat(item),item.name)}</td><td>${value(item.display_value ?? item.value)}</td></tr>`)}</tbody></table></div>` : ""}
