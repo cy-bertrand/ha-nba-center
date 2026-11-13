@@ -399,3 +399,61 @@ Cette version reconstruit un **parcours des équipes vérifiable**, pas encore u
 Les tests utilisent le calendrier complet OKC 2024-25 : le vainqueur de la première série est relié aux demi-finales, puis au vainqueur des finales Ouest et enfin aux NBA Finals. Des tests défensifs vérifient qu'aucune progression n'est inventée lorsqu'une équipe n'apparaît pas dans la série suivante, et que les tours non reconnus restent non classés.
 
 Aucune intégration au coordinateur Home Assistant ni aucun capteur n'est modifié à ce stade.
+
+
+## Recherche d'une source de seeds et de positions de bracket — 13 novembre 2026
+
+### ESPN standings : piste prioritaire à valider
+
+La documentation SportsDataverse de l'endpoint ESPN NBA standings expose notamment :
+- `playoff_seed` ;
+- `group_name` / `group_abbreviation` ;
+- `team_id`, `team_abbreviation`, `team_display_name` ;
+- les bilans et statistiques de saison.
+
+Endpoint documenté :
+`GET https://site.api.espn.com/apis/v2/sports/basketball/nba/standings?season={year}`
+
+La documentation ESPN site API décrit les paramètres `season`, `group` et `type` pour les classements, et la documentation core ESPN décrit aussi les standings avec le champ `playoff_seed`.
+
+**Ce que cela pourrait permettre :** récupérer l'ordre des équipes par conférence et rattacher un seed à un identifiant ESPN stable.
+
+**Ce qui n'est pas encore démontré :**
+- que la route renvoie correctement les standings historiques pour toutes les saisons ;
+- que `playoff_seed` représente le seed final effectivement utilisé dans le bracket après le Play-In, et pas seulement le classement de fin de saison régulière ;
+- que les valeurs restent cohérentes pour les équipes classées 7 à 10 avant et après le Play-In ;
+- que la réponse peut être récupérée de façon fiable depuis l'environnement Home Assistant.
+
+Aucune donnée de standings brute n'est encore enregistrée dans les fixtures du dépôt. Cette piste ne doit donc pas être branchée au parseur de production avant capture et vérification.
+
+### NBA.com : référence officielle de contrôle
+
+Les pages NBA.com publient les brackets officiels par saison, avec les seeds et les confrontations du premier tour. La page 2025 confirme par exemple les affiches (1)-(8), (2)-(7), (3)-(6) et (4)-(5) dans chaque conférence.
+
+Ces pages sont une bonne référence de validation manuelle des résultats calculés, mais aucune API JSON publique stable pour les extraire n'a été établie dans cette recherche.
+
+### Sportradar : schéma complet, mais fournisseur commercial
+
+La documentation Sportradar NBA Series Schedule expose directement :
+- le seed de chaque participant ;
+- le numéro de tour ;
+- l'identifiant et le titre de la série ;
+- les participants et leur bilan dans la série ;
+- des identifiants de source reliant un participant à une série précédente ;
+- les matchs, leurs équipes, scores et statuts.
+
+Le guide explique aussi que les séries peuvent être publiées avec des équipes TBD, puis mises à jour après le Play-In et au fur et à mesure de l'avancement.
+
+C'est le schéma le plus complet repéré pour un vrai bracket, mais il nécessite un accès Sportradar et une clé/API souscrite. Il ne constitue donc pas une source à ajouter implicitement à une intégration autonome gratuite.
+
+### Décision
+
+1. Garder ESPN comme source principale candidate.
+2. Capturer les standings ESPN historiques pour au moins 2024-25 et 2025-26, puis comparer les seeds à des brackets NBA.com officiels.
+3. Vérifier spécifiquement les seeds 7 et 8 après le Play-In.
+4. Ne construire les positions 1 à 8 qu'à partir de seeds confirmés ; sinon laisser le bracket partiellement positionné.
+5. Ne pas ajouter Sportradar comme dépendance sans décision explicite sur la clé, le coût et les conditions d'utilisation.
+
+### Correctif de classification des tours
+
+Le classement des tours du prototype a été rendu strict : `NBA Finals` est maintenant reconnu exactement comme le quatrième tour, et non comme une finale de conférence. Cela évite de confondre les deux étapes lors de la création des liens de progression.
