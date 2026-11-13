@@ -51,6 +51,24 @@ class PlayerDataParserTests(unittest.TestCase):
         self.assertEqual(result["statistics"][-1]["value"], 30.3)
         self.assertEqual(result["statistics"][-1]["season"], "2026-27")
 
+    def test_builds_season_history_across_categories(self):
+        result = parse_player_stats({"categories": [
+            {"name": "averages", "displayName": "Averages", "names": ["avgPoints", "avgRebounds"],
+             "labels": ["PTS", "REB"], "statistics": [
+                 {"season": {"year": 2025, "displayName": "2024-25"}, "stats": ["22.1", "5.4"]},
+                 {"season": {"year": 2026, "displayName": "2025-26"}, "stats": ["24.3", "6.1"]},
+             ]},
+            {"name": "totals", "displayName": "Totals", "names": ["gamesPlayed"], "labels": ["GP"],
+             "statistics": [
+                 {"season": {"year": 2025, "displayName": "2024-25"}, "stats": ["70"]},
+                 {"season": {"year": 2026, "displayName": "2025-26"}, "stats": ["68"]},
+             ]},
+        ]})
+        history = result["season_history"]
+        self.assertEqual([item["display_name"] for item in history], ["2025-26", "2024-25"])
+        self.assertEqual(len(history[0]["statistics"]), 3)
+        self.assertEqual(history[1]["statistics"][0]["value"], 22.1)
+
     def test_exposes_career_split_separately(self):
         result = parse_player_stats({"statistics": {
             "labels": ["GP", "PTS"],
