@@ -80,3 +80,14 @@ if (!source.includes("_playByPlayPanel") || !source.includes("POINTS SEULEMENT")
 if (!source.includes("aria-label=\"Actualiser les détails du match\"") || !bundle.includes("RÉESSAYER")) {
   throw new Error("Match detail refresh/error state is missing");
 }
+
+assert.match(source, /leader-button/, "season leader rows must be clickable");
+assert.match(source, /_openPlayer\(p\.id, p\)/, "clicking a season leader must open that player's profile");
+assert.match(source, /TOP 10 · SAISON/, "Players Center must show top-ten leaderboards instead of a duplicate player directory");
+assert.match(source, /_leaderPanel\(key,10\)/, "Players Center must render ten players per leaderboard");
+assert.match(source, /opponent_abbreviation/, "recent player games must use the opponent's NBA abbreviation");
+assert.match(source, /\}m · .*stl · .*blk/, "recent player game stats must use compact labels to fit all six values");
+assert.match(bundle, /leader-button/, "bundled season leader rows must be clickable");
+assert.match(bundle, /TOP 10 · SAISON/, "bundled Players Center must show top-ten leaderboards");
+assert.match(bundle, /_leaderPanel\(a,10\)/, "bundled Players Center must render ten players per leaderboard");
+assert.match(bundle, /opponent_abbreviation/, "bundled recent player games must use opponent abbreviations");
