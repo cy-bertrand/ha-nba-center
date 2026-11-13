@@ -35,6 +35,7 @@ Transformer l'overlay Match Center de la Phase 2 en fiche de match approfondie, 
 - CI GitHub : workflow `43384846830` terminé avec succès sur le commit `07d3a52` (13/11/2026) : compilation Python, **38 tests unitaires backend réussis**, build Lit et assertions frontend réussis. Le nouveau fichier `test_game_details_live_fixture.py` est bien détecté par `unittest discover` ; ses 3 tests passent.
 - Le fixture live reste un échantillon représentatif. Le fixture terminé couvre en revanche l'intégralité des sections utilisées par le parseur pour le header, les statistiques et les 515 actions Play-by-Play. Les sections annexes ESPN sans rapport avec ce parseur sont volontairement exclues.
 - Le schéma du Play-by-Play est maintenant vérifié sur une réponse ESPN réelle terminée de 515 actions, un extrait live et une rencontre réelle à 610 actions terminée après deux prolongations. Les cas de pagination, de rafraîchissement continu et les éventuelles variantes d'autres rencontres restent à tester.
+- Dernière CI de validation partielle : workflow `43392755537` réussi sur `main` (13/11/2026) : **52 tests unitaires Python réussis**, compilation Python, build Lit et assertions frontend réussis. Cette série comprend les cinq tests du fixture dégradé sans boxscore.
 
 ## Suite de la Phase 3
 
