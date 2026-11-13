@@ -14,6 +14,7 @@ from homeassistant.util import dt as dt_util
 
 from .scoreboard_utils import async_load_scoreboard, parse_score
 from .game_details import parse_boxscore, parse_game_state, parse_plays
+from .teams_catalog import parse_teams_catalog
 
 from .const import (
     CONF_NOTIFY_END,
@@ -32,6 +33,7 @@ from .const import (
     STANDINGS_URL,
     SUMMARY_URL,
     TEAM_SCHEDULE_URL,
+    TEAMS_URL,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -78,6 +80,8 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._details_cache: dict[str, dict[str, Any]] = {}
         self._scoreboard_cache: dict[str, tuple[datetime, dict[str, Any]]] = {}
         self._scoreboard_lock = asyncio.Lock()
+        self._teams_catalog: dict[str, Any] = {"teams": [], "count": 0, "expected_count": 30, "complete": False}
+        self._teams_catalog_fetched: datetime | None = None
 
     async def _get(self, url: str, params: dict | None = None) -> dict:
         async with self.session.get(url, params=params, timeout=20) as resp:
@@ -95,6 +99,7 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise UpdateFailed(f"Erreur API ESPN: {err}") from err
 
         await self._update_leaders()
+        await self._update_teams_catalog()
 
         games = [g for g in (self._parse_game(e) for e in scoreboard.get("events", [])) if g]
         team_data = {tid: self._parse_team(tid, schedules[tid], games) for tid in self.teams}
@@ -123,11 +128,39 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "teams": team_data,
             "leaders": self._leaders,
             "favorites": list(self.teams),
+            "teams_catalog": self._teams_catalog,
         }
         self._fire_events(games)
         live = any(g["state"] == "in" for g in games)
         self.update_interval = SCAN_INTERVAL_LIVE if live else SCAN_INTERVAL_IDLE
         return data
+
+    async def _update_teams_catalog(self) -> None:
+        """Actualise le catalogue des franchises au maximum une fois par jour.
+
+        Une réponse vide/incomplète ne remplace pas un catalogue complet déjà
+        connu. Une panne du catalogue ne bloque pas les autres données NBA.
+        """
+        now = dt_util.utcnow()
+        if self._teams_catalog_fetched and (now - self._teams_catalog_fetched).total_seconds() < 86400:
+            return
+        try:
+            raw = await self._get(TEAMS_URL)
+            parsed = parse_teams_catalog(raw)
+            if parsed["count"] == 0:
+                raise ValueError("ESPN a renvoyé un catalogue d'équipes vide")
+            if self._teams_catalog.get("complete") and not parsed["complete"]:
+                _LOGGER.warning(
+                    "Catalogue ESPN incomplet (%s/30) : conservation du catalogue complet en cache",
+                    parsed["count"],
+                )
+                return
+            self._teams_catalog = parsed
+            self._teams_catalog_fetched = now
+            if not parsed["complete"]:
+                _LOGGER.warning("Catalogue ESPN incomplet : %s/30 franchises", parsed["count"])
+        except Exception as err:  # noqa: BLE001 - cette ressource ne bloque pas le coordinator
+            _LOGGER.warning("Catalogue des franchises NBA indisponible : %s", err)
 
     async def _update_leaders(self) -> None:
         """Récupère les leaders de stats (au maximum une fois par heure).
