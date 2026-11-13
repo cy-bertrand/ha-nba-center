@@ -16,7 +16,7 @@ from .scoreboard_utils import async_load_scoreboard, parse_score
 from .game_details import parse_boxscore, parse_game_state, parse_plays
 from .teams_catalog import parse_teams_catalog
 from .team_roster import parse_team_roster
-from .player_data import parse_player_gamelog, parse_player_stats
+from .player_data import parse_player_gamelog, parse_player_stats, season_matches_espn_year
 from .playoff_data import (
     annotate_playoff_bracket,
     build_playoff_bracket,
@@ -49,20 +49,6 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def _season_matches_espn_year(season: str, espn_year: int) -> bool:
-    """Vérifie une saison NBA YYYY-YY contre l'année ESPN de fin."""
-    value = str(season or "").strip()
-    parts = value.split("-")
-    if len(parts) == 2 and parts[0].isdigit() and parts[1].isdigit():
-        start = int(parts[0])
-        suffix = int(parts[1])
-        end = (start // 100) * 100 + suffix if suffix < 100 else suffix
-        if end < start:
-            end += 100
-        return end == espn_year
-    return value.isdigit() and int(value) == espn_year
 
 
 def _to_int(value: Any) -> int:
@@ -520,7 +506,7 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
                         returned_season = str(parsed_postseason.get("season") or "")
                         # ESPN attend l'année de fin : 2023 correspond à 2022-23.
                         # Comparer le libellé complet sur son année de fin évite le décalage d'un an.
-                        if _season_matches_espn_year(returned_season, season_year):
+                        if season_matches_espn_year(returned_season, season_year):
                             postseason_stats = parsed_postseason
                         else:
                             _LOGGER.debug(
