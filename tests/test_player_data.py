@@ -121,6 +121,7 @@ class PlayerDataParserTests(unittest.TestCase):
         }})
         self.assertEqual(result["count"], 1)
         self.assertEqual(result["games"][0]["opponent"], "Chicago Bulls")
+        self.assertEqual(result["games"][0]["opponent_abbreviation"], "CHI")
         self.assertEqual(result["games"][0]["score"], "124-119")
         self.assertEqual(result["games"][0]["home_away"], "@")
         self.assertEqual(result["games"][0]["stats"], {})
