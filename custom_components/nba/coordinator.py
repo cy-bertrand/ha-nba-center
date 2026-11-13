@@ -445,6 +445,31 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
             overview = parse_player_stats(resources.get("overview", {}))
             stats = parse_player_stats(resources.get("stats", {}))
             gamelog = parse_player_gamelog(resources.get("gamelog", {}))
+            # ESPN gamelog ne fournit que les métadonnées des rencontres.
+            # On enrichit les cinq plus récentes via les box scores déjà normalisés.
+            for game in gamelog["games"][:5]:
+                game_id = game.get("id")
+                if not game_id:
+                    continue
+                try:
+                    summary = await self.async_get_game_details(game_id)
+                except Exception as err:  # noqa: BLE001 - le profil reste utilisable sans box score
+                    _LOGGER.debug("Box score joueur %s / match %s indisponible: %s", player_id, game_id, err)
+                    continue
+                found = next(
+                    (
+                        player
+                        for team in summary.get("player_stats", [])
+                        for player in team.get("players", [])
+                        if str(player.get("id") or "") == player_id
+                    ),
+                    None,
+                )
+                if found:
+                    game["stats"] = found.get("stats_by_key") or found.get("stats") or {}
+                    game["player_name"] = found.get("name")
+                    game["did_not_play"] = bool(found.get("did_not_play"))
+            gamelog["boxscore_count"] = sum(bool(game.get("stats")) for game in gamelog["games"])
             result = {
                 "player_id": player_id,
                 "overview": overview,
