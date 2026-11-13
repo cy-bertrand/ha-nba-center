@@ -391,15 +391,6 @@ class NBACenterCard extends LitElement {
     const seasonLabel = selectedSeason?.display_name ?? this._playerData?.stats?.season ?? "SAISON";
     const postseason = this._playerData?.postseason_stats ?? {};
     const postseasonStats = postseason.statistics ?? [];
-    const postseasonStat = (...names) => postseasonStats.find((item) =>
-      names.includes(String(item.name).toLowerCase()) || names.includes(String(item.label).toLowerCase())
-    );
-    const postseasonQuick = quickDefinitions.map(([label, aliases]) => [label, postseasonStat(...aliases)]);
-    const postseasonHighlighted = new Set(quickDefinitions.flatMap(([, aliases]) => aliases));
-    const postseasonDetailed = postseasonStats.filter((item) =>
-      !postseasonHighlighted.has(String(item.name ?? "").toLowerCase())
-      && !postseasonHighlighted.has(String(item.label ?? "").toLowerCase())
-    );
     const games = this._playerData?.gamelog?.games ?? [];
     const teamCatalog = this._teamsCatalog().teams;
     const currentTeam = teamCatalog.find((team) =>
@@ -444,6 +435,15 @@ class NBACenterCard extends LitElement {
       ["BLK", ["avgblocks", "blockspergame", "blocks", "blocks per game"]],
     ];
     const quick = quickDefinitions.map(([label, aliases]) => [label, stat(...aliases)]);
+    const postseasonStat = (...names) => postseasonStats.find((item) =>
+      names.includes(String(item.name ?? "").toLowerCase()) || names.includes(String(item.label ?? "").toLowerCase())
+    );
+    const postseasonQuick = quickDefinitions.map(([label, aliases]) => [label, postseasonStat(...aliases)]);
+    const postseasonHighlighted = new Set(quickDefinitions.flatMap(([, aliases]) => aliases));
+    const postseasonDetailed = postseasonStats.filter((item) =>
+      !postseasonHighlighted.has(String(item.name ?? "").toLowerCase())
+      && !postseasonHighlighted.has(String(item.label ?? "").toLowerCase())
+    );
     const highlightedNames = new Set(quickDefinitions.flatMap(([, aliases]) => aliases));
     const detailedStats = stats.filter((item) => !highlightedNames.has(String(item.name ?? "").toLowerCase()) && !highlightedNames.has(String(item.label ?? "").toLowerCase()));
     const statLabel = (item) => item?.display_value ?? (item?.value == null ? "—" : item.value);
