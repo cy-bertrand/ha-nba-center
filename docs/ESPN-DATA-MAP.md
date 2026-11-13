@@ -505,3 +505,24 @@ Le module expose maintenant deux fonctions supplémentaires, sans appel réseau 
 Les fixtures réduites `tests/fixtures/espn_standings_2024_25_seeds.json` et `tests/fixtures/espn_standings_2025_26_seeds.json` proviennent des deux captures JSON fournies. Les tests vérifient l'ordre complet 1 à 8 dans les deux conférences et les deux saisons, ainsi que les cas de seed manquant/dupliqué, l'absence de mutation et le refus de valider un premier tour incomplet.
 
 **Limite :** cette étape reste un traitement pur de données. Elle n'effectue pas encore la collecte ESPN, ne détermine pas automatiquement si une saison en cours est définitive et n'est pas branchée au coordinateur ni aux entités Home Assistant. La validation des seeds historiques sur deux saisons ne suffit pas à déclarer fiables les seeds d'une saison en cours.
+
+
+## Contrôle croisé bracket + seeds sur les fixtures de matchs réellement disponibles
+
+Un test d'intégration pur combine maintenant les captures ESPN 2024-25 déjà présentes :
+
+- calendrier complet postseason OKC (23 matchs, quatre séries) ;
+- calendrier postseason Boston (11 matchs, deux séries) ;
+- standings ESPN avec seeds historiques 1 à 8 des deux conférences.
+
+Les seeds sont correctement rattachés aux participants des séries réellement présentes :
+- West 1st Round : Oklahoma City (1) – Memphis (8) ;
+- East 1st Round : Boston (2) – Orlando (7) ;
+- West Semifinals : Oklahoma City (1) – Denver (4) ;
+- NBA Finals : Oklahoma City (1) – Indiana (4).
+
+Le test vérifie également que le parcours OKC jusqu'au titre reste correctement reconstruit. **Important :** les captures de matchs actuellement versionnées ne couvrent pas les huit séries du premier tour. Seules deux séries de premier tour (une à l'Est, une à l'Ouest) sont réellement disponibles ; elles ne sont donc jamais déclarées comme un premier tour complet (matchups_valid=false). Les standings seuls ne prouvent pas les résultats des séries manquantes.
+
+La capture standings 2025-26 permet de valider les seeds, mais aucune capture de matchs postseason 2025-26 n'est actuellement présente dans les fixtures. Il serait trompeur d'annoncer la reconstruction des huit affiches ou du parcours de cette saison sur cette base.
+
+**Prochaine donnée nécessaire pour compléter la validation historique :** les calendriers postseason ESPN des équipes qualifiées, ou des scoreboards ESPN couvrant tous les jours de playoffs, pour les séries absentes. Aucune requête réseau n'est ajoutée à l'intégration et aucune donnée de match n'est synthétisée.
