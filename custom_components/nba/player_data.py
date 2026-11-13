@@ -112,6 +112,36 @@ def _stat_rows(raw: dict[str, Any]) -> list[dict[str, Any]]:
                 })
     return rows
 
+def _overview_splits(raw: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:
+    """Extrait séparément les splits Regular Season et Career d'overview."""
+    statistics = _mapping(raw.get("statistics"))
+    names = statistics.get("names") or []
+    labels = statistics.get("labels") or []
+    displays = statistics.get("displayNames") or []
+    splits = statistics.get("splits")
+    result: dict[str, list[dict[str, Any]]] = {}
+    if not isinstance(splits, list):
+        return result
+    for split in splits:
+        block = _mapping(split)
+        split_name = _text(block.get("displayName"))
+        values = block.get("stats")
+        if not split_name or not isinstance(values, list):
+            continue
+        rows = []
+        for index, value in enumerate(values):
+            name = names[index] if index < len(names) else f"stat_{index}"
+            rows.append({
+                "name": str(name),
+                "label": _text(displays[index] if index < len(displays) else None)
+                    or _text(labels[index] if index < len(labels) else None) or str(name),
+                "value": _number(value),
+                "display_value": _text(value),
+            })
+        result[split_name.lower().replace(" ", "_")] = rows
+    return result
+
+
 def parse_player_stats(raw: dict[str, Any]) -> dict[str, Any]:
     """Normalise les statistiques saison ESPN, y compris la structure overview."""
     season = _mapping(raw.get("season"))
@@ -142,6 +172,8 @@ def parse_player_stats(raw: dict[str, Any]) -> dict[str, Any]:
             "name": _text(athlete.get("displayName") or athlete.get("fullName")),
         },
         "statistics": _stat_rows(raw),
+        "splits": _overview_splits(raw),
+        "career_statistics": _overview_splits(raw).get("career", []),
     }
 
 
