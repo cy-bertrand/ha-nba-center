@@ -385,8 +385,24 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
                  if str(item.get("id")) == team_id),
                 {},
             )
+            schedule_info = {}
+            try:
+                schedule_raw = await self._get(TEAM_SCHEDULE_URL.format(team_id=team_id))
+                today_games = (self.data or {}).get("games", [])
+                schedule_info = self._parse_team(team_id, schedule_raw, today_games)
+            except Exception as err:  # noqa: BLE001 - l'effectif reste exploitable sans calendrier
+                _LOGGER.debug("Calendrier de l'équipe %s indisponible: %s", team_id, err)
+
+            standing = None
+            for rows in (self.data or {}).get("standings", {}).values():
+                standing = next((row for row in rows if str(row.get("team_id")) == team_id), None)
+                if standing:
+                    break
+
             result = {
                 "team": team,
+                "standing": standing,
+                "schedule": schedule_info,
                 **parsed,
                 "fetched_at": now.isoformat(),
             }
