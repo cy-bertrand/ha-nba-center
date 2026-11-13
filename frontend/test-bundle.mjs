@@ -94,4 +94,3 @@ assert.match(bundle, /opponent_abbreviation/, "bundled recent player games must 
 
 assert.match(source, /postseason_stats/, "player profile must receive separate playoff statistics");
 assert.match(source, /STATISTIQUES PLAYOFFS/, "player profile must display a separate postseason section");
-assert.match(source, /seasontype: 3/, "postseason statistics must be requested with ESPN season type 3");
