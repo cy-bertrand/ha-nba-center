@@ -536,7 +536,16 @@ def annotate_playoff_bracket(bracket: Any, standings: Any) -> dict[str, Any] | N
         return None
     result = copy.deepcopy(bracket)
     season = str(result.get("season_year"))
-    season_data = standings.get("seasons", {}).get(season)
+    seasons = standings.get("seasons", {})
+    season_data = seasons.get(season) if isinstance(seasons, dict) else None
+    if not isinstance(season_data, dict) and isinstance(seasons, dict):
+        # ESPN display labels use the season start/end form (e.g. 2025-26),
+        # while playoff events are stamped with the ending calendar year (2026).
+        season_data = next((
+            value for label, value in seasons.items()
+            if isinstance(label, str) and re.search(r"-([0-9]{2})$", label)
+            and int("20" + re.search(r"-([0-9]{2})$", label).group(1)) == result.get("season_year")
+        ), None)
     if not isinstance(season_data, dict):
         return result
     for conference in ("East", "West"):
