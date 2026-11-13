@@ -52,3 +52,46 @@ Cette cartographie est fondée sur la documentation de wrappers ESPN et des sch�
 - https://hoopr.sportsdataverse.org/reference/espn_nba_player_stats_v3.html
 - https://hoopr.sportsdataverse.org/reference/espn_nba_leaders.html
 - https://hoopr.sportsdataverse.org/reference/espn_nba_teams.html
+
+
+## Historique des séries de playoffs — recherche complémentaire (13 novembre 2026)
+
+### Source candidate identifiée : NBA Stats API
+
+La documentation communautaire de l'API NBA décrit l'endpoint suivant :
+
+`GET https://stats.nba.com/stats/commonplayoffseries?LeagueID=00&Season=2024-25&SeriesID=`
+
+Paramètres :
+- `LeagueID=00` pour la NBA.
+- `Season` au format `YYYY-YY`, par exemple `2024-25`.
+- `SeriesID` facultatif pour filtrer une série.
+
+Jeu de données `PlayoffSeries` :
+- `GAME_ID`
+- `HOME_TEAM_ID`
+- `VISITOR_TEAM_ID`
+- `SERIES_ID`
+- `GAME_NUM`
+
+La documentation sportsdataverse précise que `SERIES_ID` correspond à la racine de l'identifiant du match de playoffs, sans le dernier chiffre de séquence. Les identifiants de matchs de playoffs commencent par `004`. Des sources communautaires décrivent les derniers chiffres de l'identifiant de match comme encodant le tour, la série et le numéro de match. Cette convention devra être vérifiée sur plusieurs saisons et ne doit pas être utilisée sans validation de longueur et de préfixe.
+
+### Limites à traiter avant implémentation
+
+- NBA Stats API n'est pas une API publique officiellement garantie.
+- Les endpoints `stats.nba.com` sont protégés par des mécanismes anti-bot : des clients HTTP standards peuvent recevoir 403/429. La disponibilité depuis l'environnement Home Assistant réel n'est pas confirmée.
+- La documentation du schéma est communautaire ; elle ne remplace pas une capture brute réelle.
+- Le résultat `CommonPlayoffSeries` relie les matchs aux séries, mais ne fournit pas à lui seul les noms des franchises, les scores, les dates ni le gagnant final. Ces éléments devront être enrichis depuis une source déjà utilisée (scoreboard/summary ESPN ou données de matchs existantes), sans créer de doublons.
+- Le calcul du gagnant de série doit compter uniquement les matchs terminés et les victoires explicites ; ne jamais déduire un résultat d'une donnée manquante.
+- Le tour (1er tour, demi-finales de conférence, finales de conférence, Finals) doit être dérivé uniquement après validation de la convention d'identifiants sur des exemples réels.
+
+### Décision actuelle
+
+**Pas d'implémentation de production à ce stade.** La piste NBA Stats API est suffisamment documentée pour préparer un adaptateur isolé et des tests de parsing, mais pas pour déclarer l'accès réseau fiable ni le format complet validé. Prochaine étape : obtenir et conserver une réponse brute réelle de `CommonPlayoffSeries` pour au moins deux saisons, vérifier les IDs et les associer à des matchs terminés, puis décider si la source est exploitable depuis Home Assistant.
+
+### Références complémentaires
+
+- https://py.sportsdataverse.org/docs/nba/reference/nba_stats/common
+- https://github.com/swar/nba_api/blob/master/docs/nba_api/stats/endpoints/commonplayoffseries.md
+- https://github.com/llimllib/nba_data/blob/main/docs/DATA_DICTIONARY.md
+- https://nba-api-ts.riccardo.lol/endpoints/stats/games/common-playoff-series/
