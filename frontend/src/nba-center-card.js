@@ -56,6 +56,7 @@ class NBACenterCard extends LitElement {
     _overlayLoading: { state: true }, _overlayError: { state: true },
     _showAllPlays: { state: true }, _scoringOnly: { state: true },
     _teamSearch: { state: true }, _teamConference: { state: true },
+    _teamOverlay: { state: true }, _teamRoster: { state: true }, _teamRosterLoading: { state: true }, _teamRosterError: { state: true },
   };
 
   static styles = css`
@@ -106,7 +107,7 @@ class NBACenterCard extends LitElement {
     input{min-width:140px;flex:1;border:1px solid #2b3b52;border-radius:9px;background:#0c1522;color:#f4f6fb;padding:9px 11px;font:inherit;font-size:11px}
     .team-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #ffffff10}
     .team-row:last-child{border-bottom:0;padding-bottom:0}
-    .team-row:first-child{padding-top:0}\n    .catalog-team{min-width:0}.catalog-favorite-note{margin-top:8px}
+    .team-row:first-child{padding-top:0}\n    .catalog-team{min-width:0;cursor:pointer;transition:border-color .15s,transform .15s}.catalog-team:hover{border-color:#bd9448;transform:translateY(-1px)}.catalog-team:focus-visible{outline:2px solid #f2c45f;outline-offset:2px}.catalog-favorite-note{margin-top:8px}
     .large{width:34px;height:34px}
     .team-info{min-width:0;flex:1}
     .team-info strong{display:block;font-size:12px}
@@ -154,7 +155,7 @@ class NBACenterCard extends LitElement {
     .play-score{font-size:10px;font-weight:900;color:#aab6ca;font-variant-numeric:tabular-nums}
     .play-more{display:block;margin:10px auto 0;border:1px solid #2b3b52;background:#101a29;color:#e8bb58}.player-cell{display:flex;align-items:center;gap:6px;min-width:112px;white-space:normal}.player-cell img{width:25px;height:25px;object-fit:contain;border-radius:50%}.player-cell small{display:block;color:#91a0b5;font-size:8px;margin-top:2px}.team-stats-panel{margin-top:12px}.team-stats-panel table{width:100%;border-collapse:collapse;font-size:10px}.team-stats-panel th,.team-stats-panel td{padding:8px;text-align:right;border-bottom:1px solid #ffffff10}.team-stats-panel th:first-child,.team-stats-panel td:first-child{text-align:left;color:#aab6ca}
     @media(max-width:620px){.overlay{padding:8px}.overlay-panel{max-height:94vh}.boxscore-grid{grid-template-columns:1fr}.player-table th,.player-table td{padding:7px 5px}}
-    .footer{display:flex;justify-content:space-between;gap:10px;padding:12px 22px;color:#738199;border-top:1px solid #ffffff12;font-size:9px;letter-spacing:.06em}
+    .team-roster-heading{display:flex;align-items:center;gap:12px}.roster-list{display:grid;gap:7px}.roster-player{display:grid;grid-template-columns:42px minmax(0,1fr) auto;align-items:center;gap:10px;padding:9px;border:1px solid #ffffff10;border-radius:10px;background:#101a29}.roster-headshot{width:40px;height:40px;object-fit:cover;border-radius:50%;background:#25344a}.roster-placeholder{background:#25344a}.roster-player-info{min-width:0}.roster-player-info strong{display:block;font-size:11px}.roster-player-info small{display:block;color:#91a0b5;font-size:9px;margin-top:3px}.roster-player-info .roster-injury{color:#ffb66d}.roster-number{text-align:right}.roster-number strong{display:block;color:#f2c45f;font-size:12px}.roster-number small{display:block;color:#91a0b5;font-size:8px;margin-top:3px}.team-roster-overlay{width:min(620px,100%)}\n    .footer{display:flex;justify-content:space-between;gap:10px;padding:12px 22px;color:#738199;border-top:1px solid #ffffff12;font-size:9px;letter-spacing:.06em}
     @media(max-width:620px){.hero{padding:20px 17px 17px}main{padding:15px}nav{padding:8px 7px}button{min-width:66px;padding:9px 10px}.grid{grid-template-columns:1fr}.game{grid-template-columns:1fr;gap:7px}.status{text-align:left}.matchup{gap:6px}.team-name{font-size:10px}.score{font-size:15px}.footer{padding:11px 15px}.meta{margin-top:11px}}
   `;
 
@@ -165,6 +166,10 @@ class NBACenterCard extends LitElement {
     this._search = "";
     this._teamSearch = "";
     this._teamConference = "all";
+    this._teamOverlay = null;
+    this._teamRoster = null;
+    this._teamRosterLoading = false;
+    this._teamRosterError = "";
     this._selectedDate = localDateISO();
     this._calendarGames = []; this._calendarLoading = false; this._calendarError = ""; this._calendarStale = false; this._calendarStaleError = ""; this._calendarRequest = 0; this._calendarInitialized = false;
     this._overlayGame = null; this._overlayDetails = null; this._overlayRequest = 0;
@@ -253,6 +258,60 @@ class NBACenterCard extends LitElement {
         favoriteData: favorites.get(String(team.id)),
       })).sort((a, b) => (a.name ?? "").localeCompare(b.name ?? "")),
     };
+  }
+
+  async _openTeam(team) {
+    this._teamOverlay = team;
+    this._teamRoster = null;
+    this._teamRosterError = "";
+    this._teamRosterLoading = true;
+    try {
+      this._teamRoster = await this.hass.callWS({ type: "nba/team_roster", team_id: String(team.id) });
+    } catch (err) {
+      this._teamRosterError = err?.message ?? "Effectif indisponible.";
+    } finally {
+      this._teamRosterLoading = false;
+    }
+  }
+
+  _closeTeamOverlay() {
+    this._teamOverlay = null;
+    this._teamRoster = null;
+    this._teamRosterLoading = false;
+    this._teamRosterError = "";
+  }
+
+  _teamRosterPanel() {
+    const players = this._teamRoster?.players ?? [];
+    return html`
+      <div class="overlay" @click=${(event) => { if (event.target === event.currentTarget) this._closeTeamOverlay(); }}>
+        <section class="overlay-panel team-roster-overlay" role="dialog" aria-modal="true" aria-label="Effectif de l'équipe">
+          <header class="overlay-head">
+            <div class="team-roster-heading">
+              ${this._teamOverlay?.logo ? html`<img class="logo large" src=${this._teamOverlay.logo} alt="">` : ""}
+              <div><h2>${value(this._teamOverlay?.display_name, this._teamOverlay?.name)}</h2>
+                <div class="muted">${value(this._teamOverlay?.abbreviation)} · ${value(this._teamRoster?.season, "Effectif NBA")}</div></div>
+            </div>
+            <button class="overlay-close" aria-label="Fermer la fiche équipe" @click=${this._closeTeamOverlay}>✕</button>
+          </header>
+          <div class="overlay-body">
+            <div class="panel-head"><h3>EFFECTIF</h3><span class="pill">${this._teamRoster?.count ?? 0} JOUEURS</span></div>
+            ${this._teamRosterLoading ? html`<section class="empty">Chargement de l'effectif…</section>` : ""}
+            ${this._teamRosterError ? html`<section class="empty"><strong>Effectif indisponible</strong><p>${this._teamRosterError}</p><button @click=${() => this._openTeam(this._teamOverlay)}>RÉESSAYER</button></section>` : ""}
+            ${!this._teamRosterLoading && !this._teamRosterError && players.length ? html`
+              <div class="roster-list">${players.map((player) => html`
+                <div class="roster-player">
+                  ${player.headshot ? html`<img class="roster-headshot" src=${player.headshot} alt="" loading="lazy">` : html`<div class="roster-headshot roster-placeholder"></div>`}
+                  <div class="roster-player-info"><strong>${value(player.name)}</strong>
+                    <small>${value(player.position)} · ${value(player.height)} · ${value(player.college, "Université non renseignée")}</small>
+                    ${player.injuries?.length ? html`<small class="roster-injury">${player.injuries.map((injury) => value(injury.status)).filter(Boolean).join(" · ")}</small>` : ""}
+                  </div>
+                  <div class="roster-number"><strong>${player.jersey ? `#${player.jersey}` : "—"}</strong><small>${value(player.status)}</small></div>
+                </div>`)}</div>` : ""}
+            ${!this._teamRosterLoading && !this._teamRosterError && !players.length ? html`<section class="empty">Aucun joueur retourné par ESPN.</section>` : ""}
+          </div>
+        </section>
+      </div>`;
   }
 
   _setTeamSearch(event) { this._teamSearch = event.target.value ?? ""; }
@@ -525,7 +584,7 @@ class NBACenterCard extends LitElement {
   }
   _teamCatalogCard(team) {
     const favorite = team.favoriteData;
-    return html`<section class="panel catalog-team">
+    return html`<section class="panel catalog-team" role="button" tabindex="0" @click=${() => this._openTeam(team)} @keydown=${(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); this._openTeam(team); } }}>
       <div class="team-row">
         ${team.logo ? html`<img class="logo large" src=${team.logo} alt="" loading="lazy">` : ""}
         <div class="team-info"><strong>${value(team.display_name, team.name)}</strong>
@@ -611,7 +670,7 @@ class NBACenterCard extends LitElement {
               </div>` : ""}
             ${this._playByPlayPanel()}
             ${!this._overlayLoading && !this._overlayError && !this._overlayDetails?.error && !this._overlayDetails?.teams?.length && !this._overlayDetails?.has_boxscore ? html`<section class="empty"><p>Le résumé détaillé n’est pas encore disponible pour cette rencontre.</p></section>` : ""}            </div></section></div>` : ""}
-        <footer class="footer"><span>NBA CENTER · ${active.label}</span><span>DATA VIA HOME ASSISTANT</span></footer>
+        ${this._teamOverlay ? this._teamRosterPanel() : ""}\n        <footer class="footer"><span>NBA CENTER · ${active.label}</span><span>DATA VIA HOME ASSISTANT</span></footer>
       </ha-card>`;
   }
 
