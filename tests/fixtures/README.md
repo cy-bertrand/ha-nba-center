@@ -1,25 +1,25 @@
 # ESPN summary fixture notes
 
-## Representative committed fixture
+## Real completed-game fixture
 
-`espn_summary_401909971.json` is a deliberately reduced fixture used by the unit tests. It contains the two teams, one representative player row per team, and three representative play-by-play events. It is **not** the complete ESPN summary and must not be described as a full-game regression fixture.
+`espn_summary_completed_401909971.json` is a real, full-coverage regression fixture for the parser-relevant parts of ESPN event `401909971` (Los Angeles Lakers 123–112 Milwaukee Bucks, final). It preserves the complete `header`, `boxscore`, `plays`, and `meta` sections from the supplied ESPN summary while omitting unrelated payload sections such as news, odds, video, and standings. The fixture is approximately 300 KB.
 
-## Full-source audit baseline (local source supplied for development)
-
-The complete source summary for ESPN event `401909971` (Lakers 123–112 Bucks) was audited separately. The original file is not included in this repository; its SHA-256 is:
+The SHA-256 of the original 483 KB source file supplied for this audit is:
 
 `0d705ca386919abe21b997360bff249890ef20992941158fc9aa7aa0149c29a3`
 
-Observed source dimensions:
+The fixture covers:
 
-- 515 play-by-play entries; 515 unique play IDs and 515 unique sequence numbers.
-- 2 team boxscore blocks, with 25 team statistics each.
-- 2 player boxscore blocks, with 15 athletes each (30 total), and 14 player-stat columns per team.
-- 643 participant references across plays, covering 28 distinct athlete IDs. All 28 IDs exist in the 30-player boxscore.
-- 355 usable shot coordinates; sentinel coordinates are excluded by the parser.
-- 128 plays have ESPN's `scoringPlay=true`; all 128 classify as `score`.
+- Final header state and score: LAL 123, MIL 112.
+- 2 team boxscore blocks, 25 statistics each.
+- 2 player boxscore blocks, 15 athletes each (30 total), and 14 player-stat columns per team.
+- 2 DNP players, with ESPN's original reason and unavailable stats preserved.
+- 515 play-by-play entries, with 515 unique play IDs and sequence numbers.
+- 643 participant references across plays, covering 28 distinct athlete IDs; all resolve to a player in the boxscore.
+- 355 usable shot coordinates; ESPN sentinel coordinates are excluded.
+- 128 plays with ESPN's `scoringPlay=true`.
 
-Observed primary action-category counts from the current parser rules:
+Observed primary action-category counts with the current parser:
 
 | Category | Count |
 | --- | ---: |
@@ -36,10 +36,16 @@ Observed primary action-category counts from the current parser rules:
 | jump_ball | 1 |
 | game_end | 1 |
 
-The independent event flags intentionally overlap: 36 plays carry a turnover flag, including 3 also flagged as fouls. This is why primary category counts and flag counts are not interchangeable.
+The independent event flags intentionally overlap: 36 plays carry a turnover flag, including 3 also flagged as fouls. Primary category counts and flag counts are therefore not interchangeable.
+
+## Live fixture
+
+`espn_summary_live_401909977.json` is a deliberately reduced sample of a real Wizards–Pistons live summary. It preserves the live header, representative team/player boxscore rows, DNP data, and scoring/rebound/substitution examples. It is not a full-game payload.
+
+## Representative completed-game fixture
+
+`espn_summary_401909971.json` is the earlier deliberately reduced completed-game sample: two teams, one representative player row per team, and three representative Play-by-Play events. The new `espn_summary_completed_401909971.json` should be used for full-game regression assertions.
 
 ## Source-data caveat
 
-The Lakers player-level foul values sum to 25 while ESPN's team-level foul statistic is 24 in this source. The parser preserves both source values; it must not silently adjust player or team statistics to force reconciliation.
-
-To upgrade this to a full automated regression test, add the original or a suitably redacted complete `boxscore` + `plays` payload as a versioned fixture, then assert these dimensions and counts against `parse_boxscore` and `parse_plays`.
+In the completed-game source, the Lakers player-level foul values sum to 25 while ESPN's team-level foul statistic is 24. The parser preserves both source values; it must not silently adjust player or team statistics to force reconciliation.
