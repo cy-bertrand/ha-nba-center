@@ -292,8 +292,8 @@ def parse_player_gamelog(raw: dict[str, Any]) -> dict[str, Any]:
             season_block = _mapping(season_type)
             for category in season_block.get("categories", []) if isinstance(season_block.get("categories"), list) else []:
                 category_block = _mapping(category)
-                names = category_block.get("names") or category_block.get("labels") or []
-                labels = category_block.get("labels") or names
+                names = category_block.get("names") or category_block.get("labels") or raw.get("names") or raw.get("labels") or []
+                labels = category_block.get("labels") or raw.get("labels") or names
                 rows = category_block.get("events")
                 if not isinstance(rows, list):
                     continue
@@ -303,10 +303,10 @@ def parse_player_gamelog(raw: dict[str, Any]) -> dict[str, Any]:
                     values = item.get("stats") or item.get("values")
                     if not event_id or not isinstance(values, list):
                         continue
-                    nested_stats[event_id] = {
+                    nested_stats.setdefault(event_id, {}).update({
                         str(names[index] if index < len(names) else labels[index] if index < len(labels) else f"stat_{index}"): _number(value)
                         for index, value in enumerate(values)
-                    }
+                    })
 
     games: list[dict[str, Any]] = []
     for row in source:
