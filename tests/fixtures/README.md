@@ -49,3 +49,17 @@ The independent event flags intentionally overlap: 36 plays carry a turnover fla
 ## Source-data caveat
 
 In the completed-game source, the Lakers player-level foul values sum to 25 while ESPN's team-level foul statistic is 24. The parser preserves both source values; it must not silently adjust player or team statistics to force reconciliation.
+
+
+## Real double-overtime fixture
+
+`espn_summary_overtime_401909977.json` is a focused extract from the supplied final ESPN summary for Wizards–Pistons (event `401909977`), which ended Detroit 144–140 Washington after two overtimes. It preserves the final header status and competitors, all six period scores, and the six period-end events plus the distinct end-game event. The source response contained 610 Play-by-Play entries; this focused fixture retains the exact real period-ending records needed to regression-test overtime handling without duplicating the full game payload.
+
+- Period scores, Washington: 32, 29, 29, 31, 11, 8 (140).
+- Period scores, Detroit: 33, 31, 30, 27, 11, 12 (144).
+- The fourth quarter ended tied 121–121.
+- First overtime ended tied 132–132.
+- Second overtime ended 140–144.
+- ESPN labels periods 5 and 6 as `OT` and `2OT`; the final period-end action is followed by a separate `End Game` action.
+
+The fixture is used by `tests/test_game_details_overtime_fixture.py`.
