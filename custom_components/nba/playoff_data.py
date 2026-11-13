@@ -291,3 +291,119 @@ def build_playoff_series(games: Any) -> list[dict[str, Any]]:
         series["teams"][1]["id"],
     ))
     return series_list
+
+
+
+_ROUND_RANKS = {
+    "1st round": 1,
+    "first round": 1,
+    "semifinals": 2,
+    "finals": 3,
+    "nba finals": 4,
+}
+
+
+def _round_metadata(label: str) -> tuple[str | None, int | None]:
+    normalized = label.casefold()
+    if normalized == "nba finals":
+        return "NBA", 4
+    conference = "East" if normalized.startswith("east ") else "West" if normalized.startswith("west ") else None
+    rank = next(
+        (value for marker, value in _ROUND_RANKS.items() if marker in normalized),
+        None,
+    )
+    return conference, rank
+
+
+def build_playoff_bracket(series: Any) -> list[dict[str, Any]]:
+    """Construit les parcours vérifiables entre séries, sans inventer de seeds.
+
+    Les liens sont établis uniquement lorsqu'un vainqueur explicite d'un tour
+    apparaît parmi les deux équipes d'une série du tour immédiatement suivant.
+    Les positions de tableau et les têtes de série ne sont pas déduites.
+    """
+    if not isinstance(series, (list, tuple)):
+        return []
+
+    by_season: dict[int, list[dict[str, Any]]] = {}
+    for item in series:
+        if not isinstance(item, dict) or item.get("phase") != "playoffs":
+            continue
+        year = item.get("season_year")
+        label = item.get("round_label")
+        if not isinstance(year, int) or not isinstance(label, str):
+            continue
+        by_season.setdefault(year, []).append(item)
+
+    brackets = []
+    for year, season_series in sorted(by_season.items()):
+        metadata = {}
+        for item in season_series:
+            conference, rank = _round_metadata(item["round_label"])
+            metadata[item["id"]] = (conference, rank)
+
+        links_out: dict[str, list[str]] = {item["id"]: [] for item in season_series}
+        links_in: dict[str, list[str]] = {item["id"]: [] for item in season_series}
+        for previous in season_series:
+            winner = previous.get("winner")
+            if not isinstance(winner, dict) or winner.get("id") is None:
+                continue
+            previous_conference, previous_rank = metadata[previous["id"]]
+            if previous_rank is None:
+                continue
+            candidates = []
+            for following in season_series:
+                following_conference, following_rank = metadata[following["id"]]
+                if following_rank != previous_rank + 1:
+                    continue
+                if previous_conference == "NBA":
+                    continue
+                if previous_conference in ("East", "West") and following_conference not in (previous_conference, "NBA"):
+                    continue
+                if following_conference is None:
+                    continue
+                team_ids = {
+                    str(team.get("id")) for team in following.get("teams", [])
+                    if isinstance(team, dict) and team.get("id") is not None
+                }
+                if str(winner["id"]) in team_ids:
+                    candidates.append(following)
+            if len(candidates) == 1:
+                target_id = candidates[0]["id"]
+                links_out[previous["id"]].append(target_id)
+                links_in[target_id].append(previous["id"])
+
+        for item in season_series:
+            item["advances_to"] = links_out[item["id"]]
+            item["advanced_from"] = links_in[item["id"]]
+
+        conferences = {"East": [], "West": []}
+        finals = []
+        unplaced = []
+        grouped: dict[tuple[str, str], list[dict[str, Any]]] = {}
+        for item in season_series:
+            conference, _rank = metadata[item["id"]]
+            if conference == "NBA":
+                finals.append(item)
+            elif conference in conferences:
+                grouped.setdefault((conference, item["round_label"]), []).append(item)
+            else:
+                unplaced.append(item)
+
+        for (conference, label), items in grouped.items():
+            conferences[conference].append({
+                "round_label": label,
+                "series": sorted(items, key=lambda item: item["id"]),
+            })
+        for conference in conferences:
+            conferences[conference].sort(
+                key=lambda round_data: _round_metadata(round_data["round_label"])[1] or 999
+            )
+        brackets.append({
+            "season_year": year,
+            "conferences": conferences,
+            "finals": sorted(finals, key=lambda item: item["id"]),
+            "unplaced": sorted(unplaced, key=lambda item: item["id"]),
+        })
+
+    return brackets
