@@ -114,8 +114,27 @@ def parse_player_stats(raw: dict[str, Any]) -> dict[str, Any]:
     """Normalise les statistiques saison ESPN, y compris la structure overview."""
     season = _mapping(raw.get("season"))
     athlete = _mapping(raw.get("athlete"))
+    season_name = _text(season.get("displayName") or raw.get("seasonDisplayName"))
+    if not season_name:
+        filters = _mapping(raw.get("filters"))
+        for filter_item in filters.values():
+            item = _mapping(filter_item)
+            selected = _text(item.get("value"))
+            options = item.get("options")
+            if selected and isinstance(options, list):
+                match = next((option for option in options if _text(_mapping(option).get("value")) == selected), None)
+                if match:
+                    season_name = _text(_mapping(match).get("displayValue"))
+                    break
+    if not season_name:
+        season_values = [
+            _text(_mapping(_mapping(row).get("season")).get("displayName"))
+            for category in raw.get("categories", []) if isinstance(category, dict)
+            for row in category.get("statistics", []) if isinstance(category.get("statistics"), list)
+        ]
+        season_name = next((value for value in reversed(season_values) if value), None)
     return {
-        "season": _text(season.get("displayName") or raw.get("seasonDisplayName")),
+        "season": season_name,
         "athlete": {
             "id": _text(athlete.get("id")),
             "name": _text(athlete.get("displayName") or athlete.get("fullName")),
