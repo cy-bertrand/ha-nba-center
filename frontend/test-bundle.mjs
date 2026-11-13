@@ -89,5 +89,5 @@ assert.match(source, /opponent_abbreviation/, "recent player games must use the 
 assert.match(source, /\}m · .*stl · .*blk/, "recent player game stats must use compact labels to fit all six values");
 assert.match(bundle, /leader-button/, "bundled season leader rows must be clickable");
 assert.match(bundle, /TOP 10 · SAISON/, "bundled Players Center must show top-ten leaderboards");
-assert.match(bundle, /_leaderPanel\(a,10\)/, "bundled Players Center must render ten players per leaderboard");
+assert.match(bundle, /this\._leaderPanel\([a-z],10\)/, "bundled Players Center must render ten players per leaderboard");
 assert.match(bundle, /opponent_abbreviation/, "bundled recent player games must use opponent abbreviations");
