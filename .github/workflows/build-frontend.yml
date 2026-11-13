@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - phase-2-match-center
+      - phase-5-playoff-player-data
     paths:
       - 'frontend/**'
       - 'tests/**'
