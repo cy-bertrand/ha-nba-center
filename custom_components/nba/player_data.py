@@ -74,6 +74,21 @@ def _stat_rows(raw: dict[str, Any]) -> list[dict[str, Any]]:
                             "category": _text(block.get("displayName") or block.get("name")),
                         })
                 continue
+            totals = block.get("totals")
+            if isinstance(names, list) and isinstance(totals, list):
+                for index, value in enumerate(totals):
+                    if index >= len(names):
+                        continue
+                    name = str(names[index])
+                    rows.append({
+                        "name": name,
+                        "label": _text(displays[index] if index < len(displays) else None)
+                            or _text(labels[index] if index < len(labels) else None) or name,
+                        "value": _number(value),
+                        "display_value": _text(value),
+                        "category": _text(block.get("displayName") or block.get("name")),
+                    })
+                continue
             values = block.get("values")
             if isinstance(names, list) and isinstance(values, list):
                 for index, name in enumerate(names):
