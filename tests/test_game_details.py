@@ -12,6 +12,7 @@ SPEC.loader.exec_module(module)
 parse_boxscore = module.parse_boxscore
 parse_plays = module.parse_plays
 parse_game_state = module.parse_game_state
+parse_substitutions = module.parse_substitutions
 
 
 class BoxscoreParsingTests(unittest.TestCase):
@@ -100,6 +101,30 @@ class BoxscoreParsingTests(unittest.TestCase):
             "headshot": "https://img.test/collins.png",
         })
         self.assertEqual(play["participant_details"][1], {"id": "unknown-id", "name": None})
+
+    def test_substitution_events_preserve_linked_players_and_order(self):
+        raw = {
+            "boxscore": {"players": [{"team": {"id": "8"}, "statistics": [{
+                "athletes": [
+                    {"athlete": {"id": "101", "displayName": "Player In"}},
+                    {"athlete": {"id": "102", "displayName": "Player Out"}},
+                ]
+            }]}]},
+            "plays": [{
+                "id": "sub-1", "sequenceNumber": "22", "period": {"number": 2},
+                "clock": {"displayValue": "08:15"}, "type": {"text": "Substitution"},
+                "text": "Player In enters the game for Player Out",
+                "team": {"id": "8"},
+                "participants": [{"athlete": {"id": "101"}}, {"athlete": {"id": "102"}}],
+            }],
+        }
+        plays = parse_plays(raw)
+        changes = parse_substitutions(plays)
+        self.assertEqual(len(changes), 1)
+        self.assertEqual(changes[0]["sequence_number"], "22")
+        self.assertEqual([p["name"] for p in changes[0]["participants"]],
+                         ["Player In", "Player Out"])
+        self.assertEqual(changes[0]["team_id"], "8")
 
     def test_play_parser_tolerates_scalar_nested_fields(self):
         plays = parse_plays({"plays": [
