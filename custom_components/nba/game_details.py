@@ -91,7 +91,7 @@ def parse_plays(raw: dict[str, Any]) -> list[dict[str, Any]]:
         category = _classify_play(type_text, short_description, text)
         # Use ESPN's structured labels for flags; free-form commentary can
         # mention unrelated events and cause false positives.
-        event_text = " ".join(filter(None, (type_text, short_description))).lower()
+        event_text = (" ".join(filter(None, (type_text, short_description))) or (text or "")).lower()
         plays.append({
             "id": _text(item.get("id")),
             "sequence_number": _text(item.get("sequenceNumber")),
