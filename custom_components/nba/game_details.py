@@ -146,7 +146,7 @@ def parse_boxscore(raw: dict[str, Any]) -> dict[str, Any]:
             "team_id": team_id,
             "name": team.get("displayName") or team.get("name"),
             "abbr": team.get("abbreviation"),
-            "home_away": team.get("homeAway"),
+            "home_away": block.get("homeAway") or team.get("homeAway"),
             "statistics": [
                 {
                     "name": stat.get("name"),
@@ -236,4 +236,41 @@ def parse_boxscore(raw: dict[str, Any]) -> dict[str, Any]:
         "team_stats": list(teams.values()),
         "player_stats": player_blocks,
         "has_boxscore": bool(teams or player_blocks),
+    }
+
+
+def parse_game_state(raw: dict[str, Any]) -> dict[str, Any]:
+    """Normalise l’état courant du header, indépendamment du play-by-play."""
+    header = _mapping(raw.get("header"))
+    competitions = header.get("competitions") or []
+    competition = _mapping(competitions[0]) if competitions else {}
+    status = _mapping(competition.get("status"))
+    status_type = _mapping(status.get("type"))
+    meta = _mapping(raw.get("meta"))
+    competitors: list[dict[str, Any]] = []
+    for item in competition.get("competitors") or []:
+        if not isinstance(item, dict):
+            continue
+        team = _mapping(item.get("team"))
+        competitors.append({
+            "team_id": _text(item.get("id") or team.get("id")),
+            "name": team.get("displayName") or team.get("name"),
+            "abbr": team.get("abbreviation"),
+            "home_away": item.get("homeAway"),
+            "score": _score(item.get("score")),
+            "winner": item.get("winner"),
+        })
+    return {
+        "event_id": _text(header.get("id")),
+        "state": status_type.get("state"),
+        "completed": status_type.get("completed"),
+        "status_detail": status_type.get("detail") or status_type.get("shortDetail"),
+        "period": status.get("period"),
+        "clock": status.get("displayClock"),
+        "period_display": status.get("displayPeriod"),
+        "competitors": competitors,
+        "game_state": meta.get("gameState"),
+        "last_updated_at": meta.get("lastUpdatedAt"),
+        "last_play_wallclock": meta.get("lastPlayWallClock"),
+        "score_source": "header.competitions[0].competitors",
     }
