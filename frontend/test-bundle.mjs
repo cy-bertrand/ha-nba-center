@@ -25,6 +25,11 @@ assert.match(source, /FICHE JOUEUR/, "roster players must open an individual pro
 assert.match(source, /RETOUR À L'EFFECTIF/, "player profile must return to the roster");
 assert.match(bundle, /EFFECTIF/, "bundled card must include the franchise roster overlay");
 assert.match(source, /FAVORI/, "Teams Center must distinguish favorite franchises");
+assert.match(source, /catalog-favorite-tracking/, "favorite teams must expose their live tracking data");
+assert.match(source, /home_away === "@"/, "recent form must mark away games with @");
+assert.match(source, /height_cm/, "player profile must display metric height");
+assert.match(source, /weight_kg/, "player profile must display metric weight");
+assert.match(source, /scrollTo\(\{ top: 0/, "player selection must scroll the profile to the top");
 assert.match(source, /Rechercher une équipe/, "Teams Center must include franchise search");
 assert.match(source, /EAST/, "Teams Center must include conference filtering");
 assert.match(source, /WEST/, "Teams Center must include conference filtering");
