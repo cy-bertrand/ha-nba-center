@@ -105,7 +105,7 @@ assert.match(source, /STATISTIQUES PLAYOFFS/, "player profile must display a sep
 assert.match(source, /_loadPlayerPlayoffSeason/, "player profile must load postseason stats for the selected year");
 assert.match(source, /SAISON PLAYOFFS/, "player profile must offer a postseason year selector");
 assert.match(source, /postseason_year: seasonYear/, "postseason selector must request the selected season from Home Assistant");
-assert.match(source, /ÉTAT MÉDICAL<\\/small>/, "player medical status must occupy a profile grid cell");
+assert.ok(source.includes("ÉTAT MÉDICAL</small>"), "player medical status must occupy a profile grid cell");
 assert.doesNotMatch(source, /5 DERNIERS MATCHS · PLAYOFFS/, "player profile must not duplicate the recent game log for playoffs");
 
 assert.match(source, /playoff_\$\{key\}/, "Players Center must resolve dedicated playoff leaderboard entities");
