@@ -389,6 +389,17 @@ class NBACenterCard extends LitElement {
     const selectedSeason = seasonHistory.find((item) => String(item.year) === String(this._playerSelectedSeason)) ?? seasonHistory[0];
     const stats = selectedSeason?.statistics ?? this._playerData?.stats?.statistics ?? [];
     const seasonLabel = selectedSeason?.display_name ?? this._playerData?.stats?.season ?? "SAISON";
+    const postseason = this._playerData?.postseason_stats ?? {};
+    const postseasonStats = postseason.statistics ?? [];
+    const postseasonStat = (...names) => postseasonStats.find((item) =>
+      names.includes(String(item.name).toLowerCase()) || names.includes(String(item.label).toLowerCase())
+    );
+    const postseasonQuick = quickDefinitions.map(([label, aliases]) => [label, postseasonStat(...aliases)]);
+    const postseasonHighlighted = new Set(quickDefinitions.flatMap(([, aliases]) => aliases));
+    const postseasonDetailed = postseasonStats.filter((item) =>
+      !postseasonHighlighted.has(String(item.name ?? "").toLowerCase())
+      && !postseasonHighlighted.has(String(item.label ?? "").toLowerCase())
+    );
     const games = this._playerData?.gamelog?.games ?? [];
     const teamCatalog = this._teamsCatalog().teams;
     const currentTeam = teamCatalog.find((team) =>
@@ -481,6 +492,13 @@ class NBACenterCard extends LitElement {
               ${seasonHistory.length > 1 ? html`<div class="filters player-season-picker"><label class="muted" for="player-season-select">SAISON</label><select id="player-season-select" aria-label="Choisir une saison" .value=${String(selectedSeason?.year ?? "")} @change=${(event) => { this._playerSelectedSeason = event.target.value; this.requestUpdate(); }}>${seasonHistory.map((item) => html`<option value=${String(item.year)}>${item.display_name}${seasonTeamLabel(item) ? ` · ${seasonTeamLabel(item)}` : ""}</option>`)}</select></div>` : ""}
             <div class="player-stat-grid player-season-highlights">${quick.map(([label,item]) => html`<div><small>${label} / MATCH</small><strong>${statLabel(item)}</strong></div>`)}</div>
               ${stats.length ? html`<div class="table-wrap"><table><thead><tr><th>STATISTIQUE</th><th>VALEUR</th></tr></thead><tbody>${detailedStats.map((item) => html`<tr><td>${value(translateStat(item),item.name)}</td><td>${value(item.display_value ?? item.value)}</td></tr>`)}</tbody></table></div>` : html`<p class="muted">Aucune autre statistique disponible pour cette saison.</p>`}
+            </section>
+            <section class="panel player-postseason-panel">
+              <div class="panel-head"><h3>STATISTIQUES PLAYOFFS</h3><span class="pill">${value(postseason.season, "POSTSEASON")}</span></div>
+              ${postseasonStats.length ? html`
+                <div class="player-stat-grid player-season-highlights">${postseasonQuick.map(([label,item]) => html`<div><small>${label} / MATCH</small><strong>${statLabel(item)}</strong></div>`)}</div>
+                ${postseasonDetailed.length ? html`<div class="table-wrap"><table><thead><tr><th>STATISTIQUE</th><th>VALEUR</th></tr></thead><tbody>${postseasonDetailed.map((item) => html`<tr><td>${value(translateStat(item),item.name)}</td><td>${value(item.display_value ?? item.value)}</td></tr>`)}</tbody></table></div>` : ""}
+              ` : html`<p class="muted">Les statistiques des playoffs sont récupérées séparément. Elles apparaîtront ici dès qu'ESPN publiera les données de postseason pour cette saison.</p>`}
             </section>
             ${Object.keys(this._playerData.errors ?? {}).length ? html`<p class="muted">Certaines sources ESPN sont indisponibles : ${Object.keys(this._playerData.errors).join(" · ")}</p>` : ""}
           ` : ""}
