@@ -94,3 +94,5 @@ assert.match(bundle, /opponent_abbreviation/, "bundled recent player games must 
 
 assert.match(source, /postseason_stats/, "player profile must receive separate playoff statistics");
 assert.match(source, /STATISTIQUES PLAYOFFS/, "player profile must display a separate postseason section");
+assert.match(source, /postseason_gamelog/, "player profile must receive a separate postseason game log");
+assert.match(source, /5 DERNIERS MATCHS · PLAYOFFS/, "player profile must display the latest postseason games separately");
