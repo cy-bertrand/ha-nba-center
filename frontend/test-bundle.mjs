@@ -96,3 +96,7 @@ assert.match(source, /postseason_stats/, "player profile must receive separate p
 assert.match(source, /STATISTIQUES PLAYOFFS/, "player profile must display a separate postseason section");
 assert.match(source, /postseason_gamelog/, "player profile must receive a separate postseason game log");
 assert.match(source, /5 DERNIERS MATCHS · PLAYOFFS/, "player profile must display the latest postseason games separately");
+
+assert.match(source, /playoff_\$\{key\}/, "Players Center must resolve dedicated playoff leaderboard entities");
+assert.match(source, /SAISON & PLAYOFFS/, "Players Center must distinguish regular season and playoff leaderboards");
+assert.match(source, /_leaderPanel\(key,10,true\)/, "Players Center must render top-ten playoff leaderboards");

@@ -24,6 +24,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     ]
     for key in LEADER_CATEGORIES:
         entities.append(NBALeadersSensor(coordinator, key))
+        entities.append(NBAPostseasonLeadersSensor(coordinator, key))
     for team_id in coordinator.teams:
         entities += [
             NBATeamSensor(coordinator, team_id, "last", "Dernier match"),
@@ -113,6 +114,31 @@ class NBALeadersSensor(NBABaseSensor):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         return {"leaders": self._rows(), "category": LEADER_CATEGORIES[self._key][0]}
+
+
+class NBAPostseasonLeadersSensor(NBABaseSensor):
+    """Meilleurs joueurs des playoffs dans une catégorie statistique."""
+
+    _attr_icon = "mdi:trophy-award"
+
+    def __init__(self, coordinator: NBACoordinator, key: str) -> None:
+        super().__init__(coordinator)
+        self._key = key
+        self._attr_name = f"Meilleurs {LEADER_CATEGORIES[key][0].lower()} playoffs"
+        self._attr_unique_id = f"{DOMAIN}_playoff_leaders_{key}"
+
+    def _rows(self) -> list[dict]:
+        return self.coordinator.data.get("postseason_leaders", {}).get(self._key, [])
+
+    @property
+    def native_value(self) -> str | None:
+        rows = self._rows()
+        return f"{rows[0]['player']} ({rows[0]['value']})" if rows else None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        return {"leaders": self._rows(),
+                "category": f"Playoffs {LEADER_CATEGORIES[self._key][0]}"}
 
 
 class NBATeamSensor(NBABaseSensor):

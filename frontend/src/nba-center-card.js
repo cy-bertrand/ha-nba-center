@@ -221,12 +221,13 @@ class NBACenterCard extends LitElement {
     return { state, rows: state?.attributes?.standings ?? [] };
   }
 
-  _leaders(key) {
+  _leaders(key, postseason = false) {
     const fragment = LEADERS[key][1];
-    const state = this._entity(key, (s) =>
-      Array.isArray(s.attributes?.leaders) &&
-      (s.attributes?.category ?? "").toLowerCase().includes(fragment)
-    );
+    const state = this._entity(postseason ? `playoff_${key}` : key, (s) => {
+      const category = (s.attributes?.category ?? "").toLowerCase();
+      return Array.isArray(s.attributes?.leaders) && category.includes(fragment) &&
+        (postseason ? category.startsWith("playoffs ") : !category.startsWith("playoffs "));
+    });
     return { state, rows: state?.attributes?.leaders ?? [] };
   }
 
@@ -708,11 +709,11 @@ class NBACenterCard extends LitElement {
     });
   }
 
-  _leaderPanel(key, limit = 5) {
-    const rows = this._leaders(key).rows;
+  _leaderPanel(key, limit = 5, postseason = false) {
+    const rows = this._leaders(key, postseason).rows;
     return html`
       <section class="panel">
-        <div class="panel-head"><h3>${LEADERS[key][0]}</h3><span class="pill">SAISON</span></div>
+        <div class="panel-head"><h3>${LEADERS[key][0]}</h3><span class="pill">${postseason ? "PLAYOFFS" : "SAISON"}</span></div>
         ${rows.length ? html`<div class="leader-list">${rows.slice(0, limit).map((p, i) => html`
           <button class="leader leader-button" type="button" aria-label="Voir le profil de ${value(p.player)}" @click=${() => this._openPlayer(p.id, p)}>
             <span class="rank">${value(p.rank, i + 1)}</span>
@@ -838,9 +839,12 @@ class NBACenterCard extends LitElement {
   }
 
   _playersView() {
-    return html`<div class="head"><h2>PLAYERS CENTER</h2><span class="pill">TOP 10 · SAISON</span></div>
-      <p class="muted">Sélectionne directement un joueur dans un classement pour ouvrir sa fiche détaillée. Les effectifs complets restent accessibles dans TEAMS.</p>
-      <div class="grid">${Object.keys(LEADERS).map((key) => this._leaderPanel(key,10))}</div>`;
+    return html`<div class="head"><h2>PLAYERS CENTER</h2><span class="pill">TOP 10 · SAISON & PLAYOFFS</span></div>
+      <p class="muted">Sélectionne directement un joueur dans un classement pour ouvrir sa fiche détaillée. Les classements de playoffs restent séparés de la saison régulière.</p>
+      <div class="section-kicker">SAISON RÉGULIÈRE</div>
+      <div class="grid">${Object.keys(LEADERS).map((key) => this._leaderPanel(key,10))}</div>
+      <div class="section-kicker" style="margin-top:18px">PLAYOFFS</div>
+      <div class="grid">${Object.keys(LEADERS).map((key) => this._leaderPanel(key,10,true))}</div>`;
   }
 
   _statsView() {

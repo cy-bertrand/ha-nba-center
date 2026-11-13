@@ -80,6 +80,7 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.teams: list[str] = entry.options.get(CONF_TEAMS, entry.data.get(CONF_TEAMS, []))
         self._last_state: dict[str, str] = {}
         self._leaders: dict[str, list[dict]] = {}
+        self._postseason_leaders: dict[str, list[dict]] = {}
         self._leaders_fetched: datetime | None = None
         self._details_cache: dict[str, dict[str, Any]] = {}
         self._scoreboard_cache: dict[str, tuple[datetime, dict[str, Any]]] = {}
@@ -135,6 +136,7 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "standings": self._parse_standings(standings),
             "teams": team_data,
             "leaders": self._leaders,
+            "postseason_leaders": self._postseason_leaders,
             "favorites": list(self.teams),
             "teams_catalog": self._teams_catalog,
         }
@@ -171,26 +173,32 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER.warning("Catalogue des franchises NBA indisponible : %s", err)
 
     async def _update_leaders(self) -> None:
-        """Récupère les leaders de stats (au maximum une fois par heure).
-
-        Une erreur ici ne bloque jamais le reste de l'intégration.
-        """
+        """Récupère les leaders de saison régulière et de playoffs (cache horaire)."""
         now = dt_util.utcnow()
         if self._leaders_fetched and (now - self._leaders_fetched).total_seconds() < 3600 and self._leaders:
             return
-        result: dict[str, list[dict]] = {}
-        for key, (label, sort) in LEADER_CATEGORIES.items():
+        regular: dict[str, list[dict]] = {}
+        postseason: dict[str, list[dict]] = {}
+        # ESPN utilise l'année de fin de saison NBA (ex. 2027 pour 2026-27).
+        season_year = now.year + (1 if now.month >= 10 else 0)
+        for key, (_label, sort) in LEADER_CATEGORIES.items():
+            params = {"region": "us", "lang": "en", "contentorigin": "espn",
+                      "isqualified": "true", "page": 1, "limit": LEADERS_COUNT, "sort": sort}
             try:
-                raw = await self._get(
-                    LEADERS_URL,
-                    params={"region": "us", "lang": "en", "contentorigin": "espn",
-                            "isqualified": "true", "page": 1, "limit": LEADERS_COUNT, "sort": sort},
-                )
-                result[key] = self._parse_leaders(raw, key)
+                raw = await self._get(LEADERS_URL, params=params)
+                regular[key] = self._parse_leaders(raw, key)
             except Exception as err:  # noqa: BLE001
-                _LOGGER.debug("Leaders '%s' indisponibles: %s", key, err)
-                result[key] = self._leaders.get(key, [])
-        self._leaders = result
+                _LOGGER.debug("Leaders réguliers '%s' indisponibles: %s", key, err)
+                regular[key] = self._leaders.get(key, [])
+            try:
+                playoff_params = {**params, "season": season_year, "seasontype": 3}
+                playoff_raw = await self._get(LEADERS_URL, params=playoff_params)
+                postseason[key] = self._parse_leaders(playoff_raw, key)
+            except Exception as err:  # noqa: BLE001
+                _LOGGER.debug("Leaders playoffs '%s' indisponibles: %s", key, err)
+                postseason[key] = self._postseason_leaders.get(key, [])
+        self._leaders = regular
+        self._postseason_leaders = postseason
         self._leaders_fetched = now
 
     @staticmethod
