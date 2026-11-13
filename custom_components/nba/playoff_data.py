@@ -11,7 +11,7 @@ from typing import Any
 POSTSEASON = 3
 PLAY_IN = 5
 
-_GAME_LABEL = re.compile(r"^(?P<round>.+?)\\s*-\\s*Game\\s+(?P<number>\\d+)\\s*$", re.IGNORECASE)
+_GAME_LABEL = re.compile(r"^(?P<round>.+?)\s*-\s*Game\s+(?P<number>\d+)\s*$", re.IGNORECASE)
 
 
 def _mapping(value: Any) -> dict[str, Any]:
