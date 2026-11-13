@@ -18,7 +18,7 @@ class BoxscoreParsingTests(unittest.TestCase):
     def test_home_away_is_read_from_team_block_or_team_object(self):
         raw = {"boxscore": {"teams": [
             {"team": {"id": "1", "abbreviation": "WSH"}, "homeAway": "home"},
-            {"team": {"id": "2", "abbreviation": "DET", "homeAway": "away"},
+            {"team": {"id": "2", "abbreviation": "DET", "homeAway": "away"}},
         ]}}
         parsed = parse_boxscore(raw)
         self.assertEqual([team["home_away"] for team in parsed["team_stats"]], ["home", "away"])
