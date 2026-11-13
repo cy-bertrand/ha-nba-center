@@ -339,3 +339,35 @@ Contrat normalisé :
 Tests ajoutés dans `tests/test_playoff_data.py` : calendrier historique, scoreboard Finals, journée multi-matchs, Play-In, saison régulière ignorée, compétiteurs incomplets, scores absents et variantes de structure des scores.
 
 **Limite actuelle :** le parseur normalise les événements ; il ne regroupe pas encore les rencontres en séries, ne déduit pas les gagnants d'une série et ne construit pas de bracket. Ces règles nécessiteront des tests dédiés avant toute intégration au coordinateur.
+
+
+## Reconstruction des séries — première version
+
+Le module expose maintenant `build_playoff_series(games)`, toujours sans réseau ni dépendance Home Assistant.
+
+### Règles appliquées
+
+- Les événements Play-In sont exclus : ils ne sont pas des séries au meilleur des sept.
+- Le regroupement exige une saison, un libellé de tour reconnu et exactement deux équipes identifiées.
+- La clé de regroupement est saison + phase + libellé du tour + paire d'identifiants d'équipes (paire triée, donc indépendante du domicile).
+- Les événements sont dédupliqués par identifiant de match, puis triés par numéro de match ESPN et date.
+- Une victoire n'est comptée que si `completed is True` et qu'une seule équipe porte explicitement `winner is True`. Aucun résultat n'est déduit du score.
+- Une équipe atteint le statut de vainqueur de série à quatre victoires.
+- Plus de sept matchs, deux équipes à quatre victoires ou des numéros de match dupliqués signalent une série `inconsistent`, sans vainqueur déclaré.
+- Les événements avec résultat incomplet restent dans la série et augmentent `unknown_results` ; ils ne sont pas comptés comme des victoires.
+
+Le résultat contient notamment le statut (`in_progress`, `completed` ou `inconsistent`), les équipes et leurs victoires, le nombre de matchs, les résultats inconnus, les anomalies détectées et les matchs normalisés.
+
+### Validation sur les calendriers complets fournis
+
+Les fixtures de calendrier d'équipe ont été reconstruites depuis les fichiers JSON originaux joints dans la conversation. La fixture Celtics contient les 11 matchs réellement présents dans la réponse ESPN (5 contre Orlando, 6 contre New York). Une seconde fixture contient les 23 matchs du calendrier postseason OKC.
+
+Résultats attendus et vérifiés par les tests :
+- Boston–Orlando : Boston gagne 4–1.
+- Boston–New York : New York gagne 4–2.
+- Oklahoma City–Memphis : Oklahoma City gagne 4–0.
+- Oklahoma City–Denver : Oklahoma City gagne 4–3.
+- Oklahoma City–Minnesota : Oklahoma City gagne 4–1.
+- Oklahoma City–Indiana (Finales NBA) : Oklahoma City gagne 4–3.
+
+Ces tests valident la reconstruction des séries à partir des événements du calendrier, sans dépendre des résumés `series` d'ESPN. Le bracket et l'enchaînement automatique des équipes qualifiées entre les tours restent hors périmètre : ils ne doivent pas être inférés à partir du seul libellé de série.
