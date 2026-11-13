@@ -95,3 +95,28 @@ La documentation sportsdataverse précise que `SERIES_ID` correspond à la racin
 - https://github.com/swar/nba_api/blob/master/docs/nba_api/stats/endpoints/commonplayoffseries.md
 - https://github.com/llimllib/nba_data/blob/main/docs/DATA_DICTIONARY.md
 - https://nba-api-ts.riccardo.lol/endpoints/stats/games/common-playoff-series/
+
+
+### Vérification complémentaire du schéma et des identifiants
+
+Une seconde documentation technique (nba-api-ts) confirme le même contrat de cinq champs et signale explicitement que les appels à `stats.nba.com` nécessitent un client de type navigateur. La documentation SportsDataverse signale également que les requêtes standard peuvent échouer avec 403/429 et recommande un transport compatible navigateur (`curl_cffi`). Cela renforce le risque d'exploitation depuis aiohttp/Home Assistant sans garantir qu'un contournement soit acceptable ou durable.
+
+Une documentation de données NBA décrit le format des identifiants :
+- `001` : présaison ;
+- `002` : saison régulière ;
+- `003` : All-Star ;
+- `004` : playoffs ;
+- `005` : play-in ;
+- `006` : finale NBA Cup.
+
+Pour les matchs de playoffs, elle décrit les trois derniers chiffres comme `RSG` : tour, numéro de série dans le tour, match dans la série. Cette règle est documentée comme vérifiée sur les playoffs 2025-26, mais elle reste une convention communautaire à contrôler avec des identifiants provenant de la réponse brute de la source retenue.
+
+**Conséquence d'architecture :** si l'API NBA Stats reste inaccessible dans l'environnement Home Assistant, ne pas intégrer une dépendance à un client HTTP navigateur/anti-bot dans l'intégration. Évaluer plutôt une source de données accessible et stable ou construire les séries à partir des identifiants de matchs et résultats déjà récupérés par ESPN, avec validation explicite des IDs et tests sur fixtures. Le champ `SERIES_ID` de CommonPlayoffSeries reste la référence la plus directe lorsqu'il est disponible.
+
+### État après recherche du 13 novembre 2026
+
+- Contrat de données documenté par plusieurs clients indépendants : **confirmé au niveau documentaire**.
+- Réponse brute actuelle de l'endpoint depuis cet environnement : **non obtenue** (la page de l'API est inaccessible ici).
+- Accès direct depuis Home Assistant/aiohttp : **non validé**.
+- Dérivation du tour à partir du game ID : **documentée par une source communautaire, à tester sur fixtures**.
+- Implémentation : **bloquée jusqu'à validation d'une source accessible et d'au moins une réponse brute**.
