@@ -58,6 +58,17 @@ class TeamsCatalogParserTests(unittest.TestCase):
         self.assertEqual(result["count"], 0)
         self.assertFalse(result["complete"])
 
+    def test_known_nba_groups_fill_missing_espn_metadata(self):
+        result = parse_teams_catalog({"teams": [
+            {"team": {"id": "2", "displayName": "Boston Celtics", "abbreviation": "BOS"}},
+            {"team": {"id": "14", "displayName": "Los Angeles Lakers", "abbreviation": "LAL"}},
+        ]})
+        teams = {team["abbreviation"]: team for team in result["teams"]}
+        self.assertEqual(teams["BOS"]["conference"], "Eastern Conference")
+        self.assertEqual(teams["BOS"]["division"], "Atlantic Division")
+        self.assertEqual(teams["LAL"]["conference"], "Western Conference")
+        self.assertEqual(teams["LAL"]["division"], "Pacific Division")
+
     def test_optional_conference_and_division_metadata(self):
         result = parse_teams_catalog({"teams": [{
             "team": {
