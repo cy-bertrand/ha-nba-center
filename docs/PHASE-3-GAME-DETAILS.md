@@ -27,18 +27,18 @@ Transformer l'overlay Match Center de la Phase 2 en fiche de match approfondie, 
 
 ## Tests
 
-- La vérification ESPN en direct n'a pas encore fourni de fixture vérifiable dans cet environnement ; aucune compatibilité réelle n'est affirmée à ce stade.
-
-- Tests unitaires backend : fixtures synthétiques couvrant les deux équipes, joueurs, statistiques, titulaires, DNP et valeurs absentes.
+- Une capture réelle ESPN en cours de match (Wizards–Pistons, événement `401909977`, 13/11/2026) a été fournie et réduite à un fixture de test ciblé : `tests/fixtures/espn_summary_live_401909977.json`. Elle conserve les structures réelles du header live, du box score équipes/joueurs et d'un échantillon Play-by-Play avec substitution. Les données annexes sans rapport avec le parseur (news, cotes, etc.) ne sont pas incluses.
+- Un test dédié `tests/test_game_details_live_fixture.py` vérifie le score live du header, les statistiques équipes/joueurs, les joueurs DNP et l'enrichissement des participants d'une substitution à partir des identifiants ESPN.
+- Tests unitaires backend : fixtures synthétiques couvrant les cas génériques, complétées par ce fixture réel ciblé.
 - CI GitHub : workflow `43327946269` terminé avec succès (compilation Python, tests unitaires backend, build Lit, assertions frontend et génération du bundle).
-- Aucun fixture brut ESPN capturé depuis un appel réel n'est encore versionné. Le schéma ESPN reste non officiel et peut varier.
+- Le fixture réel versionné est un échantillon représentatif et non une copie intégrale de la réponse ESPN de 176 Ko ; il confirme les structures observées sur cette capture, sans garantir tous les schémas ESPN ni toutes les situations de match.
 - Le Play-by-Play repose à ce stade sur les champs facultatifs observés dans les exemples de schéma disponibles ; il doit être confirmé sur une réponse ESPN réelle avant de considérer l'affichage comme validé.
 
 ## Suite de la Phase 3
 
-1. Capturer et anonymiser des réponses `summary` réelles : match terminé, match en direct et réponse partielle. L'accès direct au endpoint ESPN n'a pas pu être vérifié depuis l'outil de consultation utilisé ; aucune fixture réelle n'est donc revendiquée.
-2. Vérifier les clés et l'ordre des statistiques sur les réponses actuelles d'ESPN.
-3. Ajouter les tests de parsing sur ces fixtures réelles et les cas de structures absentes.
+1. Ajouter des fixtures réelles complémentaires : match terminé et réponse partielle / sans box score ; vérifier que les champs absents restent explicitement indisponibles.
+2. Vérifier les clés et l'ordre des statistiques sur d'autres réponses actuelles d'ESPN, notamment les totaux et les variations de colonnes.
+3. Étendre les tests de parsing aux structures absentes, aux groupes statistiques multiples et aux cas de joueurs actifs / inactifs / DNP.
 4. Enrichir le Match Center : cinq majeurs, joueurs DNP, totaux/ratios collectifs, et états de chargement/indisponibilité.
 5. Vérifier le Play-by-Play sur des réponses réelles : structure, ordre chronologique, pagination/volume, fréquence de rafraîchissement et disponibilité en direct. La première interface est intégrée mais reste expérimentale tant que le schéma réel n'est pas confirmé.
 6. Tester la fiche de match sur Home Assistant desktop et mobile, avec matchs terminés et live.
