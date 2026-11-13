@@ -105,9 +105,10 @@ class PlayoffPayloadTests(unittest.TestCase):
         self.assertEqual([round_data["round_label"] for round_data in bracket["conferences"]["West"]], [
             "West 1st Round", "West Semifinals", "West Finals"
         ])
-        first_round = next(item for item in series if item["round_label"] == "West 1st Round")
-        semifinals = next(item for item in series if item["round_label"] == "West Semifinals")
-        conference_finals = next(item for item in series if item["round_label"] == "West Finals")
+        west_rounds = bracket["conferences"]["West"]
+        first_round = west_rounds[0]["series"][0]
+        semifinals = west_rounds[1]["series"][0]
+        conference_finals = west_rounds[2]["series"][0]
         nba_finals = bracket["finals"][0]
         self.assertEqual(first_round["advances_to"], [semifinals["id"]])
         self.assertEqual(semifinals["advanced_from"], [first_round["id"]])
@@ -133,8 +134,10 @@ class PlayoffPayloadTests(unittest.TestCase):
             "teams": [{"id": "3"}, {"id": "4"}],
         }]
         bracket = build_playoff_bracket(series)[0]
-        self.assertEqual(series[0]["advances_to"], [])
-        self.assertEqual(series[1]["advanced_from"], [])
+        self.assertNotIn("advances_to", series[0])
+        self.assertNotIn("advanced_from", series[1])
+        self.assertEqual(bracket["conferences"]["East"][0]["series"][0]["advances_to"], [])
+        self.assertEqual(bracket["conferences"]["East"][1]["series"][0]["advanced_from"], [])
         self.assertEqual(bracket["unplaced"], [])
 
     def test_bracket_does_not_mutate_input_series(self):
@@ -162,7 +165,9 @@ class PlayoffPayloadTests(unittest.TestCase):
             "teams": [{"id": "1"}, {"id": "2"}],
         }]
         bracket = build_playoff_bracket(series)[0]
-        self.assertEqual(bracket["unplaced"], series)
+        self.assertEqual(bracket["unplaced"][0]["id"], series[0]["id"])
+        self.assertEqual(bracket["unplaced"][0]["advances_to"], [])
+        self.assertNotIn("advances_to", series[0])
 
     def test_play_in_is_not_grouped_into_best_of_seven_series(self):
         games = parse_playoff_payload(load_fixture("espn_playin_scoreboard_2025_04_16.json"))
