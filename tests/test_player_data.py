@@ -52,6 +52,14 @@ class PlayerDataParserTests(unittest.TestCase):
         self.assertEqual(result["games"][0]["opponent"], "BBB")
         self.assertEqual(result["games"][1]["stats"]["points"], 18)
 
+    def test_parses_nested_overview_gamelog_events(self):
+        result = parse_player_gamelog({"gameLog": {"events": [
+            {"id": "g1", "gameResult": "W", "stats": ["32", "9", "7"],
+             "labels": ["PTS", "REB", "AST"]},
+        ]}})
+        self.assertEqual(result["count"], 1)
+        self.assertEqual(result["games"][0]["stats"]["PTS"], 32)
+
     def test_unexpected_gamelog_payload_is_empty(self):
         self.assertEqual(parse_player_gamelog({"events": "invalid"})["games"], [])
 
