@@ -3,7 +3,11 @@ import json
 import unittest
 from pathlib import Path
 
-from custom_components.nba.playoff_data import (\n    build_playoff_series,\n    parse_playoff_event,\n    parse_playoff_payload,\n)
+from custom_components.nba.playoff_data import (
+    build_playoff_series,
+    parse_playoff_event,
+    parse_playoff_payload,
+)
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
