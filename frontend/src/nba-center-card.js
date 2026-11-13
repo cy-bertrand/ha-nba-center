@@ -55,6 +55,7 @@ class NBACenterCard extends LitElement {
     _overlayGame: { state: true }, _overlayDetails: { state: true },
     _overlayLoading: { state: true }, _overlayError: { state: true },
     _showAllPlays: { state: true }, _scoringOnly: { state: true },
+    _teamSearch: { state: true }, _teamConference: { state: true },
   };
 
   static styles = css`
@@ -105,7 +106,7 @@ class NBACenterCard extends LitElement {
     input{min-width:140px;flex:1;border:1px solid #2b3b52;border-radius:9px;background:#0c1522;color:#f4f6fb;padding:9px 11px;font:inherit;font-size:11px}
     .team-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #ffffff10}
     .team-row:last-child{border-bottom:0;padding-bottom:0}
-    .team-row:first-child{padding-top:0}
+    .team-row:first-child{padding-top:0}\n    .catalog-team{min-width:0}.catalog-favorite-note{margin-top:8px}
     .large{width:34px;height:34px}
     .team-info{min-width:0;flex:1}
     .team-info strong{display:block;font-size:12px}
@@ -162,6 +163,8 @@ class NBACenterCard extends LitElement {
     this._active = "home";
     this._filter = "all";
     this._search = "";
+    this._teamSearch = "";
+    this._teamConference = "all";
     this._selectedDate = localDateISO();
     this._calendarGames = []; this._calendarLoading = false; this._calendarError = ""; this._calendarStale = false; this._calendarStaleError = ""; this._calendarRequest = 0; this._calendarInitialized = false;
     this._overlayGame = null; this._overlayDetails = null; this._overlayRequest = 0;
@@ -234,6 +237,26 @@ class NBACenterCard extends LitElement {
     }
     return Object.values(teams).sort((a,b) => a.name.localeCompare(b.name));
   }
+
+  _teamsCatalog() {
+    const state = this._find((s) => s.entity_id?.startsWith("sensor.") &&
+      Array.isArray(s.attributes?.teams) && s.attributes?.expected_count === 30);
+    const catalog = state?.attributes ?? {};
+    const favorites = new Map(this._teams().map((team) => [String(team.id), team]));
+    return {
+      state,
+      complete: Boolean(catalog.complete),
+      count: Number(catalog.count ?? catalog.teams?.length ?? 0),
+      teams: (catalog.teams ?? []).map((team) => ({
+        ...team,
+        favorite: favorites.has(String(team.id)),
+        favoriteData: favorites.get(String(team.id)),
+      })).sort((a, b) => (a.name ?? "").localeCompare(b.name ?? "")),
+    };
+  }
+
+  _setTeamSearch(event) { this._teamSearch = event.target.value ?? ""; }
+  _setTeamConference(value) { this._teamConference = value; }
 
   _selectView(view) {
     this._active = view;
@@ -500,11 +523,41 @@ class NBACenterCard extends LitElement {
       ${!this._calendarLoading && !this._calendarError && !filtered.length ? html`<section class="empty"><strong>${rows.length ? "Aucun match correspondant" : "Aucun match programmé"}</strong><p>${rows.length ? "Modifie les filtres ou la recherche." : "Aucune rencontre n&#39;est prévue pour cette date dans le fuseau horaire de Home Assistant."}</p></section>` : ""}
     `;
   }
+  _teamCatalogCard(team) {
+    const favorite = team.favoriteData;
+    return html`<section class="panel catalog-team">
+      <div class="team-row">
+        ${team.logo ? html`<img class="logo large" src=${team.logo} alt="" loading="lazy">` : ""}
+        <div class="team-info"><strong>${value(team.display_name, team.name)}</strong>
+          <small>${value(team.abbreviation)} · ${value(team.conference, "Conférence inconnue")} · ${value(team.division, "Division inconnue")}</small></div>
+        ${team.favorite ? html`<span class="pill accent">FAVORI</span>` : ""}
+      </div>
+      ${favorite ? html`<div class="muted catalog-favorite-note">Suivi détaillé disponible dans les capteurs de cette équipe</div>` : ""}
+    </section>`;
+  }
+
   _teamsView() {
-    const teams = this._teams();
-    return html`<div class="head"><h2>TEAMS CENTER</h2><span class="pill">${teams.length} FAVORITES</span></div>
-      ${teams.length ? html`<div class="grid">${teams.map((t) => this._teamPanel(t))}</div>` :
-        html`<section class="empty"><strong>Aucune équipe favorite détectée</strong><p>Sélectionne tes équipes favorites dans Paramètres → Appareils et services → NBA. Les fiches sont alimentées par les capteurs existants.</p></section>`}`;
+    const catalog = this._teamsCatalog();
+    const term = this._teamSearch.trim().toLowerCase();
+    const teams = catalog.teams.filter((team) => {
+      const matchesSearch = !term || [team.name, team.display_name, team.abbreviation, team.nickname, team.city].filter(Boolean).join(" ").toLowerCase().includes(term);
+      const conference = String(team.conference ?? "").toLowerCase();
+      const matchesConference = this._teamConference === "all" ||
+        (this._teamConference === "east" ? conference.includes("east") : conference.includes("west"));
+      return matchesSearch && matchesConference;
+    });
+    return html`
+      <div class="head"><h2>TEAMS CENTER</h2><span class="pill">${catalog.count}/30 FRANCHISES</span></div>
+      ${!catalog.complete ? html`<p class="muted" role="status">Catalogue partiel ou en attente · ${catalog.count} équipes reçues</p>` : ""}
+      <div class="filters">
+        <button class="chip" aria-pressed=${this._teamConference === "all"} @click=${() => this._setTeamConference("all")}>TOUTES</button>
+        <button class="chip" aria-pressed=${this._teamConference === "east"} @click=${() => this._setTeamConference("east")}>EAST</button>
+        <button class="chip" aria-pressed=${this._teamConference === "west"} @click=${() => this._setTeamConference("west")}>WEST</button>
+        <input type="search" aria-label="Rechercher une franchise NBA" placeholder="Rechercher une équipe…" .value=${this._teamSearch} @input=${this._setTeamSearch}>
+      </div>
+      ${teams.length ? html`<div class="grid">${teams.map((team) => this._teamCatalogCard(team))}</div>` :
+        html`<section class="empty"><strong>${catalog.count ? "Aucune franchise correspondante" : "Catalogue des équipes indisponible"}</strong><p>${catalog.count ? "Modifie la recherche ou le filtre de conférence." : "Le capteur Catalogue des équipes n'a pas encore reçu les données ESPN."}</p></section>`}
+    `;
   }
 
   _playersView() {
