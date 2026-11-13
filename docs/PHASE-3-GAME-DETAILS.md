@@ -35,13 +35,13 @@ Transformer l'overlay Match Center de la Phase 2 en fiche de match approfondie, 
 - CI GitHub : workflow `43384846830` terminé avec succès sur le commit `07d3a52` (13/11/2026) : compilation Python, **38 tests unitaires backend réussis**, build Lit et assertions frontend réussis. Le nouveau fichier `test_game_details_live_fixture.py` est bien détecté par `unittest discover` ; ses 3 tests passent.
 - Le fixture live reste un échantillon représentatif. Le fixture terminé couvre en revanche l'intégralité des sections utilisées par le parseur pour le header, les statistiques et les 515 actions Play-by-Play. Les sections annexes ESPN sans rapport avec ce parseur sont volontairement exclues.
 - Le schéma du Play-by-Play est maintenant vérifié sur une réponse ESPN réelle terminée de 515 actions, un extrait live et une rencontre réelle à 610 actions terminée après deux prolongations. Les cas de pagination, de rafraîchissement continu et les éventuelles variantes d'autres rencontres restent à tester.
-- Dernière CI de validation partielle : workflow `43392755537` réussi sur `main` (13/11/2026) : **52 tests unitaires Python réussis**, compilation Python, build Lit et assertions frontend réussis. Cette série comprend les cinq tests du fixture dégradé sans boxscore.
+- Dernière CI de validation partielle : workflow `43392755537` réussi sur `main` (13/11/2026) : **52 tests unitaires Python réussis**, compilation Python, build Lit et assertions frontend réussis. Cette série comprend les cinq tests du fixture dégradé sans boxscore. Une nouvelle série de six tests cible les box scores partiels (équipe seule, joueurs seuls, blocs/statistiques absents, colonnes manquantes et structures invalides) ; son exécution CI est en cours.
 
 ## Suite de la Phase 3
 
 1. Fixtures live, terminé en temps réglementaire et terminé après deux prolongations ajoutés ; ajouter ensuite une réponse partielle / sans box score et vérifier que les champs absents restent explicitement indisponibles.
 2. Vérifier les clés et l'ordre des statistiques sur d'autres réponses actuelles d'ESPN, notamment les totaux et les variations de colonnes.
-3. Étendre les tests de parsing aux structures absentes, aux groupes statistiques multiples et aux cas de joueurs actifs / inactifs / DNP.
+3. Étendre les tests de parsing aux groupes statistiques multiples et aux cas de joueurs actifs / inactifs / DNP ; les premiers cas de box scores partiels sont maintenant couverts.
 4. Enrichir le Match Center : cinq majeurs, joueurs DNP, totaux/ratios collectifs, et états de chargement/indisponibilité.
 5. La structure du Play-by-Play est maintenant contrôlée sur une réponse réelle terminée (515 actions, 70 substitutions, 128 actions de score) et sur un extrait live. Il reste à vérifier la pagination/volume, la fréquence de rafraîchissement et la disponibilité en direct. La première interface reste expérimentale tant que ces points ne sont pas confirmés.
 6. Tester la fiche de match sur Home Assistant desktop et mobile, avec matchs terminés et live.
