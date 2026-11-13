@@ -112,6 +112,32 @@ def _stat_rows(raw: dict[str, Any]) -> list[dict[str, Any]]:
                 })
     return rows
 
+def _filter_items(raw: dict[str, Any]) -> list[dict[str, Any]]:
+    filters = raw.get("filters")
+    if isinstance(filters, dict):
+        return [_mapping(item) for item in filters.values() if isinstance(item, dict)]
+    if isinstance(filters, list):
+        return [_mapping(item) for item in filters if isinstance(item, dict)]
+    return []
+
+
+def _season_type(raw: dict[str, Any]) -> tuple[str | None, str | None]:
+    for item in _filter_items(raw):
+        name = str(item.get("name") or item.get("displayName") or "").lower().replace(" ", "")
+        if name not in {"seasontype", "seasonphase"} and "seasontype" not in name:
+            continue
+        selected = _text(item.get("value"))
+        options = item.get("options")
+        label = _text(item.get("displayValue"))
+        if isinstance(options, list):
+            match = next((option for option in options
+                          if _text(_mapping(option).get("value")) == selected), None)
+            if match:
+                label = _text(_mapping(match).get("displayValue")) or label
+        return selected, label
+    return None, None
+
+
 def _overview_splits(raw: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:
     """Extrait séparément les splits Regular Season et Career d'overview."""
     statistics = _mapping(raw.get("statistics"))
@@ -196,8 +222,7 @@ def parse_player_stats(raw: dict[str, Any]) -> dict[str, Any]:
     athlete = _mapping(raw.get("athlete"))
     season_name = _text(season.get("displayName") or raw.get("seasonDisplayName"))
     if not season_name:
-        filters = _mapping(raw.get("filters"))
-        for filter_item in filters.values():
+        for filter_item in _filter_items(raw):
             item = _mapping(filter_item)
             selected = _text(item.get("value"))
             options = item.get("options")
@@ -213,8 +238,11 @@ def parse_player_stats(raw: dict[str, Any]) -> dict[str, Any]:
             for row in category.get("statistics", []) if isinstance(category.get("statistics"), list)
         ]
         season_name = next((value for value in reversed(season_values) if value), None)
+    season_type_id, season_type_name = _season_type(raw)
     return {
         "season": season_name,
+        "season_type_id": season_type_id,
+        "season_type": season_type_name,
         "athlete": {
             "id": _text(athlete.get("id")),
             "name": _text(athlete.get("displayName") or athlete.get("fullName")),
