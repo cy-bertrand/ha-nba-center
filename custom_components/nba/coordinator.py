@@ -16,7 +16,7 @@ from .scoreboard_utils import async_load_scoreboard, parse_score
 from .game_details import parse_boxscore, parse_game_state, parse_plays
 from .teams_catalog import parse_teams_catalog
 from .team_roster import parse_team_roster
-from .player_data import parse_player_gamelog, parse_player_stats
+from .player_data import parse_player_gamelog, parse_player_stats, season_matches_espn_year
 from .playoff_data import (
     annotate_playoff_bracket,
     build_playoff_bracket,
@@ -504,10 +504,9 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     parsed_postseason = parse_player_stats(postseason_raw)
                     if parsed_postseason.get("season_type_id") == "3":
                         returned_season = str(parsed_postseason.get("season") or "")
-                        returned_start = returned_season.split("-")[0]
-                        # ESPN peut ignorer le paramètre season et renvoyer le dernier split playoffs.
-                        # Ne jamais présenter ce split sous l'année demandée.
-                        if postseason_year is None or (returned_start.isdigit() and int(returned_start) == season_year):
+                        # ESPN attend l'année de fin : 2023 correspond à 2022-23.
+                        # Comparer le libellé complet sur son année de fin évite le décalage d'un an.
+                        if season_matches_espn_year(returned_season, season_year):
                             postseason_stats = parsed_postseason
                         else:
                             _LOGGER.debug(
