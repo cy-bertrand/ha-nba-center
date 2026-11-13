@@ -172,7 +172,9 @@ class PlayerDataParserTests(unittest.TestCase):
         self.assertEqual(result["season"], "2026-27")
         self.assertEqual(result["season_type_id"], "3")
         self.assertEqual(result["season_type"], "Playoffs")
-        self.assertEqual(result["statistics"][0]["value"], 29.5)
+        points = next(row for row in result["statistics"] if row["name"] == "avgPoints")
+        self.assertEqual(result["statistics"][0]["value"], 12)
+        self.assertEqual(points["value"], 29.5)
 
     def test_unexpected_gamelog_payload_is_empty(self):
         self.assertEqual(parse_player_gamelog({"events": "invalid"})["games"], [])
