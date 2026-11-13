@@ -8,6 +8,7 @@ on:
       - phase-5-playoff-player-data
       - phase-5-playoff-leaderboards
       - phase-5-playoff-series
+      - feature/player-center-season-polish
     paths:
       - 'frontend/**'
       - 'tests/**'
