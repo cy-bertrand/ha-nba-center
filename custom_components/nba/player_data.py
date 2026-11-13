@@ -165,8 +165,16 @@ def _season_history(raw: dict[str, Any]) -> list[dict[str, Any]]:
             values = item.get("stats")
             if not year or not isinstance(values, list):
                 continue
+            team = _mapping(item.get("team"))
+            team_abbreviation = _text(item.get("teamAbbreviation") or item.get("team_abbreviation")
+                                       or team.get("abbreviation") or team.get("shortDisplayName"))
+            team_name = _text(team.get("displayName") or team.get("name"))
             record = seasons.setdefault(year, {"year": int(year) if year.isdigit() else year,
                                                 "display_name": display_name, "statistics": []})
+            if team_abbreviation and not record.get("team_abbreviation"):
+                record["team_abbreviation"] = team_abbreviation
+            if team_name and not record.get("team_name"):
+                record["team_name"] = team_name
             for index, value in enumerate(values):
                 name = str(names[index]) if index < len(names) else f"stat_{index}"
                 record["statistics"].append({
