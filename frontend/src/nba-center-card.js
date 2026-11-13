@@ -7,6 +7,7 @@ const VIEWS = [
   { id: "teams", label: "TEAMS" },
   { id: "players", label: "PLAYERS" },
   { id: "stats", label: "STATS" },
+  { id: "playoffs", label: "PLAYOFFS" },
 ];
 const LEADERS = {
   points: ["POINTS", "marque"],
@@ -58,6 +59,7 @@ class NBACenterCard extends LitElement {
     _teamSearch: { state: true }, _teamConference: { state: true },
     _teamOverlay: { state: true }, _teamRoster: { state: true }, _teamRosterLoading: { state: true }, _teamRosterError: { state: true },
     _playerSearch: { state: true }, _playerOverlay: { state: true }, _playerData: { state: true }, _playerLoading: { state: true }, _playerError: { state: true }, _playerRequest: { state: true },
+    _playoffData: { state: true }, _playoffLoading: { state: true }, _playoffError: { state: true }, _playoffSeason: { state: true }, _playoffRequest: { state: true },
   };
 
   static styles = css`
@@ -87,6 +89,7 @@ class NBACenterCard extends LitElement {
     .panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
     .accent{color:#f0c05b}
     .empty{border:1px dashed #33445e;border-radius:13px;padding:20px;background:#101a29}
+    .playoff-season{max-width:132px;border:1px solid #2b3b52;border-radius:9px;background:#101a29;color:#f2c45f;padding:9px;font:inherit;font-size:11px;font-weight:800}.playoff-summary{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}.playoff-summary span{border:1px solid #2c3b52;border-radius:999px;padding:6px 10px;color:#aab6ca;font-size:9px;font-weight:800;letter-spacing:.08em}.playoff-conference{margin-top:22px}.playoff-conference-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}.playoff-conference-title h2{font-size:16px;color:#f2c45f}.playoff-round{margin:14px 0}.playoff-round .grid{grid-template-columns:repeat(2,minmax(0,1fr))}.playoff-series{padding:12px}.playoff-team{display:grid;grid-template-columns:28px minmax(0,1fr) 28px;align-items:center;gap:8px;padding:8px 2px;border-bottom:1px solid #ffffff12;font-size:12px}.playoff-team:last-of-type{border-bottom:0}.playoff-seed{color:#8291a7;font-size:10px;font-weight:800}.playoff-wins{text-align:center;color:#f2c45f;font-size:16px;font-weight:950}.playoff-winner strong{color:#75d6a1}.playoff-meta{margin-top:8px;color:#8190a7;font-size:9px}.playoff-warning{margin-top:8px;color:#e8b75a;font-size:10px;line-height:1.5}.playoff-conference .empty{margin-top:8px}
     .empty strong{display:block;margin-bottom:7px;color:#e9edf5;font-size:13px}
     .empty p{margin:0;color:#9eabc0;font-size:11px;line-height:1.65}
     .game-list,.team-list,.leader-list{display:grid;gap:9px}
@@ -182,6 +185,7 @@ class NBACenterCard extends LitElement {
     this._calendarGames = []; this._calendarLoading = false; this._calendarError = ""; this._calendarStale = false; this._calendarStaleError = ""; this._calendarRequest = 0; this._calendarInitialized = false;
     this._overlayGame = null; this._overlayDetails = null; this._overlayRequest = 0;
     this._overlayLoading = false; this._overlayError = "";
+    this._playoffData = null; this._playoffLoading = false; this._playoffError = ""; this._playoffSeason = 2026; this._playoffRequest = 0;
     this._config = {};
   }
 
@@ -221,12 +225,13 @@ class NBACenterCard extends LitElement {
     return { state, rows: state?.attributes?.standings ?? [] };
   }
 
-  _leaders(key) {
+  _leaders(key, postseason = false) {
     const fragment = LEADERS[key][1];
-    const state = this._entity(key, (s) =>
-      Array.isArray(s.attributes?.leaders) &&
-      (s.attributes?.category ?? "").toLowerCase().includes(fragment)
-    );
+    const state = this._entity(postseason ? `playoff_${key}` : key, (s) => {
+      const category = (s.attributes?.category ?? "").toLowerCase();
+      return Array.isArray(s.attributes?.leaders) && category.includes(fragment) &&
+        (postseason ? category.startsWith("playoffs ") : !category.startsWith("playoffs "));
+    });
     return { state, rows: state?.attributes?.leaders ?? [] };
   }
 
@@ -392,6 +397,7 @@ class NBACenterCard extends LitElement {
     const postseason = this._playerData?.postseason_stats ?? {};
     const postseasonStats = postseason.statistics ?? [];
     const games = this._playerData?.gamelog?.games ?? [];
+    const postseasonGames = this._playerData?.postseason_gamelog?.games ?? [];
     const teamCatalog = this._teamsCatalog().teams;
     const currentTeam = teamCatalog.find((team) =>
       (player.team_id != null && String(team.id) === String(player.team_id))
@@ -493,6 +499,19 @@ class NBACenterCard extends LitElement {
             <div class="player-stat-grid player-season-highlights">${quick.map(([label,item]) => html`<div><small>${label} / MATCH</small><strong>${statLabel(item)}</strong></div>`)}</div>
               ${stats.length ? html`<div class="table-wrap"><table><thead><tr><th>STATISTIQUE</th><th>VALEUR</th></tr></thead><tbody>${detailedStats.map((item) => html`<tr><td>${value(translateStat(item),item.name)}</td><td>${value(item.display_value ?? item.value)}</td></tr>`)}</tbody></table></div>` : html`<p class="muted">Aucune autre statistique disponible pour cette saison.</p>`}
             </section>
+            ${postseasonGames.length ? html`
+              <section class="panel player-gamelog player-postseason-gamelog"><div class="panel-head"><h3>5 DERNIERS MATCHS · PLAYOFFS</h3><span class="pill">${this._playerData.postseason_gamelog?.boxscore_count ?? 0}/${Math.min(postseasonGames.length, 5)} BOX SCORES</span></div>
+                ${postseasonGames.slice(0,5).some((game) => Object.keys(game.stats ?? {}).length) ? html`<div class="player-game-list">
+                  ${postseasonGames.slice(0,5).map((game) => {
+                    const stats = game.stats ?? {};
+                    const pick = (...keys) => {
+                      const key = keys.find((candidate) => stats[candidate] !== undefined && stats[candidate] !== null && stats[candidate] !== "");
+                      return key ? stats[key] : "—";
+                    };
+                    const statLine = `${pick("MIN","minutes")}m · ${pick("PTS","points")}p · ${pick("REB","rebounds")}r · ${pick("AST","assists")}a · ${pick("STL","steals")}stl · ${pick("BLK","blocks")}blk`;
+                    return html`<div class="player-game-row"><div class="player-game-meta"><strong>${formatGameDate(game.date)}</strong><span>${game.home_away === "@" ? "@" : "vs"} ${value(game.opponent_abbreviation, value(game.opponent))}</span></div><div class="player-game-stats">${statLine}</div></div>`;
+                  })}</div>` : html`<p class="muted">Les box scores des rencontres de playoffs ne sont pas encore disponibles.</p>`}
+              </section>` : ""}
             <section class="panel player-postseason-panel">
               <div class="panel-head"><h3>STATISTIQUES PLAYOFFS</h3><span class="pill">${value(postseason.season, "POSTSEASON")}</span></div>
               ${postseasonStats.length ? html`
@@ -522,12 +541,66 @@ class NBACenterCard extends LitElement {
 
   _selectView(view) {
     this._active = view;
+    if (view === "playoffs") this._loadPlayoffBracket();
     if (view === "scores") {
       if (!this._calendarInitialized) { this._selectedDate = localDateISO(new Date(), this.hass?.config?.time_zone); this._calendarInitialized = true; }
       this._loadCalendar(this._selectedDate);
     }
   }
   _setFilter(filter) { this._filter = filter; }
+  _setPlayoffSeason(event) {
+    const year = Number(event.target.value);
+    if (!Number.isInteger(year) || year < 2000 || year > 2100) return;
+    this._playoffSeason = year;
+    this._loadPlayoffBracket(year);
+  }
+  async _loadPlayoffBracket(year = this._playoffSeason) {
+    if (!this.hass?.callWS || !Number.isInteger(year)) return;
+    const request = ++this._playoffRequest;
+    this._playoffLoading = true; this._playoffError = ""; this._playoffData = null;
+    try {
+      const result = await this.hass.callWS({ type: "nba/playoff_bracket", season_year: year });
+      if (request !== this._playoffRequest || year !== this._playoffSeason) return;
+      this._playoffData = result;
+    } catch (err) {
+      if (request !== this._playoffRequest) return;
+      this._playoffError = err?.message ?? "Impossible de charger le tableau des playoffs.";
+    } finally {
+      if (request === this._playoffRequest) this._playoffLoading = false;
+    }
+  }
+  _playoffSeriesCard(series) {
+    const teams = series.teams ?? [];
+    const winnerId = series.winner?.id == null ? null : String(series.winner.id);
+    return html`<section class="panel playoff-series">
+      <div class="panel-head"><h3>${value(series.round_label, "SÉRIE")}</h3><span class="pill">${series.status === "completed" ? "TERMINÉE" : series.status === "inconsistent" ? "À VÉRIFIER" : "EN COURS"}</span></div>
+      ${teams.map((team) => html`<div class="playoff-team ${winnerId === String(team.id) ? "playoff-winner" : ""}">
+        <span class="playoff-seed">${team.seed == null ? "—" : `#${team.seed}`}</span><strong>${value(team.abbreviation, team.name ?? team.id)}</strong><span class="playoff-wins">${Number.isInteger(team.wins) ? team.wins : 0}</span>
+      </div>`)}
+      <div class="playoff-meta">${series.completed_games ?? 0} MATCHS TERMINÉS · ${series.games_played ?? 0} MATCHS RECENSÉS</div>
+      ${series.unknown_results ? html`<div class="playoff-warning">${series.unknown_results} résultat(s) non confirmé(s)</div>` : ""}
+      ${series.issues?.length ? html`<div class="playoff-warning">Données incohérentes : ${series.issues.join(", ")}</div>` : ""}
+    </section>`;
+  }
+  _playoffRound(round) {
+    return html`<section class="playoff-round"><div class="section-kicker">${value(round.round_label)}</div><div class="grid">${(round.series ?? []).map((series) => this._playoffSeriesCard(series))}</div></section>`;
+  }
+  _playoffsView() {
+    const data = this._playoffData;
+    const years = [2027, 2026, 2025];
+    return html`<div class="head"><div><h2>PLAYOFFS CENTER</h2><p class="muted">Tableaux et séries reconstruits à partir des résultats ESPN vérifiés.</p></div>
+      <select class="playoff-season" aria-label="Saison des playoffs" .value=${String(this._playoffSeason)} @change=${this._setPlayoffSeason}>${years.map((year) => html`<option value=${year}>${year - 1}-${String(year).slice(-2)}</option>`)}</select></div>
+      ${this._playoffLoading ? html`<section class="empty">Chargement du tableau ${this._playoffSeason - 1}-${String(this._playoffSeason).slice(-2)}…</section>` : ""}
+      ${this._playoffError ? html`<section class="empty"><strong>Tableau indisponible</strong><p>${this._playoffError}</p><button @click=${() => this._loadPlayoffBracket()}>RÉESSAYER</button></section>` : ""}
+      ${!this._playoffLoading && data ? html`<div class="playoff-summary"><span>${data.games_count ?? 0} MATCHS</span><span>${data.series_count ?? 0} SÉRIES</span><span>${data.available ? "DONNÉES REÇUES" : "AUCUN MATCH PLAYOFF"}</span></div>
+        ${Object.entries(data.conferences ?? {}).map(([conference, rounds]) => html`<section class="playoff-conference"><div class="playoff-conference-title"><h2>${conference.toUpperCase()}ERN CONFERENCE</h2><span class="pill">${(rounds ?? []).reduce((n, round) => n + (round.series?.length ?? 0), 0)} SÉRIES</span></div>${(rounds ?? []).length ? rounds.map((round) => this._playoffRound(round)) : html`<section class="empty"><strong>Tableau ${conference} indisponible</strong><p>Les données ESPN ne permettent pas de reconstituer les séries de cette conférence.</p></section>`}</section>`)}
+        <section class="playoff-conference"><div class="playoff-conference-title"><h2>NBA FINALS</h2></div>${(data.finals ?? []).length ? html`<div class="grid">${data.finals.map((series) => this._playoffSeriesCard(series))}</div>` : html`<section class="empty"><strong>Finales NBA non disponibles</strong><p>Aucune série des Finales n'a été identifiée pour cette saison.</p></section>`}</section>
+        ${(data.unplaced ?? []).length ? html`<section class="playoff-conference"><div class="playoff-conference-title"><h2>SÉRIES NON CLASSÉES</h2></div><div class="grid">${data.unplaced.map((series) => this._playoffSeriesCard(series))}</div></section>` : ""}
+        ${Object.keys(data.seed_errors ?? {}).length ? html`<section class="empty playoff-warning"><strong>Têtes de série non validées</strong><p>${Object.entries(data.seed_errors).map(([conference, errors]) => `${conference} : ${errors.join(", ")}`).join(" · ")}</p>Les positions de tableau ne sont pas inventées.</section>` : ""}
+        ${Object.keys(data.schedule_errors ?? {}).length ? html`<p class="muted">Calendriers manquants pour ${Object.keys(data.schedule_errors).length} équipe(s) · certaines séries peuvent être incomplètes.</p>` : ""}
+      ` : ""}
+      ${!this._playoffLoading && !this._playoffError && !data ? html`<section class="empty"><strong>Aucune donnée chargée</strong><p>Choisis une saison pour charger son tableau.</p><button @click=${() => this._loadPlayoffBracket()}>CHARGER LES PLAYOFFS</button></section>` : ""}`;
+  }
   _setSearch(event) { this._search = event.target.value ?? ""; }
   _shiftDate(days) { this._selectedDate = shiftDateISO(this._selectedDate, days); this._loadCalendar(this._selectedDate); }
   _setDate(event) { this._selectedDate = event.target.value; this._loadCalendar(this._selectedDate); }
@@ -694,11 +767,11 @@ class NBACenterCard extends LitElement {
     });
   }
 
-  _leaderPanel(key, limit = 5) {
-    const rows = this._leaders(key).rows;
+  _leaderPanel(key, limit = 5, postseason = false) {
+    const rows = this._leaders(key, postseason).rows;
     return html`
       <section class="panel">
-        <div class="panel-head"><h3>${LEADERS[key][0]}</h3><span class="pill">SAISON</span></div>
+        <div class="panel-head"><h3>${LEADERS[key][0]}</h3><span class="pill">${postseason ? "PLAYOFFS" : "SAISON"}</span></div>
         ${rows.length ? html`<div class="leader-list">${rows.slice(0, limit).map((p, i) => html`
           <button class="leader leader-button" type="button" aria-label="Voir le profil de ${value(p.player)}" @click=${() => this._openPlayer(p.id, p)}>
             <span class="rank">${value(p.rank, i + 1)}</span>
@@ -824,9 +897,12 @@ class NBACenterCard extends LitElement {
   }
 
   _playersView() {
-    return html`<div class="head"><h2>PLAYERS CENTER</h2><span class="pill">TOP 10 · SAISON</span></div>
-      <p class="muted">Sélectionne directement un joueur dans un classement pour ouvrir sa fiche détaillée. Les effectifs complets restent accessibles dans TEAMS.</p>
-      <div class="grid">${Object.keys(LEADERS).map((key) => this._leaderPanel(key,10))}</div>`;
+    return html`<div class="head"><h2>PLAYERS CENTER</h2><span class="pill">TOP 10 · SAISON & PLAYOFFS</span></div>
+      <p class="muted">Sélectionne directement un joueur dans un classement pour ouvrir sa fiche détaillée. Les classements de playoffs restent séparés de la saison régulière.</p>
+      <div class="section-kicker">SAISON RÉGULIÈRE</div>
+      <div class="grid">${Object.keys(LEADERS).map((key) => this._leaderPanel(key,10))}</div>
+      <div class="section-kicker" style="margin-top:18px">PLAYOFFS</div>
+      <div class="grid">${Object.keys(LEADERS).map((key) => this._leaderPanel(key,10,true))}</div>`;
   }
 
   _statsView() {
@@ -838,7 +914,7 @@ class NBACenterCard extends LitElement {
   render() {
     const active = VIEWS.find((v) => v.id === this._active) ?? VIEWS[0];
     const view = { home: () => this._homeView(), scores: () => this._scoresView(),
-      teams: () => this._teamsView(), players: () => this._playersView(), stats: () => this._statsView() };
+      teams: () => this._teamsView(), players: () => this._playersView(), stats: () => this._statsView(), playoffs: () => this._playoffsView() };
     return html`
       <ha-card class="shell">
         <header class="hero"><div class="eyebrow">THE ASSOCIATION · HOME ASSISTANT</div>

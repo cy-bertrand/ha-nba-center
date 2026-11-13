@@ -1,0 +1,272 @@
+{
+  "events": [
+    {
+      "id": "401767818",
+      "date": "2025-04-20T17:00Z",
+      "name": "Memphis Grizzlies at Oklahoma City Thunder",
+      "season": {
+        "year": 2025,
+        "type": 3,
+        "slug": "post-season"
+      },
+      "competitions": [
+        {
+          "id": "401767818",
+          "type": {
+            "id": "14",
+            "abbreviation": "RD16"
+          },
+          "competitors": [
+            {
+              "id": "25",
+              "homeAway": "home",
+              "winner": true,
+              "team": {
+                "id": "25",
+                "abbreviation": "OKC",
+                "displayName": "Oklahoma City Thunder"
+              },
+              "score": "131"
+            },
+            {
+              "id": "29",
+              "homeAway": "away",
+              "winner": false,
+              "team": {
+                "id": "29",
+                "abbreviation": "MEM",
+                "displayName": "Memphis Grizzlies"
+              },
+              "score": "80"
+            }
+          ],
+          "notes": [
+            {
+              "type": "event",
+              "headline": "West 1st Round - Game 1"
+            }
+          ],
+          "series": {
+            "type": "playoff",
+            "summary": "OKC leads series 1-0",
+            "completed": false,
+            "totalCompetitions": 7,
+            "competitors": [
+              {
+                "id": "25",
+                "wins": 1,
+                "ties": 0
+              },
+              {
+                "id": "29",
+                "wins": 0,
+                "ties": 0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "401767822",
+      "date": "2025-04-20T19:30Z",
+      "name": "Orlando Magic at Boston Celtics",
+      "season": {
+        "year": 2025,
+        "type": 3,
+        "slug": "post-season"
+      },
+      "competitions": [
+        {
+          "id": "401767822",
+          "type": {
+            "id": "14",
+            "abbreviation": "RD16"
+          },
+          "competitors": [
+            {
+              "id": "2",
+              "homeAway": "home",
+              "winner": true,
+              "team": {
+                "id": "2",
+                "abbreviation": "BOS",
+                "displayName": "Boston Celtics"
+              },
+              "score": "103"
+            },
+            {
+              "id": "19",
+              "homeAway": "away",
+              "winner": false,
+              "team": {
+                "id": "19",
+                "abbreviation": "ORL",
+                "displayName": "Orlando Magic"
+              },
+              "score": "86"
+            }
+          ],
+          "notes": [
+            {
+              "type": "event",
+              "headline": "East 1st Round - Game 1"
+            }
+          ],
+          "series": {
+            "type": "playoff",
+            "summary": "BOS leads series 1-0",
+            "completed": false,
+            "totalCompetitions": 7,
+            "competitors": [
+              {
+                "id": "2",
+                "wins": 1,
+                "ties": 0
+              },
+              {
+                "id": "19",
+                "wins": 0,
+                "ties": 0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "401767816",
+      "date": "2025-04-20T23:00Z",
+      "name": "Miami Heat at Cleveland Cavaliers",
+      "season": {
+        "year": 2025,
+        "type": 3,
+        "slug": "post-season"
+      },
+      "competitions": [
+        {
+          "id": "401767816",
+          "type": {
+            "id": "14",
+            "abbreviation": "RD16"
+          },
+          "competitors": [
+            {
+              "id": "5",
+              "homeAway": "home",
+              "winner": true,
+              "team": {
+                "id": "5",
+                "abbreviation": "CLE",
+                "displayName": "Cleveland Cavaliers"
+              },
+              "score": "121"
+            },
+            {
+              "id": "14",
+              "homeAway": "away",
+              "winner": false,
+              "team": {
+                "id": "14",
+                "abbreviation": "MIA",
+                "displayName": "Miami Heat"
+              },
+              "score": "100"
+            }
+          ],
+          "notes": [
+            {
+              "type": "event",
+              "headline": "East 1st Round - Game 1"
+            }
+          ],
+          "series": {
+            "type": "playoff",
+            "summary": "CLE leads series 1-0",
+            "completed": false,
+            "totalCompetitions": 7,
+            "competitors": [
+              {
+                "id": "5",
+                "wins": 1,
+                "ties": 0
+              },
+              {
+                "id": "14",
+                "wins": 0,
+                "ties": 0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "401767823",
+      "date": "2025-04-21T01:30Z",
+      "name": "Golden State Warriors at Houston Rockets",
+      "season": {
+        "year": 2025,
+        "type": 3,
+        "slug": "post-season"
+      },
+      "competitions": [
+        {
+          "id": "401767823",
+          "type": {
+            "id": "14",
+            "abbreviation": "RD16"
+          },
+          "competitors": [
+            {
+              "id": "10",
+              "homeAway": "home",
+              "winner": false,
+              "team": {
+                "id": "10",
+                "abbreviation": "HOU",
+                "displayName": "Houston Rockets"
+              },
+              "score": "85"
+            },
+            {
+              "id": "9",
+              "homeAway": "away",
+              "winner": true,
+              "team": {
+                "id": "9",
+                "abbreviation": "GS",
+                "displayName": "Golden State Warriors"
+              },
+              "score": "95"
+            }
+          ],
+          "notes": [
+            {
+              "type": "event",
+              "headline": "West 1st Round - Game 1"
+            }
+          ],
+          "series": {
+            "type": "playoff",
+            "summary": "GS leads series 1-0",
+            "completed": false,
+            "totalCompetitions": 7,
+            "competitors": [
+              {
+                "id": "10",
+                "wins": 0,
+                "ties": 0
+              },
+              {
+                "id": "9",
+                "wins": 1,
+                "ties": 0
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

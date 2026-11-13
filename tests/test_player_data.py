@@ -176,6 +176,40 @@ class PlayerDataParserTests(unittest.TestCase):
         self.assertEqual(result["statistics"][0]["value"], 12)
         self.assertEqual(points["value"], 29.5)
 
+    def test_parses_gamelog_stats_nested_under_season_types(self):
+        result = parse_player_gamelog({
+            "events": {
+                "game-1": {
+                    "id": "game-1",
+                    "gameDate": "2025-05-20T00:00:00Z",
+                    "opponent": {"displayName": "Minnesota Timberwolves", "abbreviation": "MIN"},
+                    "gameResult": "W",
+                    "atVs": "@",
+                },
+            },
+            "seasonTypes": [{
+                "id": "3",
+                "displayName": "Postseason",
+                "categories": [{
+                    "name": "general",
+                    "labels": ["MIN", "PTS", "REB", "AST"],
+                    "names": ["minutes", "points", "rebounds", "assists"],
+                    "events": [{
+                        "eventId": "game-1",
+                        "stats": ["42", "31", "8", "7"],
+                    }],
+                }],
+            }],
+        })
+        self.assertEqual(result["count"], 1)
+        game = result["games"][0]
+        self.assertEqual(game["id"], "game-1")
+        self.assertEqual(game["opponent_abbreviation"], "MIN")
+        self.assertEqual(game["home_away"], "@")
+        self.assertEqual(game["stats"]["points"], 31)
+        self.assertEqual(game["stats"]["rebounds"], 8)
+        self.assertEqual(game["stats"]["assists"], 7)
+
     def test_unexpected_gamelog_payload_is_empty(self):
         self.assertEqual(parse_player_gamelog({"events": "invalid"})["games"], [])
 

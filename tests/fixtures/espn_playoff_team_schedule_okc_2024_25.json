@@ -1,0 +1,1764 @@
+{
+  "requestedSeason": {
+    "year": 2025,
+    "type": 3,
+    "name": "Postseason",
+    "displayName": "2024-25"
+  },
+  "team": {
+    "id": "25",
+    "abbreviation": "OKC",
+    "displayName": "Oklahoma City Thunder"
+  },
+  "events": [
+    {
+      "id": "401767818",
+      "date": "2025-04-20T17:00Z",
+      "name": "Memphis Grizzlies at Oklahoma City Thunder",
+      "season": {
+        "year": 2025,
+        "displayName": "2024-25"
+      },
+      "seasonType": {
+        "id": "3",
+        "type": 3,
+        "name": "Postseason",
+        "abbreviation": "post"
+      },
+      "competitions": [
+        {
+          "type": {
+            "id": "14",
+            "text": "Round of 16",
+            "abbreviation": "RD16",
+            "slug": "round-of-16",
+            "type": "round-of-16"
+          },
+          "notes": [
+            {
+              "type": "event",
+              "headline": "West 1st Round - Game 1"
+            }
+          ],
+          "status": {
+            "clock": 0,
+            "displayClock": "0.0",
+            "period": 4,
+            "type": {
+              "id": "3",
+              "name": "STATUS_FINAL",
+              "state": "post",
+              "completed": true,
+              "description": "Final",
+              "detail": "Final",
+              "shortDetail": "Final"
+            }
+          },
+          "competitors": [
+            {
+              "id": "25",
+              "homeAway": "home",
+              "winner": true,
+              "team": {
+                "id": "25",
+                "abbreviation": "OKC",
+                "displayName": "Oklahoma City Thunder"
+              },
+              "score": {
+                "value": 131,
+                "displayValue": "131"
+              }
+            },
+            {
+              "id": "29",
+              "homeAway": "away",
+              "winner": false,
+              "team": {
+                "id": "29",
+                "abbreviation": "MEM",
+                "displayName": "Memphis Grizzlies"
+              },
+              "score": {
+                "value": 80,
+                "displayValue": "80"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "401767903",
+      "date": "2025-04-22T23:30Z",
+      "name": "Memphis Grizzlies at Oklahoma City Thunder",
+      "season": {
+        "year": 2025,
+        "displayName": "2024-25"
+      },
+      "seasonType": {
+        "id": "3",
+        "type": 3,
+        "name": "Postseason",
+        "abbreviation": "post"
+      },
+      "competitions": [
+        {
+          "type": {
+            "id": "14",
+            "text": "Round of 16",
+            "abbreviation": "RD16",
+            "slug": "round-of-16",
+            "type": "round-of-16"
+          },
+          "notes": [
+            {
+              "type": "event",
+              "headline": "West 1st Round - Game 2"
+            }
+          ],
+          "status": {
+            "clock": 0,
+            "displayClock": "0.0",
+            "period": 4,
+            "type": {
+              "id": "3",
+              "name": "STATUS_FINAL",
+              "state": "post",
+              "completed": true,
+              "description": "Final",
+              "detail": "Final",
+              "shortDetail": "Final"
+            }
+          },
+          "competitors": [
+            {
+              "id": "25",
+              "homeAway": "home",
+              "winner": true,
+              "team": {
+                "id": "25",
+                "abbreviation": "OKC",
+                "displayName": "Oklahoma City Thunder"
+              },
+              "score": {
+                "value": 118,
+                "displayValue": "118"
+              }
+            },
+            {
+              "id": "29",
+              "homeAway": "away",
+              "winner": false,
+              "team": {
+                "id": "29",
+                "abbreviation": "MEM",
+                "displayName": "Memphis Grizzlies"
+              },
+              "score": {
+                "value": 99,
+                "displayValue": "99"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "401767904",
+      "date": "2025-04-25T01:30Z",
+      "name": "Oklahoma City Thunder at Memphis Grizzlies",
+      "season": {
+        "year": 2025,
+        "displayName": "2024-25"
+      },
+      "seasonType": {
+        "id": "3",
+        "type": 3,
+        "name": "Postseason",
+        "abbreviation": "post"
+      },
+      "competitions": [
+        {
+          "type": {
+            "id": "14",
+            "text": "Round of 16",
+            "abbreviation": "RD16",
+            "slug": "round-of-16",
+            "type": "round-of-16"
+          },
+          "notes": [
+            {
+              "type": "event",
+              "headline": "West 1st Round - Game 3"
+            }
+          ],
+          "status": {
+            "clock": 0,
+            "displayClock": "0.0",
+            "period": 4,
+            "type": {
+              "id": "3",
+              "name": "STATUS_FINAL",
+              "state": "post",
+              "completed": true,
+              "description": "Final",
+              "detail": "Final",
+              "shortDetail": "Final"
+            }
+          },
+          "competitors": [
+            {
+              "id": "29",
+              "homeAway": "home",
+              "winner": false,
+              "team": {
+                "id": "29",
+                "abbreviation": "MEM",
+                "displayName": "Memphis Grizzlies"
+              },
+              "score": {
+                "value": 108,
+                "displayValue": "108"
+              }
+            },
+            {
+              "id": "25",
+              "homeAway": "away",
+              "winner": true,
+              "team": {
+                "id": "25",
+                "abbreviation": "OKC",
+                "displayName": "Oklahoma City Thunder"
+              },
+              "score": {
+                "value": 114,
+                "displayValue": "114"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "401767905",
+      "date": "2025-04-26T19:30Z",
+      "name": "Oklahoma City Thunder at Memphis Grizzlies",
+      "season": {
+        "year": 2025,
+        "displayName": "2024-25"
+      },
+      "seasonType": {
+        "id": "3",
+        "type": 3,
+        "name": "Postseason",
+        "abbreviation": "post"
+      },
+      "competitions": [
+        {
+          "type": {
+            "id": "14",
+            "text": "Round of 16",
+            "abbreviation": "RD16",
+            "slug": "round-of-16",
+            "type": "round-of-16"
+          },
+          "notes": [
+            {
+              "type": "event",
+              "headline": "West 1st Round - Game 4"
+            }
+          ],
+          "status": {
+            "clock": 0,
+            "displayClock": "0.0",
+            "period": 4,
+            "type": {
+              "id": "3",
+              "name": "STATUS_FINAL",
+              "state": "post",
+              "completed": true,
+              "description": "Final",
+              "detail": "Final",
+              "shortDetail": "Final"
+            }
+          },
+          "competitors": [
+            {
+              "id": "29",
+              "homeAway": "home",
+              "winner": false,
+              "team": {
+                "id": "29",
+                "abbreviation": "MEM",
+                "displayName": "Memphis Grizzlies"
+              },
+              "score": {
+                "value": 115,
+                "displayValue": "115"
+              }
+            },
+            {
+              "id": "25",
+              "homeAway": "away",
+              "winner": true,
+              "team": {
+                "id": "25",
+                "abbreviation": "OKC",
+                "displayName": "Oklahoma City Thunder"
+              },
+              "score": {
+                "value": 117,
+                "displayValue": "117"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "401769820",
+      "date": "2025-05-06T01:30Z",
+      "name": "Denver Nuggets at Oklahoma City Thunder",
+      "season": {
+        "year": 2025,
+        "displayName": "2024-25"
+      },
+      "seasonType": {
+        "id": "3",
+        "type": 3,
+        "name": "Postseason",
+        "abbreviation": "post"
+      },
+      "competitions": [
+        {
+          "type": {
+            "id": "15",
+            "text": "Quarterfinal",
+            "abbreviation": "QTR",
+            "slug": "quarterfinal",
+            "type": "quarterfinal"
+          },
+          "notes": [
+            {
+              "type": "event",
+              "headline": "West Semifinals - Game 1"
+            }
+          ],
+          "status": {
+            "clock": 0,
+            "displayClock": "0.0",
+            "period": 4,
+            "type": {
+              "id": "3",
+              "name": "STATUS_FINAL",
+              "state": "post",
+              "completed": true,
+              "description": "Final",
+              "detail": "Final",
+              "shortDetail": "Final"
+            }
+          },
+          "competitors": [
+            {
+              "id": "25",
+              "homeAway": "home",
+              "winner": false,
+              "team": {
+                "id": "25",
+                "abbreviation": "OKC",
+                "displayName": "Oklahoma City Thunder"
+              },
+              "score": {
+                "value": 119,
+                "displayValue": "119"
+              }
+            },
+            {
+              "id": "7",
+              "homeAway": "away",
+              "winner": true,
+              "team": {
+                "id": "7",
+                "abbreviation": "DEN",
+                "displayName": "Denver Nuggets"
+              },
+              "score": {
+                "value": 121,
+                "displayValue": "121"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "401769821",
+      "date": "2025-05-08T01:30Z",
+      "name": "Denver Nuggets at Oklahoma City Thunder",
+      "season": {
+        "year": 2025,
+        "displayName": "2024-25"
+      },
+      "seasonType": {
+        "id": "3",
+        "type": 3,
+        "name": "Postseason",
+        "abbreviation": "post"
+      },
+      "competitions": [
+        {
+          "type": {
+            "id": "15",
+            "text": "Quarterfinal",
+            "abbreviation": "QTR",
+            "slug": "quarterfinal",
+            "type": "quarterfinal"
+          },
+          "notes": [
+            {
+              "type": "event",
+              "headline": "West Semifinals - Game 2"
+            }
+          ],
+          "status": {
+            "clock": 0,
+            "displayClock": "0.0",
+            "period": 4,
+            "type": {
+              "id": "3",
+              "name": "STATUS_FINAL",
+              "state": "post",
+              "completed": true,
+              "description": "Final",
+              "detail": "Final",
+              "shortDetail": "Final"
+            }
+          },
+          "competitors": [
+            {
+              "id": "25",
+              "homeAway": "home",
+              "winner": true,
+              "team": {
+                "id": "25",
+                "abbreviation": "OKC",
+                "displayName": "Oklahoma City Thunder"
+              },
+              "score": {
+                "value": 149,
+                "displayValue": "149"
+              }
+            },
+            {
+              "id": "7",
+              "homeAway": "away",
+              "winner": false,
+              "team": {
+                "id": "7",
+                "abbreviation": "DEN",
+                "displayName": "Denver Nuggets"
+              },
+              "score": {
+                "value": 106,
+                "displayValue": "106"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "401769822",
+      "date": "2025-05-10T02:25Z",
+      "name": "Oklahoma City Thunder at Denver Nuggets",
+      "season": {
+        "year": 2025,
+        "displayName": "2024-25"
+      },
+      "seasonType": {
+        "id": "3",
+        "type": 3,
+        "name": "Postseason",
+        "abbreviation": "post"
+      },
+      "competitions": [
+        {
+          "type": {
+            "id": "15",
+            "text": "Quarterfinal",
+            "abbreviation": "QTR",
+            "slug": "quarterfinal",
+            "type": "quarterfinal"
+          },
+          "notes": [
+            {
+              "type": "event",
+              "headline": "West Semifinals - Game 3"
+            }
+          ],
+          "status": {
+            "clock": 0,
+            "displayClock": "0.0",
+            "period": 5,
+            "type": {
+              "id": "3",
+              "name": "STATUS_FINAL",
+              "state": "post",
+              "completed": true,
+              "description": "Final",
+              "detail": "Final/OT",
+              "shortDetail": "Final/OT",
+              "altDetail": "OT"
+            }
+          },
+          "competitors": [
+            {
+              "id": "7",
+              "homeAway": "home",
+              "winner": true,
+              "team": {
+                "id": "7",
+                "abbreviation": "DEN",
+                "displayName": "Denver Nuggets"
+              },
+              "score": {
+                "value": 113,
+                "displayValue": "113"
+              }
+            },
+            {
+              "id": "25",
+              "homeAway": "away",
+              "winner": false,
+              "team": {
+                "id": "25",
+                "abbreviation": "OKC",
+                "displayName": "Oklahoma City Thunder"
+              },
+              "score": {
+                "value": 104,
+                "displayValue": "104"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "401769823",
+      "date": "2025-05-11T19:30Z",
+      "name": "Oklahoma City Thunder at Denver Nuggets",
+      "season": {
+        "year": 2025,
+        "displayName": "2024-25"
+      },
+      "seasonType": {
+        "id": "3",
+        "type": 3,
+        "name": "Postseason",
+        "abbreviation": "post"
+      },
+      "competitions": [
+        {
+          "type": {
+            "id": "15",
+            "text": "Quarterfinal",
+            "abbreviation": "QTR",
+            "slug": "quarterfinal",
+            "type": "quarterfinal"
+          },
+          "notes": [
+            {
+              "type": "event",
+              "headline": "West Semifinals - Game 4"
+            }
+          ],
+          "status": {
+            "clock": 0,
+            "displayClock": "0.0",
+            "period": 4,
+            "type": {
+              "id": "3",
+              "name": "STATUS_FINAL",
+              "state": "post",
+              "completed": true,
+              "description": "Final",
+              "detail": "Final",
+              "shortDetail": "Final"
+            }
+          },
+          "competitors": [
+            {
+              "id": "7",
+              "homeAway": "home",
+              "winner": false,
+              "team": {
+                "id": "7",
+                "abbreviation": "DEN",
+                "displayName": "Denver Nuggets"
+              },
+              "score": {
+                "value": 87,
+                "displayValue": "87"
+              }
+            },
+            {
+              "id": "25",
+              "homeAway": "away",
+              "winner": true,
+              "team": {
+                "id": "25",
+                "abbreviation": "OKC",
+                "displayName": "Oklahoma City Thunder"
+              },
+              "score": {
+                "value": 92,
+                "displayValue": "92"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "401769990",
+      "date": "2025-05-14T01:30Z",
+      "name": "Denver Nuggets at Oklahoma City Thunder",
+      "season": {
+        "year": 2025,
+        "displayName": "2024-25"
+      },
+      "seasonType": {
+        "id": "3",
+        "type": 3,
+        "name": "Postseason",
+        "abbreviation": "post"
+      },
+      "competitions": [
+        {
+          "type": {
+            "id": "15",
+            "text": "Quarterfinal",
+            "abbreviation": "QTR",
+            "slug": "quarterfinal",
+            "type": "quarterfinal"
+          },
+          "notes": [
+            {
+              "type": "event",
+              "headline": "West Semifinals - Game 5"
+            }
+          ],
+          "status": {
+            "clock": 0,
+            "displayClock": "0.0",
+            "period": 4,
+            "type": {
+              "id": "3",
+              "name": "STATUS_FINAL",
+              "state": "post",
+              "completed": true,
+              "description": "Final",
+              "detail": "Final",
+              "shortDetail": "Final"
+            }
+          },
+          "competitors": [
+            {
+              "id": "25",
+              "homeAway": "home",
+              "winner": true,
+              "team": {
+                "id": "25",
+                "abbreviation": "OKC",
+                "displayName": "Oklahoma City Thunder"
+              },
+              "score": {
+                "value": 112,
+                "displayValue": "112"
+              }
+            },
+            {
+              "id": "7",
+              "homeAway": "away",
+              "winner": false,
+              "team": {
+                "id": "7",
+                "abbreviation": "DEN",
+                "displayName": "Denver Nuggets"
+              },
+              "score": {
+                "value": 105,
+                "displayValue": "105"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "401769991",
+      "date": "2025-05-16T00:30Z",
+      "name": "Oklahoma City Thunder at Denver Nuggets",
+      "season": {
+        "year": 2025,
+        "displayName": "2024-25"
+      },
+      "seasonType": {
+        "id": "3",
+        "type": 3,
+        "name": "Postseason",
+        "abbreviation": "post"
+      },
+      "competitions": [
+        {
+          "type": {
+            "id": "15",
+            "text": "Quarterfinal",
+            "abbreviation": "QTR",
+            "slug": "quarterfinal",
+            "type": "quarterfinal"
+          },
+          "notes": [
+            {
+              "type": "event",
+              "headline": "West Semifinals - Game 6"
+            }
+          ],
+          "status": {
+            "clock": 0,
+            "displayClock": "0.0",
+            "period": 4,
+            "type": {
+              "id": "3",
+              "name": "STATUS_FINAL",
+              "state": "post",
+              "completed": true,
+              "description": "Final",
+              "detail": "Final",
+              "shortDetail": "Final"
+            }
+          },
+          "competitors": [
+            {
+              "id": "7",
+              "homeAway": "home",
+              "winner": true,
+              "team": {
+                "id": "7",
+                "abbreviation": "DEN",
+                "displayName": "Denver Nuggets"
+              },
+              "score": {
+                "value": 119,
+                "displayValue": "119"
+              }
+            },
+            {
+              "id": "25",
+              "homeAway": "away",
+              "winner": false,
+              "team": {
+                "id": "25",
+                "abbreviation": "OKC",
+                "displayName": "Oklahoma City Thunder"
+              },
+              "score": {
+                "value": 107,
+                "displayValue": "107"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "401769992",
+      "date": "2025-05-18T19:30Z",
+      "name": "Denver Nuggets at Oklahoma City Thunder",
+      "season": {
+        "year": 2025,
+        "displayName": "2024-25"
+      },
+      "seasonType": {
+        "id": "3",
+        "type": 3,
+        "name": "Postseason",
+        "abbreviation": "post"
+      },
+      "competitions": [
+        {
+          "type": {
+            "id": "15",
+            "text": "Quarterfinal",
+            "abbreviation": "QTR",
+            "slug": "quarterfinal",
+            "type": "quarterfinal"
+          },
+          "notes": [
+            {
+              "type": "event",
+              "headline": "West Semifinals - Game 7"
+            }
+          ],
+          "status": {
+            "clock": 0,
+            "displayClock": "0.0",
+            "period": 4,
+            "type": {
+              "id": "3",
+              "name": "STATUS_FINAL",
+              "state": "post",
+              "completed": true,
+              "description": "Final",
+              "detail": "Final",
+              "shortDetail": "Final"
+            }
+          },
+          "competitors": [
+            {
+              "id": "25",
+              "homeAway": "home",
+              "winner": true,
+              "team": {
+                "id": "25",
+                "abbreviation": "OKC",
+                "displayName": "Oklahoma City Thunder"
+              },
+              "score": {
+                "value": 125,
+                "displayValue": "125"
+              }
+            },
+            {
+              "id": "7",
+              "homeAway": "away",
+              "winner": false,
+              "team": {
+                "id": "7",
+                "abbreviation": "DEN",
+                "displayName": "Denver Nuggets"
+              },
+              "score": {
+                "value": 93,
+                "displayValue": "93"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "401773148",
+      "date": "2025-05-21T00:30Z",
+      "name": "Minnesota Timberwolves at Oklahoma City Thunder",
+      "season": {
+        "year": 2025,
+        "displayName": "2024-25"
+      },
+      "seasonType": {
+        "id": "3",
+        "type": 3,
+        "name": "Postseason",
+        "abbreviation": "post"
+      },
+      "competitions": [
+        {
+          "type": {
+            "id": "16",
+            "text": "Semifinal",
+            "abbreviation": "SEMI",
+            "slug": "semifinal",
+            "type": "semifinal"
+          },
+          "notes": [
+            {
+              "type": "event",
+              "headline": "West Finals - Game 1"
+            }
+          ],
+          "status": {
+            "clock": 0,
+            "displayClock": "0.0",
+            "period": 4,
+            "type": {
+              "id": "3",
+              "name": "STATUS_FINAL",
+              "state": "post",
+              "completed": true,
+              "description": "Final",
+              "detail": "Final",
+              "shortDetail": "Final"
+            }
+          },
+          "competitors": [
+            {
+              "id": "25",
+              "homeAway": "home",
+              "winner": true,
+              "team": {
+                "id": "25",
+                "abbreviation": "OKC",
+                "displayName": "Oklahoma City Thunder"
+              },
+              "score": {
+                "value": 114,
+                "displayValue": "114"
+              }
+            },
+            {
+              "id": "16",
+              "homeAway": "away",
+              "winner": false,
+              "team": {
+                "id": "16",
+                "abbreviation": "MIN",
+                "displayName": "Minnesota Timberwolves"
+              },
+              "score": {
+                "value": 88,
+                "displayValue": "88"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "401773149",
+      "date": "2025-05-23T00:30Z",
+      "name": "Minnesota Timberwolves at Oklahoma City Thunder",
+      "season": {
+        "year": 2025,
+        "displayName": "2024-25"
+      },
+      "seasonType": {
+        "id": "3",
+        "type": 3,
+        "name": "Postseason",
+        "abbreviation": "post"
+      },
+      "competitions": [
+        {
+          "type": {
+            "id": "16",
+            "text": "Semifinal",
+            "abbreviation": "SEMI",
+            "slug": "semifinal",
+            "type": "semifinal"
+          },
+          "notes": [
+            {
+              "type": "event",
+              "headline": "West Finals - Game 2"
+            }
+          ],
+          "status": {
+            "clock": 0,
+            "displayClock": "0.0",
+            "period": 4,
+            "type": {
+              "id": "3",
+              "name": "STATUS_FINAL",
+              "state": "post",
+              "completed": true,
+              "description": "Final",
+              "detail": "Final",
+              "shortDetail": "Final"
+            }
+          },
+          "competitors": [
+            {
+              "id": "25",
+              "homeAway": "home",
+              "winner": true,
+              "team": {
+                "id": "25",
+                "abbreviation": "OKC",
+                "displayName": "Oklahoma City Thunder"
+              },
+              "score": {
+                "value": 118,
+                "displayValue": "118"
+              }
+            },
+            {
+              "id": "16",
+              "homeAway": "away",
+              "winner": false,
+              "team": {
+                "id": "16",
+                "abbreviation": "MIN",
+                "displayName": "Minnesota Timberwolves"
+              },
+              "score": {
+                "value": 103,
+                "displayValue": "103"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "401773150",
+      "date": "2025-05-25T00:30Z",
+      "name": "Oklahoma City Thunder at Minnesota Timberwolves",
+      "season": {
+        "year": 2025,
+        "displayName": "2024-25"
+      },
+      "seasonType": {
+        "id": "3",
+        "type": 3,
+        "name": "Postseason",
+        "abbreviation": "post"
+      },
+      "competitions": [
+        {
+          "type": {
+            "id": "16",
+            "text": "Semifinal",
+            "abbreviation": "SEMI",
+            "slug": "semifinal",
+            "type": "semifinal"
+          },
+          "notes": [
+            {
+              "type": "event",
+              "headline": "West Finals - Game 3"
+            }
+          ],
+          "status": {
+            "clock": 0,
+            "displayClock": "0.0",
+            "period": 4,
+            "type": {
+              "id": "3",
+              "name": "STATUS_FINAL",
+              "state": "post",
+              "completed": true,
+              "description": "Final",
+              "detail": "Final",
+              "shortDetail": "Final"
+            }
+          },
+          "competitors": [
+            {
+              "id": "16",
+              "homeAway": "home",
+              "winner": true,
+              "team": {
+                "id": "16",
+                "abbreviation": "MIN",
+                "displayName": "Minnesota Timberwolves"
+              },
+              "score": {
+                "value": 143,
+                "displayValue": "143"
+              }
+            },
+            {
+              "id": "25",
+              "homeAway": "away",
+              "winner": false,
+              "team": {
+                "id": "25",
+                "abbreviation": "OKC",
+                "displayName": "Oklahoma City Thunder"
+              },
+              "score": {
+                "value": 101,
+                "displayValue": "101"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "401773151",
+      "date": "2025-05-27T00:30Z",
+      "name": "Oklahoma City Thunder at Minnesota Timberwolves",
+      "season": {
+        "year": 2025,
+        "displayName": "2024-25"
+      },
+      "seasonType": {
+        "id": "3",
+        "type": 3,
+        "name": "Postseason",
+        "abbreviation": "post"
+      },
+      "competitions": [
+        {
+          "type": {
+            "id": "16",
+            "text": "Semifinal",
+            "abbreviation": "SEMI",
+            "slug": "semifinal",
+            "type": "semifinal"
+          },
+          "notes": [
+            {
+              "type": "event",
+              "headline": "West Finals - Game 4"
+            }
+          ],
+          "status": {
+            "clock": 0,
+            "displayClock": "0.0",
+            "period": 4,
+            "type": {
+              "id": "3",
+              "name": "STATUS_FINAL",
+              "state": "post",
+              "completed": true,
+              "description": "Final",
+              "detail": "Final",
+              "shortDetail": "Final"
+            }
+          },
+          "competitors": [
+            {
+              "id": "16",
+              "homeAway": "home",
+              "winner": false,
+              "team": {
+                "id": "16",
+                "abbreviation": "MIN",
+                "displayName": "Minnesota Timberwolves"
+              },
+              "score": {
+                "value": 126,
+                "displayValue": "126"
+              }
+            },
+            {
+              "id": "25",
+              "homeAway": "away",
+              "winner": true,
+              "team": {
+                "id": "25",
+                "abbreviation": "OKC",
+                "displayName": "Oklahoma City Thunder"
+              },
+              "score": {
+                "value": 128,
+                "displayValue": "128"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "401773152",
+      "date": "2025-05-29T00:30Z",
+      "name": "Minnesota Timberwolves at Oklahoma City Thunder",
+      "season": {
+        "year": 2025,
+        "displayName": "2024-25"
+      },
+      "seasonType": {
+        "id": "3",
+        "type": 3,
+        "name": "Postseason",
+        "abbreviation": "post"
+      },
+      "competitions": [
+        {
+          "type": {
+            "id": "16",
+            "text": "Semifinal",
+            "abbreviation": "SEMI",
+            "slug": "semifinal",
+            "type": "semifinal"
+          },
+          "notes": [
+            {
+              "type": "event",
+              "headline": "West Finals - Game 5"
+            }
+          ],
+          "status": {
+            "clock": 0,
+            "displayClock": "0.0",
+            "period": 4,
+            "type": {
+              "id": "3",
+              "name": "STATUS_FINAL",
+              "state": "post",
+              "completed": true,
+              "description": "Final",
+              "detail": "Final",
+              "shortDetail": "Final"
+            }
+          },
+          "competitors": [
+            {
+              "id": "25",
+              "homeAway": "home",
+              "winner": true,
+              "team": {
+                "id": "25",
+                "abbreviation": "OKC",
+                "displayName": "Oklahoma City Thunder"
+              },
+              "score": {
+                "value": 124,
+                "displayValue": "124"
+              }
+            },
+            {
+              "id": "16",
+              "homeAway": "away",
+              "winner": false,
+              "team": {
+                "id": "16",
+                "abbreviation": "MIN",
+                "displayName": "Minnesota Timberwolves"
+              },
+              "score": {
+                "value": 94,
+                "displayValue": "94"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "401766122",
+      "date": "2025-06-06T00:30Z",
+      "name": "Indiana Pacers at Oklahoma City Thunder",
+      "season": {
+        "year": 2025,
+        "displayName": "2024-25"
+      },
+      "seasonType": {
+        "id": "3",
+        "type": 3,
+        "name": "Postseason",
+        "abbreviation": "post"
+      },
+      "competitions": [
+        {
+          "type": {
+            "id": "17",
+            "text": "Final",
+            "abbreviation": "FINAL",
+            "slug": "final",
+            "type": "final"
+          },
+          "notes": [
+            {
+              "type": "event",
+              "headline": "NBA Finals - Game 1"
+            }
+          ],
+          "status": {
+            "clock": 0,
+            "displayClock": "0.0",
+            "period": 4,
+            "type": {
+              "id": "3",
+              "name": "STATUS_FINAL",
+              "state": "post",
+              "completed": true,
+              "description": "Final",
+              "detail": "Final",
+              "shortDetail": "Final"
+            }
+          },
+          "competitors": [
+            {
+              "id": "25",
+              "homeAway": "home",
+              "winner": false,
+              "team": {
+                "id": "25",
+                "abbreviation": "OKC",
+                "displayName": "Oklahoma City Thunder"
+              },
+              "score": {
+                "value": 110,
+                "displayValue": "110"
+              }
+            },
+            {
+              "id": "11",
+              "homeAway": "away",
+              "winner": true,
+              "team": {
+                "id": "11",
+                "abbreviation": "IND",
+                "displayName": "Indiana Pacers"
+              },
+              "score": {
+                "value": 111,
+                "displayValue": "111"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "401766123",
+      "date": "2025-06-09T00:00Z",
+      "name": "Indiana Pacers at Oklahoma City Thunder",
+      "season": {
+        "year": 2025,
+        "displayName": "2024-25"
+      },
+      "seasonType": {
+        "id": "3",
+        "type": 3,
+        "name": "Postseason",
+        "abbreviation": "post"
+      },
+      "competitions": [
+        {
+          "type": {
+            "id": "17",
+            "text": "Final",
+            "abbreviation": "FINAL",
+            "slug": "final",
+            "type": "final"
+          },
+          "notes": [
+            {
+              "type": "event",
+              "headline": "NBA Finals - Game 2"
+            }
+          ],
+          "status": {
+            "clock": 0,
+            "displayClock": "0.0",
+            "period": 4,
+            "type": {
+              "id": "3",
+              "name": "STATUS_FINAL",
+              "state": "post",
+              "completed": true,
+              "description": "Final",
+              "detail": "Final",
+              "shortDetail": "Final"
+            }
+          },
+          "competitors": [
+            {
+              "id": "25",
+              "homeAway": "home",
+              "winner": true,
+              "team": {
+                "id": "25",
+                "abbreviation": "OKC",
+                "displayName": "Oklahoma City Thunder"
+              },
+              "score": {
+                "value": 123,
+                "displayValue": "123"
+              }
+            },
+            {
+              "id": "11",
+              "homeAway": "away",
+              "winner": false,
+              "team": {
+                "id": "11",
+                "abbreviation": "IND",
+                "displayName": "Indiana Pacers"
+              },
+              "score": {
+                "value": 107,
+                "displayValue": "107"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "401766124",
+      "date": "2025-06-12T00:30Z",
+      "name": "Oklahoma City Thunder at Indiana Pacers",
+      "season": {
+        "year": 2025,
+        "displayName": "2024-25"
+      },
+      "seasonType": {
+        "id": "3",
+        "type": 3,
+        "name": "Postseason",
+        "abbreviation": "post"
+      },
+      "competitions": [
+        {
+          "type": {
+            "id": "17",
+            "text": "Final",
+            "abbreviation": "FINAL",
+            "slug": "final",
+            "type": "final"
+          },
+          "notes": [
+            {
+              "type": "event",
+              "headline": "NBA Finals - Game 3"
+            }
+          ],
+          "status": {
+            "clock": 0,
+            "displayClock": "0.0",
+            "period": 4,
+            "type": {
+              "id": "3",
+              "name": "STATUS_FINAL",
+              "state": "post",
+              "completed": true,
+              "description": "Final",
+              "detail": "Final",
+              "shortDetail": "Final"
+            }
+          },
+          "competitors": [
+            {
+              "id": "11",
+              "homeAway": "home",
+              "winner": true,
+              "team": {
+                "id": "11",
+                "abbreviation": "IND",
+                "displayName": "Indiana Pacers"
+              },
+              "score": {
+                "value": 116,
+                "displayValue": "116"
+              }
+            },
+            {
+              "id": "25",
+              "homeAway": "away",
+              "winner": false,
+              "team": {
+                "id": "25",
+                "abbreviation": "OKC",
+                "displayName": "Oklahoma City Thunder"
+              },
+              "score": {
+                "value": 107,
+                "displayValue": "107"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "401766125",
+      "date": "2025-06-14T00:30Z",
+      "name": "Oklahoma City Thunder at Indiana Pacers",
+      "season": {
+        "year": 2025,
+        "displayName": "2024-25"
+      },
+      "seasonType": {
+        "id": "3",
+        "type": 3,
+        "name": "Postseason",
+        "abbreviation": "post"
+      },
+      "competitions": [
+        {
+          "type": {
+            "id": "17",
+            "text": "Final",
+            "abbreviation": "FINAL",
+            "slug": "final",
+            "type": "final"
+          },
+          "notes": [
+            {
+              "type": "event",
+              "headline": "NBA Finals - Game 4"
+            }
+          ],
+          "status": {
+            "clock": 0,
+            "displayClock": "0.0",
+            "period": 4,
+            "type": {
+              "id": "3",
+              "name": "STATUS_FINAL",
+              "state": "post",
+              "completed": true,
+              "description": "Final",
+              "detail": "Final",
+              "shortDetail": "Final"
+            }
+          },
+          "competitors": [
+            {
+              "id": "11",
+              "homeAway": "home",
+              "winner": false,
+              "team": {
+                "id": "11",
+                "abbreviation": "IND",
+                "displayName": "Indiana Pacers"
+              },
+              "score": {
+                "value": 104,
+                "displayValue": "104"
+              }
+            },
+            {
+              "id": "25",
+              "homeAway": "away",
+              "winner": true,
+              "team": {
+                "id": "25",
+                "abbreviation": "OKC",
+                "displayName": "Oklahoma City Thunder"
+              },
+              "score": {
+                "value": 111,
+                "displayValue": "111"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "401766126",
+      "date": "2025-06-17T00:30Z",
+      "name": "Indiana Pacers at Oklahoma City Thunder",
+      "season": {
+        "year": 2025,
+        "displayName": "2024-25"
+      },
+      "seasonType": {
+        "id": "3",
+        "type": 3,
+        "name": "Postseason",
+        "abbreviation": "post"
+      },
+      "competitions": [
+        {
+          "type": {
+            "id": "17",
+            "text": "Final",
+            "abbreviation": "FINAL",
+            "slug": "final",
+            "type": "final"
+          },
+          "notes": [
+            {
+              "type": "event",
+              "headline": "NBA Finals - Game 5"
+            }
+          ],
+          "status": {
+            "clock": 0,
+            "displayClock": "0.0",
+            "period": 4,
+            "type": {
+              "id": "3",
+              "name": "STATUS_FINAL",
+              "state": "post",
+              "completed": true,
+              "description": "Final",
+              "detail": "Final",
+              "shortDetail": "Final"
+            }
+          },
+          "competitors": [
+            {
+              "id": "25",
+              "homeAway": "home",
+              "winner": true,
+              "team": {
+                "id": "25",
+                "abbreviation": "OKC",
+                "displayName": "Oklahoma City Thunder"
+              },
+              "score": {
+                "value": 120,
+                "displayValue": "120"
+              }
+            },
+            {
+              "id": "11",
+              "homeAway": "away",
+              "winner": false,
+              "team": {
+                "id": "11",
+                "abbreviation": "IND",
+                "displayName": "Indiana Pacers"
+              },
+              "score": {
+                "value": 109,
+                "displayValue": "109"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "401766127",
+      "date": "2025-06-20T00:30Z",
+      "name": "Oklahoma City Thunder at Indiana Pacers",
+      "season": {
+        "year": 2025,
+        "displayName": "2024-25"
+      },
+      "seasonType": {
+        "id": "3",
+        "type": 3,
+        "name": "Postseason",
+        "abbreviation": "post"
+      },
+      "competitions": [
+        {
+          "type": {
+            "id": "17",
+            "text": "Final",
+            "abbreviation": "FINAL",
+            "slug": "final",
+            "type": "final"
+          },
+          "notes": [
+            {
+              "type": "event",
+              "headline": "NBA Finals - Game 6"
+            }
+          ],
+          "status": {
+            "clock": 0,
+            "displayClock": "0.0",
+            "period": 4,
+            "type": {
+              "id": "3",
+              "name": "STATUS_FINAL",
+              "state": "post",
+              "completed": true,
+              "description": "Final",
+              "detail": "Final",
+              "shortDetail": "Final"
+            }
+          },
+          "competitors": [
+            {
+              "id": "11",
+              "homeAway": "home",
+              "winner": true,
+              "team": {
+                "id": "11",
+                "abbreviation": "IND",
+                "displayName": "Indiana Pacers"
+              },
+              "score": {
+                "value": 108,
+                "displayValue": "108"
+              }
+            },
+            {
+              "id": "25",
+              "homeAway": "away",
+              "winner": false,
+              "team": {
+                "id": "25",
+                "abbreviation": "OKC",
+                "displayName": "Oklahoma City Thunder"
+              },
+              "score": {
+                "value": 91,
+                "displayValue": "91"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "401766128",
+      "date": "2025-06-23T00:00Z",
+      "name": "Indiana Pacers at Oklahoma City Thunder",
+      "season": {
+        "year": 2025,
+        "displayName": "2024-25"
+      },
+      "seasonType": {
+        "id": "3",
+        "type": 3,
+        "name": "Postseason",
+        "abbreviation": "post"
+      },
+      "competitions": [
+        {
+          "type": {
+            "id": "17",
+            "text": "Final",
+            "abbreviation": "FINAL",
+            "slug": "final",
+            "type": "final"
+          },
+          "notes": [
+            {
+              "type": "event",
+              "headline": "NBA Finals - Game 7"
+            }
+          ],
+          "status": {
+            "clock": 0,
+            "displayClock": "0.0",
+            "period": 4,
+            "type": {
+              "id": "3",
+              "name": "STATUS_FINAL",
+              "state": "post",
+              "completed": true,
+              "description": "Final",
+              "detail": "Final",
+              "shortDetail": "Final"
+            }
+          },
+          "competitors": [
+            {
+              "id": "25",
+              "homeAway": "home",
+              "winner": true,
+              "team": {
+                "id": "25",
+                "abbreviation": "OKC",
+                "displayName": "Oklahoma City Thunder"
+              },
+              "score": {
+                "value": 103,
+                "displayValue": "103"
+              }
+            },
+            {
+              "id": "11",
+              "homeAway": "away",
+              "winner": false,
+              "team": {
+                "id": "11",
+                "abbreviation": "IND",
+                "displayName": "Indiana Pacers"
+              },
+              "score": {
+                "value": 91,
+                "displayValue": "91"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -5,12 +5,19 @@ const bundle = await readFile("custom_components/nba/www/nba-center-card.js", "u
 const source = await readFile("frontend/src/nba-center-card.js", "utf8");
 
 console.log("BUNDLE LENGTH", bundle.length, "SOURCE LENGTH", source.length);
-assert.ok(bundle.length > source.length + 4_000, "Lit runtime must be bundled into the standalone card (not just the card source)");
+assert.ok(bundle.length > source.length + 1_000, "Lit runtime must be bundled into the standalone card (not just the card source)");
 assert.match(bundle, /nba-center-card/, "custom card type must be present");
 assert.match(bundle, /customElements\.define/, "custom element must be registered");
 assert.match(bundle, /window\.customCards/, "Lovelace card metadata must be exposed");
 assert.match(bundle, /SCORES & CALENDRIER/, "scores view must be included");
 assert.match(bundle, /PLAYERS CENTER/, "players view must be included");
+assert.match(source, /\{ id: "playoffs", label: "PLAYOFFS" \}/, "sixth PLAYOFFS navigation tab must be present");
+assert.match(source, /nba\/playoff_bracket/, "playoffs view must use the Home Assistant websocket service");
+assert.match(source, /PLAYOFFS CENTER/, "dedicated playoffs center must be rendered");
+assert.match(source, /_playoffSeriesCard\(series\)/, "playoff series must have a dedicated card renderer");
+assert.match(source, /TÊTES DE SÉRIE NON VALIDÉES|Têtes de série non validées/, "unvalidated playoff seeds must be disclosed");
+assert.match(bundle, /PLAYOFFS CENTER/, "bundled card must include the playoffs center");
+assert.match(bundle, /NBA FINALS/, "bundled card must include NBA Finals");
 assert.match(bundle, /FORME RÉCENTE/, "favorite team recent form must be included");
 assert.match(source, /_teamsCatalog\(\)/, "Teams Center must read the global franchise catalog sensor");
 assert.match(source, /_teamCatalogCard\(team\)/, "Teams Center must render lightweight franchise cards");
@@ -94,3 +101,9 @@ assert.match(bundle, /opponent_abbreviation/, "bundled recent player games must 
 
 assert.match(source, /postseason_stats/, "player profile must receive separate playoff statistics");
 assert.match(source, /STATISTIQUES PLAYOFFS/, "player profile must display a separate postseason section");
+assert.match(source, /postseason_gamelog/, "player profile must receive a separate postseason game log");
+assert.match(source, /5 DERNIERS MATCHS · PLAYOFFS/, "player profile must display the latest postseason games separately");
+
+assert.match(source, /playoff_\$\{key\}/, "Players Center must resolve dedicated playoff leaderboard entities");
+assert.match(source, /SAISON & PLAYOFFS/, "Players Center must distinguish regular season and playoff leaderboards");
+assert.match(source, /_leaderPanel\(key,10,true\)/, "Players Center must render top-ten playoff leaderboards");

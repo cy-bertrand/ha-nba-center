@@ -17,6 +17,14 @@ from .game_details import parse_boxscore, parse_game_state, parse_plays
 from .teams_catalog import parse_teams_catalog
 from .team_roster import parse_team_roster
 from .player_data import parse_player_gamelog, parse_player_stats
+from .playoff_data import (
+    annotate_playoff_bracket,
+    build_playoff_bracket,
+    build_playoff_series,
+    parse_playoff_payload,
+    parse_playoff_standings,
+    validate_playoff_seeds,
+)
 
 from .const import (
     CONF_NOTIFY_END,
@@ -80,6 +88,7 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.teams: list[str] = entry.options.get(CONF_TEAMS, entry.data.get(CONF_TEAMS, []))
         self._last_state: dict[str, str] = {}
         self._leaders: dict[str, list[dict]] = {}
+        self._postseason_leaders: dict[str, list[dict]] = {}
         self._leaders_fetched: datetime | None = None
         self._details_cache: dict[str, dict[str, Any]] = {}
         self._scoreboard_cache: dict[str, tuple[datetime, dict[str, Any]]] = {}
@@ -90,6 +99,8 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._team_roster_locks: dict[str, asyncio.Lock] = {}
         self._player_data_cache: dict[str, tuple[datetime, dict[str, Any]]] = {}
         self._player_data_locks: dict[str, asyncio.Lock] = {}
+        self._playoff_cache: dict[int, tuple[datetime, dict[str, Any]]] = {}
+        self._playoff_locks: dict[int, asyncio.Lock] = {}
 
     async def _get(self, url: str, params: dict | None = None) -> dict:
         async with self.session.get(url, params=params, timeout=20) as resp:
@@ -135,6 +146,7 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "standings": self._parse_standings(standings),
             "teams": team_data,
             "leaders": self._leaders,
+            "postseason_leaders": self._postseason_leaders,
             "favorites": list(self.teams),
             "teams_catalog": self._teams_catalog,
         }
@@ -171,26 +183,32 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER.warning("Catalogue des franchises NBA indisponible : %s", err)
 
     async def _update_leaders(self) -> None:
-        """Récupère les leaders de stats (au maximum une fois par heure).
-
-        Une erreur ici ne bloque jamais le reste de l'intégration.
-        """
+        """Récupère les leaders de saison régulière et de playoffs (cache horaire)."""
         now = dt_util.utcnow()
         if self._leaders_fetched and (now - self._leaders_fetched).total_seconds() < 3600 and self._leaders:
             return
-        result: dict[str, list[dict]] = {}
-        for key, (label, sort) in LEADER_CATEGORIES.items():
+        regular: dict[str, list[dict]] = {}
+        postseason: dict[str, list[dict]] = {}
+        # ESPN utilise l'année de fin de saison NBA (ex. 2027 pour 2026-27).
+        season_year = now.year + (1 if now.month >= 10 else 0)
+        for key, (_label, sort) in LEADER_CATEGORIES.items():
+            params = {"region": "us", "lang": "en", "contentorigin": "espn",
+                      "isqualified": "true", "page": 1, "limit": LEADERS_COUNT, "sort": sort}
             try:
-                raw = await self._get(
-                    LEADERS_URL,
-                    params={"region": "us", "lang": "en", "contentorigin": "espn",
-                            "isqualified": "true", "page": 1, "limit": LEADERS_COUNT, "sort": sort},
-                )
-                result[key] = self._parse_leaders(raw, key)
+                raw = await self._get(LEADERS_URL, params=params)
+                regular[key] = self._parse_leaders(raw, key)
             except Exception as err:  # noqa: BLE001
-                _LOGGER.debug("Leaders '%s' indisponibles: %s", key, err)
-                result[key] = self._leaders.get(key, [])
-        self._leaders = result
+                _LOGGER.debug("Leaders réguliers '%s' indisponibles: %s", key, err)
+                regular[key] = self._leaders.get(key, [])
+            try:
+                playoff_params = {**params, "season": season_year, "seasontype": 3}
+                playoff_raw = await self._get(LEADERS_URL, params=playoff_params)
+                postseason[key] = self._parse_leaders(playoff_raw, key)
+            except Exception as err:  # noqa: BLE001
+                _LOGGER.debug("Leaders playoffs '%s' indisponibles: %s", key, err)
+                postseason[key] = self._postseason_leaders.get(key, [])
+        self._leaders = regular
+        self._postseason_leaders = postseason
         self._leaders_fetched = now
 
     @staticmethod
@@ -492,37 +510,53 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
                         player_id, season_year, err,
                     )
 
-            # ESPN gamelog ne fournit que les métadonnées des rencontres.
-            # On enrichit les cinq plus récentes via les box scores déjà normalisés.
-            for game in gamelog["games"][:5]:
-                game_id = game.get("id")
-                if not game_id:
-                    continue
+            postseason_gamelog: dict[str, Any] = {"games": [], "count": 0, "boxscore_count": 0}
+            if postseason_stats and season_year:
                 try:
-                    summary = await self.async_get_game_details(game_id)
-                except Exception as err:  # noqa: BLE001 - le profil reste utilisable sans box score
-                    _LOGGER.debug("Box score joueur %s / match %s indisponible: %s", player_id, game_id, err)
-                    continue
-                found = next(
-                    (
-                        player
-                        for team in summary.get("player_stats", [])
-                        for player in team.get("players", [])
-                        if str(player.get("id") or "") == player_id
-                    ),
-                    None,
-                )
-                if found:
-                    game["stats"] = found.get("stats_by_key") or found.get("stats") or {}
-                    game["player_name"] = found.get("name")
-                    game["did_not_play"] = bool(found.get("did_not_play"))
-            gamelog["boxscore_count"] = sum(bool(game.get("stats")) for game in gamelog["games"])
+                    raw_postseason_log = await self._get(
+                        PLAYER_DATA_URL.format(player_id=player_id, resource="gamelog"),
+                        params={"season": season_year, "seasontype": 3},
+                    )
+                    postseason_gamelog = parse_player_gamelog(raw_postseason_log)
+                except Exception as err:  # noqa: BLE001 - les playoffs ne bloquent jamais le profil
+                    _LOGGER.debug("Journal playoffs ESPN indisponible pour le joueur %s: %s", player_id, err)
+
+            # Les gamelogs ESPN fournissent parfois uniquement les métadonnées.
+            # Les cinq rencontres récentes sont enrichies via les box scores normalisés.
+            async def enrich_recent_games(log: dict[str, Any], label: str) -> None:
+                for game in log["games"][:5]:
+                    game_id = game.get("id")
+                    if not game_id:
+                        continue
+                    try:
+                        summary = await self.async_get_game_details(game_id)
+                    except Exception as err:  # noqa: BLE001 - le profil reste utilisable sans box score
+                        _LOGGER.debug("Box score %s joueur %s / match %s indisponible: %s", label, player_id, game_id, err)
+                        continue
+                    found = next(
+                        (
+                            player
+                            for team in summary.get("player_stats", [])
+                            for player in team.get("players", [])
+                            if str(player.get("id") or "") == player_id
+                        ),
+                        None,
+                    )
+                    if found:
+                        game["stats"] = found.get("stats_by_key") or found.get("stats") or {}
+                        game["player_name"] = found.get("name")
+                        game["did_not_play"] = bool(found.get("did_not_play"))
+                log["boxscore_count"] = sum(bool(game.get("stats")) for game in log["games"][:5])
+
+            await enrich_recent_games(gamelog, "saison régulière")
+            await enrich_recent_games(postseason_gamelog, "playoffs")
             result = {
                 "player_id": player_id,
                 "overview": overview,
                 "stats": stats,
                 "postseason_stats": postseason_stats,
                 "gamelog": gamelog,
+                "postseason_gamelog": postseason_gamelog,
                 "errors": errors,
                 "available": bool(overview["statistics"] or stats["statistics"] or gamelog["games"]),
                 "fetched_at": now.isoformat(),
@@ -561,6 +595,90 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 )
                 raise RuntimeError("ESPN n'a renvoyé aucune donnée exploitable pour ce joueur")
             self._player_data_cache[player_id] = (now, result)
+            return result
+
+
+    async def async_get_playoff_bracket(self, season_year: int) -> dict[str, Any]:
+        """Charge à la demande le bracket d'une saison, sans requêtes au démarrage.
+
+        ESPN attend l'année de fin de saison (ex. 2025 pour 2024-25).
+        Seules les 16 équipes disposant d'un seed 1..8 validé sont interrogées.
+        """
+        if isinstance(season_year, bool) or not isinstance(season_year, int) or not 2000 <= season_year <= 2100:
+            raise ValueError("Saison NBA invalide")
+        now = dt_util.utcnow()
+        cached = self._playoff_cache.get(season_year)
+        if cached and (now - cached[0]).total_seconds() < 3600:
+            return cached[1]
+
+        lock = self._playoff_locks.setdefault(season_year, asyncio.Lock())
+        async with lock:
+            now = dt_util.utcnow()
+            cached = self._playoff_cache.get(season_year)
+            if cached and (now - cached[0]).total_seconds() < 3600:
+                return cached[1]
+
+            raw_standings = await self._get(STANDINGS_URL, params={"season": season_year})
+            parsed_standings = parse_playoff_standings(raw_standings)
+            validated = validate_playoff_seeds(parsed_standings)
+            season_label = next(
+                (item.get("season") for item in parsed_standings if item.get("season")),
+                None,
+            )
+            season_data = validated.get("seasons", {}).get(season_label, {}).get("conferences", {})
+            team_ids: list[str] = []
+            seed_errors: dict[str, list[str]] = {}
+            for conference in ("East", "West"):
+                info = season_data.get(conference, {})
+                if info.get("valid"):
+                    team_ids.extend(str(team_id) for team_id in info.get("seeds", {}).values())
+                else:
+                    seed_errors[conference] = info.get("errors", ["standings_unavailable"])
+
+            semaphore = asyncio.Semaphore(4)
+
+            async def load_team_schedule(team_id: str) -> tuple[str, dict[str, Any] | None, str | None]:
+                async with semaphore:
+                    try:
+                        payload = await self._get(
+                            TEAM_SCHEDULE_URL.format(team_id=team_id),
+                            params={"season": season_year, "seasontype": 3},
+                        )
+                        return team_id, payload, None
+                    except Exception as err:  # noqa: BLE001 - un calendrier manquant ne bloque pas les autres
+                        _LOGGER.debug("Calendrier playoffs ESPN indisponible pour %s/%s: %s", season_year, team_id, err)
+                        return team_id, None, str(err)
+
+            loaded = await asyncio.gather(*(load_team_schedule(team_id) for team_id in dict.fromkeys(team_ids)))
+            games = []
+            schedule_errors = {}
+            for team_id, payload, error in loaded:
+                if payload is not None:
+                    games.extend(parse_playoff_payload(payload))
+                elif error:
+                    schedule_errors[team_id] = error
+
+            series = build_playoff_series(games)
+            brackets = build_playoff_bracket(series)
+            bracket = next((item for item in brackets if item.get("season_year") == season_year), None)
+            if bracket is None:
+                bracket = {
+                    "season_year": season_year,
+                    "conferences": {"East": [], "West": []},
+                    "finals": [],
+                    "unplaced": [],
+                }
+            annotated = annotate_playoff_bracket(bracket, validated) or bracket
+            result = {
+                **annotated,
+                "available": bool(games),
+                "games_count": len({game.get("id") for game in games if game.get("id")}),
+                "series_count": len(series),
+                "seed_errors": seed_errors,
+                "schedule_errors": schedule_errors,
+                "fetched_at": now.isoformat(),
+            }
+            self._playoff_cache[season_year] = (now, result)
             return result
 
     async def async_get_scoreboard_for_local_date(self, local_date: str) -> dict[str, Any]:
