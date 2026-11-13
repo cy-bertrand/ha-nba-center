@@ -28,19 +28,19 @@ Transformer l'overlay Match Center de la Phase 2 en fiche de match approfondie, 
 ## Tests
 
 - Une capture réelle ESPN en cours de match (Wizards–Pistons, événement `401909977`, 13/11/2026) a été fournie et réduite à un fixture de test ciblé : `tests/fixtures/espn_summary_live_401909977.json`. Elle conserve les structures réelles du header live, du box score équipes/joueurs et d'un échantillon Play-by-Play avec substitution. Les données annexes sans rapport avec le parseur (news, cotes, etc.) ne sont pas incluses.
-- Un test dédié `tests/test_game_details_live_fixture.py` vérifie le score live du header, les statistiques équipes/joueurs, les joueurs DNP et l'enrichissement des participants d'une substitution à partir des identifiants ESPN.
+- Un test dédié `tests/test_game_details_live_fixture.py` vérifie le score live du header, les statistiques équipes/joueurs, les joueurs DNP et l'enrichissement des participants d'une substitution à partir des identifiants ESPN.\n- Une seconde capture réelle terminée (Lakers–Bucks, événement `401909971`) est désormais versionnée dans `tests/fixtures/espn_summary_completed_401909971.json` : payload complet pour les sections `header`, `boxscore`, `plays` et `meta` (environ 300 Ko), extrait du résumé source de 483 Ko.
 - Tests unitaires backend : fixtures synthétiques couvrant les cas génériques, complétées par ce fixture réel ciblé.
 - CI GitHub : workflow `43384846830` terminé avec succès sur le commit `07d3a52` (13/11/2026) : compilation Python, **38 tests unitaires backend réussis**, build Lit et assertions frontend réussis. Le nouveau fichier `test_game_details_live_fixture.py` est bien détecté par `unittest discover` ; ses 3 tests passent.
-- Le fixture réel versionné est un échantillon représentatif et non une copie intégrale de la réponse ESPN de 176 Ko ; il confirme les structures observées sur cette capture, sans garantir tous les schémas ESPN ni toutes les situations de match.
+- Le fixture live reste un échantillon représentatif. Le fixture terminé couvre en revanche l'intégralité des sections utilisées par le parseur pour le header, les statistiques et les 515 actions Play-by-Play. Les sections annexes ESPN sans rapport avec ce parseur sont volontairement exclues.
 - Le Play-by-Play repose à ce stade sur les champs facultatifs observés dans les exemples de schéma disponibles ; il doit être confirmé sur une réponse ESPN réelle avant de considérer l'affichage comme validé.
 
 ## Suite de la Phase 3
 
-1. Ajouter des fixtures réelles complémentaires : match terminé et réponse partielle / sans box score ; vérifier que les champs absents restent explicitement indisponibles.
+1. Fixture live et fixture de match terminé ajoutés ; ajouter ensuite une réponse partielle / sans box score et vérifier que les champs absents restent explicitement indisponibles.
 2. Vérifier les clés et l'ordre des statistiques sur d'autres réponses actuelles d'ESPN, notamment les totaux et les variations de colonnes.
 3. Étendre les tests de parsing aux structures absentes, aux groupes statistiques multiples et aux cas de joueurs actifs / inactifs / DNP.
 4. Enrichir le Match Center : cinq majeurs, joueurs DNP, totaux/ratios collectifs, et états de chargement/indisponibilité.
-5. Vérifier le Play-by-Play sur des réponses réelles : structure, ordre chronologique, pagination/volume, fréquence de rafraîchissement et disponibilité en direct. La première interface est intégrée mais reste expérimentale tant que le schéma réel n'est pas confirmé.
+5. La structure du Play-by-Play est maintenant contrôlée sur une réponse réelle terminée (515 actions, 70 substitutions, 128 actions de score) et sur un extrait live. Il reste à vérifier la pagination/volume, la fréquence de rafraîchissement et la disponibilité en direct. La première interface reste expérimentale tant que ces points ne sont pas confirmés.
 6. Tester la fiche de match sur Home Assistant desktop et mobile, avec matchs terminés et live.
 7. Publier une version candidate et demander la validation de l'utilisateur avant de clôturer la Phase 3.
 
