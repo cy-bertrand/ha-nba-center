@@ -13,7 +13,10 @@ Transformer l'overlay Match Center de la Phase 2 en fiche de match approfondie, 
 - Le Match Center affiche les box scores des deux équipes, les titulaires en premier, les statistiques disponibles et une comparaison des statistiques collectives.
 - Un bouton d'actualisation manuelle permet de recharger les détails d'un match ; les erreurs renvoyées par le backend sont désormais visibles avec une action de nouvelle tentative.
 - Les tableaux sont défilables horizontalement et adaptés aux petits écrans.
-- Une première timeline Play-by-Play est ajoutée : chronologie inversée (actions récentes en haut), filtre « points seulement », score associé quand fourni et affichage progressif des actions.
+- Le score par période est présenté dans un tableau comparatif, avec colonnes Q1 à Q4 puis OT / 2OT si nécessaire.
+- Les lignes joueurs exposent désormais le numéro, le poste, le statut titulaire, les DNP avec motif et les exclusions (éjection) lorsque ces champs sont fournis.
+- Les colonnes du box-score conservent aussi les statistiques supplémentaires rencontrées, au lieu de limiter l'affichage à la liste standard.
+- Une première timeline Play-by-Play est ajoutée : chronologie inversée (actions récentes en haut), filtre « points seulement », score associé quand fourni, libellé de période ESPN (y compris prolongations) et affichage progressif des actions.
 - Le parseur `summary.plays` conserve texte, quart-temps, horloge, type, équipe, score et indicateur de panier sans reconstituer les champs absents.
 - Le service historique `nba.get_game_details` et la commande WebSocket `nba/game_details` conservent leur contrat externe ; les nouveaux champs sont ajoutés à la réponse.
 
@@ -43,7 +46,7 @@ Transformer l'overlay Match Center de la Phase 2 en fiche de match approfondie, 
 1. Fixtures live, terminé en temps réglementaire et terminé après deux prolongations ajoutés ; ajouter ensuite une réponse partielle / sans box score et vérifier que les champs absents restent explicitement indisponibles.
 2. Vérifier les clés et l'ordre des statistiques sur d'autres réponses actuelles d'ESPN, notamment les totaux et les variations de colonnes.
 3. Les structures de box scores partiels et les leaders absents/malformés sont désormais couverts par des tests. Il reste à étendre la couverture aux groupes statistiques multiples et aux cas de joueurs actifs / inactifs / DNP.
-4. Enrichir le Match Center : cinq majeurs, joueurs DNP, totaux/ratios collectifs, et états de chargement/indisponibilité.
+4. Vérifier dans les données réelles le rendu des cinq majeurs, des joueurs DNP/inactifs/éjectés et les totaux/ratios collectifs ; compléter les états de chargement et d'indisponibilité si nécessaire.
 5. La structure du Play-by-Play est maintenant contrôlée sur une réponse réelle terminée (515 actions, 70 substitutions, 128 actions de score) et sur un extrait live. Il reste à vérifier la pagination/volume, la fréquence de rafraîchissement et la disponibilité en direct. La première interface reste expérimentale tant que ces points ne sont pas confirmés.
 6. Tester la fiche de match sur Home Assistant desktop et mobile, avec matchs terminés et live.
 7. Publier une version candidate et demander la validation de l'utilisateur avant de clôturer la Phase 3.
