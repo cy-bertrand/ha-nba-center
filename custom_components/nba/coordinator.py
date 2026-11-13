@@ -228,6 +228,7 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
             rows.append(
                 {
                     "rank": i,
+                    "id": str(athlete.get("id")) if athlete.get("id") is not None else None,
                     "player": athlete.get("displayName"),
                     "team": athlete.get("teamShortName") or athlete.get("teamName"),
                     "headshot": (athlete.get("headshot") or {}).get("href"),
@@ -454,6 +455,14 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 "fetched_at": now.isoformat(),
             }
             if not result["available"]:
+                _LOGGER.warning(
+                    "Aucune donnée exploitable pour le joueur %s. Réponses ESPN: overview=%s stats=%s gamelog=%s; erreurs=%s",
+                    player_id,
+                    sorted(resources.get("overview", {}).keys()) if isinstance(resources.get("overview"), dict) else type(resources.get("overview")).__name__,
+                    sorted(resources.get("stats", {}).keys()) if isinstance(resources.get("stats"), dict) else type(resources.get("stats")).__name__,
+                    sorted(resources.get("gamelog", {}).keys()) if isinstance(resources.get("gamelog"), dict) else type(resources.get("gamelog")).__name__,
+                    errors,
+                )
                 raise RuntimeError("ESPN n'a renvoyé aucune donnée exploitable pour ce joueur")
             self._player_data_cache[player_id] = (now, result)
             return result
