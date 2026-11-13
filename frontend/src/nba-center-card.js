@@ -384,7 +384,7 @@ class NBACenterCard extends LitElement {
           ${this._playerData ? html`
             <div class="player-stat-grid">${quick.map(([label,item]) => html`<div><small>${label} / MATCH</small><strong>${statLabel(item)}</strong></div>`)}</div>
             <section class="panel"><div class="panel-head"><h3>STATISTIQUES DE SAISON</h3><span class="pill">${value(seasonLabel, "SAISON")}</span></div>
-              ${seasonHistory.length > 1 ? html`<div class="filters"><label class="muted" for="player-season-select">SAISON</label><select id="player-season-select" aria-label="Choisir une saison" .value=${String(selectedSeason?.year ?? "")} @change=${(event) => { this._playerSelectedSeason = event.target.value; }}>${seasonHistory.map((item) => html`<option value=${String(item.year)}>${item.display_name}</option>`)}</select></div>` : ""}
+              ${seasonHistory.length > 1 ? html`<div class="filters"><label class="muted" for="player-season-select">SAISON</label><select id="player-season-select" aria-label="Choisir une saison" .value=${String(selectedSeason?.year ?? "")} @change=${(event) => { this._playerSelectedSeason = event.target.value; this.requestUpdate(); }}>${seasonHistory.map((item) => html`<option value=${String(item.year)}>${item.display_name}</option>`)}</select></div>` : ""}
               ${stats.length ? html`<div class="table-wrap"><table><thead><tr><th>STATISTIQUE</th><th>VALEUR</th></tr></thead><tbody>${stats.map((item) => html`<tr><td>${value(item.label,item.name)}</td><td>${value(item.display_value ?? item.value)}</td></tr>`)}</tbody></table></div>` : html`<p class="muted">Statistiques de saison non retournées par ESPN.</p>`}
             </section>
             ${(this._playerData.overview?.career_statistics?.length ? html`
