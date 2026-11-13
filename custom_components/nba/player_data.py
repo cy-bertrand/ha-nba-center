@@ -100,6 +100,8 @@ def parse_player_gamelog(raw: dict[str, Any]) -> dict[str, Any]:
     """Normalise le journal de matchs en conservant uniquement les champs fournis."""
     events = raw.get("events")
     if not isinstance(events, list):
+        events = _mapping(raw.get("gameLog")).get("events")
+    if not isinstance(events, list):
         events = _mapping(raw.get("seasonTypes")).get("categories", [])
     games: list[dict[str, Any]] = []
     for row in events:
