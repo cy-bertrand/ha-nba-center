@@ -30,12 +30,36 @@ def _number(value: Any) -> int | float | None:
 
 
 def _stat_rows(raw: dict[str, Any]) -> list[dict[str, Any]]:
-    """Convertit les catégories ESPN en lignes stables sans supposer un ordre."""
+    """Convertit les catégories ESPN et les splits overview en lignes stables."""
     rows: list[dict[str, Any]] = []
     categories = raw.get("categories")
     if isinstance(categories, list):
         for category in categories:
             block = _mapping(category)
+            names = block.get("names") or []
+            labels = block.get("labels") or []
+            displays = block.get("displayNames") or []
+            seasons = block.get("statistics")
+            if isinstance(seasons, list) and seasons:
+                selected = max(
+                    seasons,
+                    key=lambda item: _number(_mapping(_mapping(item).get("season")).get("year")) or 0,
+                )
+                values = _mapping(selected).get("stats")
+                season_name = _text(_mapping(_mapping(selected).get("season")).get("displayName"))
+                if isinstance(values, list):
+                    for index, value in enumerate(values):
+                        name = names[index] if index < len(names) else f"stat_{index}"
+                        rows.append({
+                            "name": str(name),
+                            "label": _text(displays[index] if index < len(displays) else None)
+                                or _text(labels[index] if index < len(labels) else None) or str(name),
+                            "value": _number(value),
+                            "display_value": _text(value),
+                            "category": _text(block.get("displayName") or block.get("name")),
+                            "season": season_name,
+                        })
+                continue
             stats = block.get("stats")
             if isinstance(stats, list):
                 for stat in stats:
@@ -50,37 +74,41 @@ def _stat_rows(raw: dict[str, Any]) -> list[dict[str, Any]]:
                             "category": _text(block.get("displayName") or block.get("name")),
                         })
                 continue
-            names, labels = block.get("names"), block.get("labels")
-            values, displays = block.get("values"), block.get("displayValues")
+            values = block.get("values")
             if isinstance(names, list) and isinstance(values, list):
                 for index, name in enumerate(names):
-                    if not isinstance(name, str) or index >= len(values):
+                    if index >= len(values):
                         continue
                     rows.append({
-                        "name": name,
-                        "label": _text(labels[index]) if isinstance(labels, list) and index < len(labels) else name,
+                        "name": str(name),
+                        "label": _text(displays[index] if index < len(displays) else None)
+                            or _text(labels[index] if index < len(labels) else None) or str(name),
                         "value": _number(values[index]),
-                        "display_value": _text(displays[index]) if isinstance(displays, list) and index < len(displays) else None,
+                        "display_value": _text(values[index]),
                         "category": _text(block.get("displayName") or block.get("name")),
                     })
-    # Certaines réponses overview exposent directement statistics.labels/names/values.
+
     statistics = _mapping(raw.get("statistics"))
     if statistics and not rows:
-        names, labels = statistics.get("names"), statistics.get("labels")
-        values, displays = statistics.get("values"), statistics.get("displayValues")
-        if isinstance(names, list) and isinstance(values, list):
-            for index, name in enumerate(names):
-                if not isinstance(name, str) or index >= len(values):
-                    continue
-                rows.append({
-                    "name": name,
-                    "label": _text(labels[index]) if isinstance(labels, list) and index < len(labels) else name,
-                    "value": _number(values[index]),
-                    "display_value": _text(displays[index]) if isinstance(displays, list) and index < len(displays) else None,
-                    "category": "Saison",
-                })
+        names = statistics.get("names") or []
+        labels = statistics.get("labels") or []
+        displays = statistics.get("displayNames") or []
+        splits = statistics.get("splits")
+        if isinstance(splits, list):
+            split = next((item for item in splits if "regular" in str(_mapping(item).get("displayName", "")).lower()), splits[0] if splits else {})
+            values = _mapping(split).get("stats")
+            if isinstance(values, list):
+                for index, value in enumerate(values):
+                    name = names[index] if index < len(names) else f"stat_{index}"
+                    rows.append({
+                        "name": str(name),
+                        "label": _text(displays[index] if index < len(displays) else None)
+                            or _text(labels[index] if index < len(labels) else None) or str(name),
+                        "value": _number(value),
+                        "display_value": _text(value),
+                        "category": _text(_mapping(split).get("displayName")) or "Saison",
+                    })
     return rows
-
 
 def parse_player_stats(raw: dict[str, Any]) -> dict[str, Any]:
     """Normalise les statistiques saison ESPN, y compris la structure overview."""
