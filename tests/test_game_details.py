@@ -56,7 +56,10 @@ class BoxscoreParsingTests(unittest.TestCase):
         self.assertEqual(bos["team_id"], "2")
         self.assertEqual(bos["players"][0]["stats"]["FG"], "10-20")
         self.assertEqual(bos["players"][0]["stats"]["PTS"], "27")
+        self.assertEqual(bos["players"][0]["id"], "1")
         self.assertTrue(bos["players"][0]["starter"])
+        self.assertTrue(bos["players"][0]["active"])
+        self.assertFalse(bos["players"][1]["active"] if bos["players"][1]["active"] is not None else False)
         self.assertTrue(bos["players"][1]["did_not_play"])
         self.assertEqual(bos["players"][1]["reason"], "Coach's Decision")
 
