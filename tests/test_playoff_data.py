@@ -137,6 +137,21 @@ class PlayoffPayloadTests(unittest.TestCase):
         self.assertEqual(series[1]["advanced_from"], [])
         self.assertEqual(bracket["unplaced"], [])
 
+    def test_bracket_does_not_mutate_input_series(self):
+        series = [{
+            "id": "first", "season_year": 2025, "phase": "playoffs",
+            "round_label": "East 1st Round", "winner": {"id": "1"},
+            "teams": [{"id": "1"}, {"id": "8"}],
+        }, {
+            "id": "next", "season_year": 2025, "phase": "playoffs",
+            "round_label": "East Semifinals", "winner": None,
+            "teams": [{"id": "1"}, {"id": "4"}],
+        }]
+        original = json.loads(json.dumps(series))
+        bracket = build_playoff_bracket(series)
+        self.assertEqual(series, original)
+        self.assertEqual(bracket[0]["conferences"]["East"][0]["series"][0]["advances_to"], ["next"])
+
     def test_bracket_keeps_unknown_rounds_out_of_conference_slots(self):
         series = [{
             "id": "unknown",
@@ -368,6 +383,17 @@ class ValidatedSeedTests(unittest.TestCase):
         self.assertEqual(result["seeds"], {})
         self.assertIn("duplicate_seed_7", result["errors"])
         self.assertIn("missing_seed_8", result["errors"])
+
+    def test_missing_team_id_with_valid_seed_invalidates_conference_without_crashing(self):
+        teams = [
+            {"season": "2025-26", "conference": "East", "team_id": str(seed), "seed": seed}
+            for seed in range(1, 9)
+        ]
+        teams[3]["team_id"] = None
+        result = validate_playoff_seeds(teams)["seasons"]["2025-26"]["conferences"]["East"]
+        self.assertFalse(result["valid"])
+        self.assertEqual(result["seeds"], {})
+        self.assertIn("duplicate_or_missing_team_ids", result["errors"])
 
     def test_bracket_annotation_is_non_mutating_and_checks_first_round_pairings(self):
         standings = validate_playoff_seeds([
