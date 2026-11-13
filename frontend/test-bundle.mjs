@@ -93,7 +93,8 @@ assert.match(source, /_openPlayer\(p\.id, p\)/, "clicking a season leader must o
 assert.match(source, /TOP 10 · SAISON/, "Players Center must show top-ten leaderboards instead of a duplicate player directory");
 assert.match(source, /_leaderPanel\(key,10\)/, "Players Center must render ten players per leaderboard");
 assert.match(source, /opponent_abbreviation/, "recent player games must use the opponent's NBA abbreviation");
-assert.match(source, /\}m · .*stl · .*blk/, "recent player game stats must use compact labels to fit all six values");
+assert.match(source, /\["MIN",pick\("MIN","minutes"\)\]/, "recent player game stats must expose six labelled values");
+assert.match(source, /player-game-stat/, "recent player game stats must use readable stat chips");
 assert.match(bundle, /leader-button/, "bundled season leader rows must be clickable");
 assert.match(bundle, /TOP 10 · SAISON/, "bundled Players Center must show top-ten leaderboards");
 assert.match(bundle, /this\._leaderPanel\([a-z],10\)/, "bundled Players Center must render ten players per leaderboard");
@@ -101,8 +102,11 @@ assert.match(bundle, /opponent_abbreviation/, "bundled recent player games must 
 
 assert.match(source, /postseason_stats/, "player profile must receive separate playoff statistics");
 assert.match(source, /STATISTIQUES PLAYOFFS/, "player profile must display a separate postseason section");
-assert.match(source, /postseason_gamelog/, "player profile must receive a separate postseason game log");
-assert.match(source, /5 DERNIERS MATCHS · PLAYOFFS/, "player profile must display the latest postseason games separately");
+assert.match(source, /_loadPlayerPlayoffSeason/, "player profile must load postseason stats for the selected year");
+assert.match(source, /SAISON PLAYOFFS/, "player profile must offer a postseason year selector");
+assert.match(source, /postseason_year: seasonYear/, "postseason selector must request the selected season from Home Assistant");
+assert.match(source, /ÉTAT MÉDICAL<\\/small>/, "player medical status must occupy a profile grid cell");
+assert.doesNotMatch(source, /5 DERNIERS MATCHS · PLAYOFFS/, "player profile must not duplicate the recent game log for playoffs");
 
 assert.match(source, /playoff_\$\{key\}/, "Players Center must resolve dedicated playoff leaderboard entities");
 assert.match(source, /SAISON & PLAYOFFS/, "Players Center must distinguish regular season and playoff leaderboards");
