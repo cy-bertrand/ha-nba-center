@@ -443,20 +443,23 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return result
 
 
-    async def async_get_player_data(self, player_id: str) -> dict[str, Any]:
+    async def async_get_player_data(self, player_id: str, postseason_year: int | None = None) -> dict[str, Any]:
         """Charge les statistiques et le gamelog d'un joueur ESPN, avec cache d'une heure."""
         player_id = str(player_id).strip()
         if not player_id.isdigit() or len(player_id) > 12:
             raise ValueError("Identifiant de joueur ESPN invalide")
+        if postseason_year is not None and (isinstance(postseason_year, bool) or not isinstance(postseason_year, int) or not 2000 <= postseason_year <= 2100):
+            raise ValueError("Saison playoffs invalide")
+        cache_key = f"{player_id}:{postseason_year or 'current'}"
         now = dt_util.utcnow()
-        cached = self._player_data_cache.get(player_id)
+        cached = self._player_data_cache.get(cache_key)
         if cached and (now - cached[0]).total_seconds() < 3600:
             return cached[1]
 
-        lock = self._player_data_locks.setdefault(player_id, asyncio.Lock())
+        lock = self._player_data_locks.setdefault(cache_key, asyncio.Lock())
         async with lock:
             now = dt_util.utcnow()
-            cached = self._player_data_cache.get(player_id)
+            cached = self._player_data_cache.get(cache_key)
             if cached and (now - cached[0]).total_seconds() < 3600:
                 return cached[1]
 
@@ -485,6 +488,8 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     season_year = int(stats["season_history"][0].get("year"))
                 except (TypeError, ValueError):
                     season_year = None
+            if postseason_year is not None:
+                season_year = postseason_year
             if season_year is None and stats.get("season"):
                 parts = str(stats["season"]).split("-")
                 if len(parts) == 2 and parts[0].isdigit() and parts[1].isdigit():
@@ -594,7 +599,7 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     resources.get("gamelog", {}).get("labels", [])[:8],
                 )
                 raise RuntimeError("ESPN n'a renvoyé aucune donnée exploitable pour ce joueur")
-            self._player_data_cache[player_id] = (now, result)
+            self._player_data_cache[cache_key] = (now, result)
             return result
 
 
