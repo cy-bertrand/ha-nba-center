@@ -59,7 +59,7 @@ class BoxscoreParsingTests(unittest.TestCase):
         self.assertEqual(bos["players"][0]["id"], "1")
         self.assertTrue(bos["players"][0]["starter"])
         self.assertTrue(bos["players"][0]["active"])
-        self.assertFalse(bos["players"][1]["active"] if bos["players"][1]["active"] is not None else False)
+        self.assertIsNone(bos["players"][1]["active"])
         self.assertTrue(bos["players"][1]["did_not_play"])
         self.assertEqual(bos["players"][1]["reason"], "Coach's Decision")
 
@@ -179,6 +179,16 @@ class BoxscoreParsingTests(unittest.TestCase):
         self.assertEqual(plays[2]["action_category"], "timeout")
         self.assertFalse(plays[2]["is_foul"])
 
+    def test_event_flags_fall_back_to_commentary_only_when_labels_are_missing(self):
+        plays = parse_plays({"plays": [
+            {"text": "Player offensive foul turnover"},
+            {"type": {"text": "Jump Shot"}, "text": "Player misses after a timeout"},
+        ]})
+        self.assertTrue(plays[0]["is_foul"])
+        self.assertTrue(plays[0]["is_turnover"])
+        self.assertEqual(plays[0]["action_category"], "foul")
+        self.assertFalse(plays[1]["is_timeout"])
+        self.assertEqual(plays[1]["action_category"], "other")
     def test_score_change_uses_espn_scoring_play_marker(self):
         plays = parse_plays({"plays": [
             {"homeScore": 0, "awayScore": 0, "scoringPlay": False},
