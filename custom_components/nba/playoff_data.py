@@ -34,7 +34,7 @@ def _season_type(event: dict[str, Any]) -> int | None:
 def _score(value: Any) -> int | None:
     """Accepte les scores scoreboard (string/int) et schedule ({value, displayValue})."""
     if isinstance(value, dict):
-        value = value.get("value")
+        value = value.get("value", value.get("displayValue"))
         if value is None:
             return None
     if isinstance(value, bool) or value is None or value == "":
