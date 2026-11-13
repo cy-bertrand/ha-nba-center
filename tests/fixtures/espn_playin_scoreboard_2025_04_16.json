@@ -1,0 +1,114 @@
+{
+  "events": [
+    {
+      "id": "401766460",
+      "date": "2025-04-16T23:30Z",
+      "name": "Miami Heat at Chicago Bulls",
+      "season": {
+        "year": 2025,
+        "type": 5,
+        "slug": "play-in-season"
+      },
+      "competitions": [
+        {
+          "type": {
+            "id": "1",
+            "abbreviation": "STD"
+          },
+          "competitors": [
+            {
+              "id": "4",
+              "homeAway": "home",
+              "winner": false,
+              "team": {
+                "id": "4",
+                "abbreviation": "CHI",
+                "displayName": "Chicago Bulls"
+              },
+              "score": "90"
+            },
+            {
+              "id": "14",
+              "homeAway": "away",
+              "winner": true,
+              "team": {
+                "id": "14",
+                "abbreviation": "MIA",
+                "displayName": "Miami Heat"
+              },
+              "score": "109"
+            }
+          ],
+          "notes": [
+            {
+              "headline": "NBA Play-In - East - 9th Place vs 10th Place"
+            }
+          ],
+          "status": {
+            "type": {
+              "id": "3",
+              "name": "STATUS_FINAL",
+              "state": "post",
+              "completed": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "401766461",
+      "date": "2025-04-17T02:00Z",
+      "name": "Dallas Mavericks at Sacramento Kings",
+      "season": {
+        "year": 2025,
+        "type": 5,
+        "slug": "play-in-season"
+      },
+      "competitions": [
+        {
+          "type": {
+            "id": "1",
+            "abbreviation": "STD"
+          },
+          "competitors": [
+            {
+              "id": "26",
+              "homeAway": "home",
+              "winner": false,
+              "team": {
+                "id": "26",
+                "abbreviation": "SAC",
+                "displayName": "Sacramento Kings"
+              },
+              "score": "106"
+            },
+            {
+              "id": "6",
+              "homeAway": "away",
+              "winner": true,
+              "team": {
+                "id": "6",
+                "abbreviation": "DAL",
+                "displayName": "Dallas Mavericks"
+              },
+              "score": "120"
+            }
+          ],
+          "notes": [
+            {
+              "headline": "NBA Play-In - West - 9th Place vs 10th Place"
+            }
+          ],
+          "status": {
+            "type": {
+              "id": "3",
+              "name": "STATUS_FINAL",
+              "state": "post",
+              "completed": true
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
