@@ -455,6 +455,43 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
             overview = parse_player_stats(resources.get("overview", {}))
             stats = parse_player_stats(resources.get("stats", {}))
             gamelog = parse_player_gamelog(resources.get("gamelog", {}))
+
+            # Les playoffs sont un split ESPN distinct (seasontype=3). On
+            # conserve ce bloc séparément et on vérifie le filtre retourné
+            # avant de l'exposer : aucune moyenne de saison régulière ne peut
+            # ainsi être étiquetée par erreur comme une statistique de playoffs.
+            postseason_stats: dict[str, Any] = {}
+            season_year = None
+            if stats.get("season_history"):
+                try:
+                    season_year = int(stats["season_history"][0].get("year"))
+                except (TypeError, ValueError):
+                    season_year = None
+            if season_year is None and stats.get("season"):
+                parts = str(stats["season"]).split("-")
+                if len(parts) == 2 and parts[0].isdigit() and parts[1].isdigit():
+                    suffix = int(parts[1])
+                    season_year = suffix if suffix > 99 else (int(parts[0]) // 100) * 100 + suffix
+            if season_year:
+                try:
+                    postseason_raw = await self._get(
+                        PLAYER_DATA_URL.format(player_id=player_id, resource="stats"),
+                        params={"season": season_year, "seasontype": 3},
+                    )
+                    parsed_postseason = parse_player_stats(postseason_raw)
+                    if parsed_postseason.get("season_type_id") == "3":
+                        postseason_stats = parsed_postseason
+                    else:
+                        _LOGGER.debug(
+                            "ESPN n'a pas confirmé le split playoffs pour le joueur %s / saison %s",
+                            player_id, season_year,
+                        )
+                except Exception as err:  # noqa: BLE001 - les playoffs ne bloquent jamais le profil régulier
+                    _LOGGER.debug(
+                        "Statistiques playoffs ESPN indisponibles pour le joueur %s / saison %s: %s",
+                        player_id, season_year, err,
+                    )
+
             # ESPN gamelog ne fournit que les métadonnées des rencontres.
             # On enrichit les cinq plus récentes via les box scores déjà normalisés.
             for game in gamelog["games"][:5]:
@@ -484,6 +521,7 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 "player_id": player_id,
                 "overview": overview,
                 "stats": stats,
+                "postseason_stats": postseason_stats,
                 "gamelog": gamelog,
                 "errors": errors,
                 "available": bool(overview["statistics"] or stats["statistics"] or gamelog["games"]),
