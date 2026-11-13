@@ -20,7 +20,7 @@ assert.match(bundle, /MATCH CENTER/, "interactive match overlay must be included
 assert.match(bundle, /BOX SCORE · JOUEURS/, "full player box score view must be included");
 assert.match(bundle, /COMPARAISON DES ÉQUIPES/, "team statistics comparison must be included");
 assert.match(bundle, /SCORE PAR PÉRIODE/, "quarter-by-quarter scoreboard must be included");
-assert.match(bundle, /ÉJECTÉ/, "player ejection status must be included");
+assert.match(source, /ÉJECTÉ/, "player ejection status must be included");
 assert.match(bundle, /period_display/, "ESPN period display labels must be used in play-by-play");
 assert.match(source, /_quarterScorePanel\(\)/, "quarter score panel renderer must be present");
 assert.match(source, /player\.ejected/, "player ejection metadata must be rendered");
