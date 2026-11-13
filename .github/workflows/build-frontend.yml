@@ -10,6 +10,7 @@ on:
       - phase-5-playoff-series
       - feature/player-center-season-polish
       - fix/player-profile-gamelog-playoffs-season
+      - fix/player-playoffs-season-year
     paths:
       - 'frontend/**'
       - 'tests/**'
