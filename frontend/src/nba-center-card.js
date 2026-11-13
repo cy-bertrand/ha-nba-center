@@ -396,6 +396,7 @@ class NBACenterCard extends LitElement {
 
   _selectRosterPlayer(player) {
     this._selectedPlayer = player;
+    this._openPlayer(player.id, { ...player, player: player.name });
     this.requestUpdate();
     this.updateComplete.then(() => {
       const body = this.renderRoot?.querySelector(".team-roster-overlay .overlay-body");
