@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from typing import Any
+import re
 
 
 def _mapping(value: Any) -> dict[str, Any]:
@@ -46,6 +47,12 @@ def parse_team_roster(raw: dict[str, Any]) -> dict[str, Any]:
                         "date": _text(item.get("date")),
                     })
         experience = _mapping(athlete.get("experience"))
+        height_text = _text(athlete.get("displayHeight"))
+        weight_text = _text(athlete.get("displayWeight"))
+        height_match = re.search(r"(\\d+)\\s*'\\s*(\\d+)", height_text or "")
+        weight_match = re.search(r"(\\d+(?:\\.\\d+)?)", weight_text or "")
+        height_cm = round((int(height_match.group(1)) * 12 + int(height_match.group(2))) * 2.54) if height_match else None
+        weight_kg = round(float(weight_match.group(1)) * 0.45359237, 1) if weight_match else None
         players.append({
             "id": player_id,
             "name": name,
@@ -54,8 +61,10 @@ def parse_team_roster(raw: dict[str, Any]) -> dict[str, Any]:
             "jersey": _text(athlete.get("jersey")),
             "position": _text(position.get("abbreviation") or position.get("displayName")),
             "position_name": _text(position.get("displayName") or position.get("name")),
-            "height": _text(athlete.get("displayHeight")),
-            "weight": _text(athlete.get("displayWeight")),
+            "height": height_text,
+            "weight": weight_text,
+            "height_cm": height_cm,
+            "weight_kg": weight_kg,
             "age": athlete.get("age") if isinstance(athlete.get("age"), (int, float)) else None,
             "college": _text(college.get("shortName") or college.get("name")),
             "experience_years": experience.get("years") if isinstance(experience.get("years"), (int, float)) else None,
