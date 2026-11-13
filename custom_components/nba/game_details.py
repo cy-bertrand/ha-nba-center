@@ -96,6 +96,26 @@ def _player_index(raw: dict[str, Any]) -> dict[str, dict[str, Any]]:
     return index
 
 
+def parse_substitutions(plays: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Expose les entrées/sorties de joueurs sans déduire le côté depuis le texte."""
+    changes: list[dict[str, Any]] = []
+    for play in plays:
+        if not isinstance(play, dict) or not play.get("is_substitution"):
+            continue
+        participants = play.get("participant_details") or []
+        changes.append({
+            "play_id": play.get("id"),
+            "sequence_number": play.get("sequence_number"),
+            "period": play.get("period"),
+            "clock": play.get("clock"),
+            "team_id": play.get("team_id"),
+            "participants": participants,
+            "text": play.get("text"),
+            "short_description": play.get("short_description"),
+        })
+    return changes
+
+
 def parse_plays(raw: dict[str, Any]) -> list[dict[str, Any]]:
     """Normalise summary.plays and enrich participants via ESPN athlete IDs."""
     plays: list[dict[str, Any]] = []
