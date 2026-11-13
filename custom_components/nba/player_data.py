@@ -142,6 +142,43 @@ def _overview_splits(raw: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:
     return result
 
 
+
+def _season_history(raw: dict[str, Any]) -> list[dict[str, Any]]:
+    """Fusionne les catégories ESPN par saison pour construire un historique complet."""
+    seasons: dict[str, dict[str, Any]] = {}
+    categories = raw.get("categories")
+    if not isinstance(categories, list):
+        return []
+    for category in categories:
+        block = _mapping(category)
+        names = block.get("names") or []
+        labels = block.get("labels") or []
+        displays = block.get("displayNames") or []
+        entries = block.get("statistics")
+        if not isinstance(entries, list):
+            continue
+        for entry in entries:
+            item = _mapping(entry)
+            season = _mapping(item.get("season"))
+            year = _text(season.get("year"))
+            display_name = _text(season.get("displayName")) or year
+            values = item.get("stats")
+            if not year or not isinstance(values, list):
+                continue
+            record = seasons.setdefault(year, {"year": int(year) if year.isdigit() else year,
+                                                "display_name": display_name, "statistics": []})
+            for index, value in enumerate(values):
+                name = str(names[index]) if index < len(names) else f"stat_{index}"
+                record["statistics"].append({
+                    "name": name,
+                    "label": _text(displays[index] if index < len(displays) else None)
+                        or _text(labels[index] if index < len(labels) else None) or name,
+                    "value": _number(value),
+                    "display_value": _text(value),
+                    "category": _text(block.get("displayName") or block.get("name")),
+                })
+    return sorted(seasons.values(), key=lambda item: str(item["year"]), reverse=True)
+
 def parse_player_stats(raw: dict[str, Any]) -> dict[str, Any]:
     """Normalise les statistiques saison ESPN, y compris la structure overview."""
     season = _mapping(raw.get("season"))
@@ -172,6 +209,7 @@ def parse_player_stats(raw: dict[str, Any]) -> dict[str, Any]:
             "name": _text(athlete.get("displayName") or athlete.get("fullName")),
         },
         "statistics": _stat_rows(raw),
+        "season_history": _season_history(raw),
         "splits": _overview_splits(raw),
         "career_statistics": _overview_splits(raw).get("career", []),
     }
