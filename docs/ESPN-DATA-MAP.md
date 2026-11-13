@@ -261,3 +261,59 @@ Le comportement d'une récupération complète de la postseason reste à valider
 - `tests/fixtures/espn_playoff_scoreboard_2025_06_05.json` — le match NBA Finals Game 1 IND–OKC, incluant l'objet `series`.
 
 Les fixtures sont volontairement réduites aux champs nécessaires pour les tests ; elles conservent les structures imbriquées réelles utilisées par le parseur.
+
+
+## Captures complémentaires — 13 novembre 2026
+
+Trois nouvelles réponses réelles ont été fournies et inspectées : calendrier OKC 2024-25, scoreboard du 20 avril 2025 et scoreboard du 16 avril 2025 (Play-In).
+
+### Calendrier Oklahoma City Thunder — 2024-25
+
+Requête : `teams/25/schedule?season=2025&seasontype=3`.
+
+- `requestedSeason` indique bien 2024-25, postseason (année 2025, type 3).
+- La réponse contient 23 événements postseason.
+- Les notes `competitions[0].notes[0].headline` distinguent :
+  - West 1st Round — Games 1 à 4 (4 événements dans le calendrier OKC) ;
+  - West Semifinals — Games 1 à 7 (7 événements) ;
+  - West Finals — Games 1 à 5 (5 événements) ;
+  - NBA Finals — Games 1 à 7 (7 événements).
+- Les finales NBA apparaissent dans le calendrier OKC après la finale de conférence, avec les mêmes champs de saison et de notes.
+- `competitions[0].type` est une classification ESPN complémentaire : Round of 16, Quarterfinal, Semifinal et Final. Ne pas confondre ces libellés ESPN avec le texte de tour dans `notes[].headline`.
+- La réponse racine contient encore `season=2026-27` (Regular Season), alors que `requestedSeason` et les événements décrivent 2024-25 postseason. La saison racine ne doit jamais servir seule à classer les événements.
+
+### Scoreboard du 20 avril 2025 — quatre rencontres
+
+Requête : `scoreboard?dates=20250420&seasontype=3`.
+
+- Quatre événements sont renvoyés dans une seule réponse.
+- Les quatre événements portent `season.type=3`.
+- Chacun contient un label de tour dans `competitions[0].notes[].headline`.
+- Sur les quatre événements de cette capture, `competitions[0].series` est présent et contient notamment `summary`, `completed`, `totalCompetitions` et `competitors[].wins`.
+- Les scores sont des chaînes dans le scoreboard (`"131"`, par exemple), alors que le calendrier d'équipe observé fournit un objet score avec `value` et `displayValue`. Le parseur devra accepter ces deux formes.
+
+### Scoreboard du 16 avril 2025 — Play-In
+
+Requête : `scoreboard?dates=20250416&seasontype=3`.
+
+- Deux événements sont renvoyés.
+- Les deux événements portent `season.type=5` et `slug=play-in-season`.
+- Les notes identifient explicitement le Play-In et le match de classement (9e contre 10e).
+- Le champ `competitions[0].series` est absent.
+- `competitions[0].type` vaut `STD` : le type de compétition seul ne permet donc pas de distinguer playoffs et Play-In.
+
+### Conséquences pour le parseur
+
+1. Lire le type de saison au niveau de chaque événement : `event.season.type` dans le scoreboard, ou `event.seasonType.type` dans le calendrier d'équipe. Dans la capture du calendrier, `event.season.type` ne porte pas le type postseason ; il est fourni par `event.seasonType`.
+2. Classer `3` comme postseason et `5` comme Play-In ; ne pas fusionner les deux.
+3. Extraire le libellé d'événement depuis `competitions[0].notes[].headline`, en le conservant tel quel.
+4. Traiter `series` comme facultatif, même si sa présence est confirmée sur les quatre matchs du scoreboard du 20 avril.
+5. Normaliser les scores depuis une chaîne ou depuis un objet `value/displayValue`, sans convertir une valeur absente en zéro.
+6. Gérer les deux variantes de saison : `seasonType.type` dans les calendriers d'équipe et `season.type` dans les scoreboards.
+
+### Fixtures ciblées
+
+- `tests/fixtures/espn_playoff_scoreboard_2025_04_20.json` : quatre matchs et leurs objets `series`.
+- `tests/fixtures/espn_playin_scoreboard_2025_04_16.json` : deux matchs de Play-In sans objet `series`.
+
+Ces fichiers sont des fixtures réduites aux champs utiles, recopiés depuis les réponses réelles ; ce ne sont pas des dumps complets des réponses ESPN.
