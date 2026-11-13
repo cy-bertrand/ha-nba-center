@@ -1,6 +1,6 @@
 # Phase 3 — Detailed Game Center
 
-**Statut :** première tranche backend et frontend intégrée sur `main` ; CI verte. Validation fonctionnelle Home Assistant et vérification sur réponses ESPN réelles encore requises.
+**Statut :** première tranche backend et frontend intégrée sur `main` ; CI verte. Les parseurs sont désormais couverts par des réponses ESPN réelles live et terminée. La validation fonctionnelle dans Home Assistant reste à faire.
 
 ## Objectif
 Transformer l'overlay Match Center de la Phase 2 en fiche de match approfondie, sans appels ESPN depuis le navigateur et sans casser le calendrier ni les services existants.
@@ -34,7 +34,7 @@ Transformer l'overlay Match Center de la Phase 2 en fiche de match approfondie, 
 - Tests unitaires backend : fixtures synthétiques couvrant les cas génériques, complétées par ce fixture réel ciblé.
 - CI GitHub : workflow `43384846830` terminé avec succès sur le commit `07d3a52` (13/11/2026) : compilation Python, **38 tests unitaires backend réussis**, build Lit et assertions frontend réussis. Le nouveau fichier `test_game_details_live_fixture.py` est bien détecté par `unittest discover` ; ses 3 tests passent.
 - Le fixture live reste un échantillon représentatif. Le fixture terminé couvre en revanche l'intégralité des sections utilisées par le parseur pour le header, les statistiques et les 515 actions Play-by-Play. Les sections annexes ESPN sans rapport avec ce parseur sont volontairement exclues.
-- Le Play-by-Play repose à ce stade sur les champs facultatifs observés dans les exemples de schéma disponibles ; il doit être confirmé sur une réponse ESPN réelle avant de considérer l'affichage comme validé.
+- Le schéma du Play-by-Play et ses champs facultatifs sont maintenant confirmés sur une réponse ESPN réelle terminée de 515 actions, en complément de l'extrait live. Les cas de pagination, de rafraîchissement continu et les éventuelles variantes d'autres rencontres restent à tester.
 
 ## Suite de la Phase 3
 
