@@ -267,6 +267,8 @@ def parse_player_gamelog(raw: dict[str, Any]) -> dict[str, Any]:
             "home_away": _text(event.get("atVs")),
             "team": _text(team.get("abbreviation")),
             "opponent": _text(opponent.get("displayName") or opponent.get("abbreviation") or event.get("opponentDisplayName")),
+            "opponent_abbreviation": _text(opponent.get("abbreviation") or opponent.get("shortDisplayName")
+                                           or event.get("opponentAbbreviation") or event.get("opponent_abbreviation")),
             "stats": stat_values,
         })
     games.sort(key=lambda item: item.get("date") or "", reverse=True)
