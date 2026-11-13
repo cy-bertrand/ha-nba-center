@@ -152,19 +152,22 @@ class PlayerDataParserTests(unittest.TestCase):
 
     def test_parses_postseason_season_type_filter(self):
         result = parse_player_stats({
-            "filters": [{
-                "displayName": "Season Type", "name": "seasontype", "value": "3",
-                "options": [
-                    {"value": "2", "displayValue": "Regular Season"},
-                    {"value": "3", "displayValue": "Playoffs"},
-                ],
-            }],
+            "filters": [
+                {"displayName": "Season", "name": "season", "value": "2027",
+                 "options": [{"value": "2027", "displayValue": "2026-27"}]},
+                {"displayName": "Season Type", "name": "seasontype", "value": "3",
+                 "options": [
+                     {"value": "2", "displayValue": "Regular Season"},
+                     {"value": "3", "displayValue": "Playoffs"},
+                 ]},
+            ],
             "categories": [{
                 "name": "averages", "displayName": "Postseason Averages",
                 "stats": [{"name": "avgPoints", "displayName": "Points Per Game",
                            "value": 29.5, "displayValue": "29.5"}],
             }],
         })
+        self.assertEqual(result["season"], "2026-27")
         self.assertEqual(result["season_type_id"], "3")
         self.assertEqual(result["season_type"], "Playoffs")
         self.assertEqual(result["statistics"][0]["value"], 29.5)
