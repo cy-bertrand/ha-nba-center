@@ -224,6 +224,9 @@ def parse_player_stats(raw: dict[str, Any]) -> dict[str, Any]:
     if not season_name:
         for filter_item in _filter_items(raw):
             item = _mapping(filter_item)
+            filter_name = str(item.get("name") or item.get("displayName") or "").lower().replace(" ", "").replace("_", "")
+            if filter_name not in {"season", "seasonyear"}:
+                continue
             selected = _text(item.get("value"))
             options = item.get("options")
             if selected and isinstance(options, list):
