@@ -63,3 +63,14 @@ In the completed-game source, the Lakers player-level foul values sum to 25 whil
 - ESPN labels periods 5 and 6 as `OT` and `2OT`; the final period-end action is followed by a separate `End Game` action.
 
 The fixture is used by `tests/test_game_details_overtime_fixture.py`.
+
+
+## Degraded / partial summary fixture
+
+`espn_summary_partial_401909977.json` is a deliberately degraded test input derived from the real live capture for event `401909977`. It preserves the original `header`, `plays`, and `meta` sections but deliberately omits `boxscore` to simulate an incomplete ESPN response. It is **not** presented as an unmodified ESPN response.
+
+The regression tests verify that:
+- the live game state and score remain available;
+- missing team/player boxscores are represented by empty collections and `has_boxscore: false`, never by fabricated zero statistics;
+- Play-by-Play and substitution participant IDs remain available even when player names cannot be enriched from a boxscore;
+- null, empty, and wrong-type boxscore values do not raise parser errors.
