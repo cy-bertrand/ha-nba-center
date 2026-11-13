@@ -72,11 +72,11 @@
           },
           "competitors": [
             {
-              "id": "26",
+              "id": "23",
               "homeAway": "home",
               "winner": false,
               "team": {
-                "id": "26",
+                "id": "23",
                 "abbreviation": "SAC",
                 "displayName": "Sacramento Kings"
               },
