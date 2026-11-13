@@ -74,13 +74,14 @@ class PlayerDataParserTests(unittest.TestCase):
             "name": "averages", "names": ["avgPoints"], "labels": ["PTS"],
             "statistics": [
                 {"season": {"year": 2026, "displayName": "2025-26"},
-                 "team": {"abbreviation": "OKC", "displayName": "Oklahoma City Thunder"},
+                 "team": {"id": "25", "abbreviation": "OKC", "displayName": "Oklahoma City Thunder"},
                  "stats": ["32.0"]},
             ],
         }]})
         season = result["season_history"][0]
         self.assertEqual(season["team_abbreviation"], "OKC")
         self.assertEqual(season["team_name"], "Oklahoma City Thunder")
+        self.assertEqual(season["team_id"], "25")
 
     def test_exposes_career_split_separately(self):
         result = parse_player_stats({"statistics": {
