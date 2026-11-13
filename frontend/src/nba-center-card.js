@@ -370,7 +370,7 @@ class NBACenterCard extends LitElement {
     const stats = this._playerData?.stats?.statistics ?? [];
     const games = this._playerData?.gamelog?.games ?? [];
     const stat = (...names) => stats.find((item) => names.includes(String(item.name).toLowerCase()) || names.includes(String(item.label).toLowerCase()));
-    const quick = [["PTS",stat("pts","points","points per game")],["REB",stat("reb","rebounds","rebounds per game")],["AST",stat("ast","assists","assists per game")],["STL",stat("stl","steals","steals per game")],["BLK",stat("blk","blocks","blocks per game")]];
+    const quick = [["PTS",stat("pts","points","points per game","avgpoints")],["REB",stat("reb","rebounds","rebounds per game","avgrebounds")],["AST",stat("ast","assists","assists per game","avgassists")],["STL",stat("stl","steals","steals per game","avgsteals")],["BLK",stat("blk","blocks","blocks per game","avgblocks")]];
     const statLabel = (item) => item?.display_value ?? (item?.value == null ? "—" : item.value);
     return html`<div class="overlay" @click=${(event) => { if (event.target === event.currentTarget) this._closePlayer(); }}>
       <section class="overlay-panel player-profile-overlay" role="dialog" aria-modal="true" aria-label="Profil joueur">
