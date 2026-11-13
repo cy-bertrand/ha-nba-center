@@ -125,14 +125,18 @@ def parse_player_stats(raw: dict[str, Any]) -> dict[str, Any]:
 
 
 def parse_player_gamelog(raw: dict[str, Any]) -> dict[str, Any]:
-    """Normalise le journal de matchs en conservant uniquement les champs fournis."""
+    """Normalise le journal ESPN dont events est un dictionnaire indexé par event ID."""
     events = raw.get("events")
-    if not isinstance(events, list):
-        events = _mapping(raw.get("gameLog")).get("events")
-    if not isinstance(events, list):
-        events = _mapping(raw.get("seasonTypes")).get("categories", [])
+    if isinstance(events, dict):
+        source = list(events.values())
+    elif isinstance(events, list):
+        source = events
+    else:
+        nested = _mapping(raw.get("gameLog")).get("events")
+        source = list(nested.values()) if isinstance(nested, dict) else nested if isinstance(nested, list) else []
+
     games: list[dict[str, Any]] = []
-    for row in events:
+    for row in source:
         event = _mapping(row)
         if not event:
             continue
@@ -140,20 +144,28 @@ def parse_player_gamelog(raw: dict[str, Any]) -> dict[str, Any]:
         if isinstance(stats, dict):
             stat_values = {str(key): _number(value) for key, value in stats.items()}
         elif isinstance(stats, list):
-            names = event.get("labels") or event.get("names")
+            names = event.get("labels") or event.get("names") or raw.get("labels") or raw.get("names")
             stat_values = {
                 str(names[index]): _number(value)
                 for index, value in enumerate(stats)
                 if isinstance(names, list) and index < len(names) and isinstance(names[index], str)
             }
         else:
+            # L'endpoint gamelog fourni ne contient pas les statistiques individuelles,
+            # seulement les métadonnées de rencontre.
             stat_values = {}
+        opponent = _mapping(event.get("opponent"))
+        team = _mapping(event.get("team"))
         games.append({
             "id": _text(event.get("id") or event.get("eventId")),
             "date": _text(event.get("date") or event.get("gameDate")),
             "name": _text(event.get("name") or event.get("shortName")),
             "result": _text(event.get("gameResult") or event.get("result")),
-            "opponent": _text(event.get("opponent") or event.get("opponentDisplayName")),
+            "score": _text(event.get("score")),
+            "home_away": _text(event.get("atVs")),
+            "team": _text(team.get("abbreviation")),
+            "opponent": _text(opponent.get("displayName") or opponent.get("abbreviation") or event.get("opponentDisplayName")),
             "stats": stat_values,
         })
+    games.sort(key=lambda item: item.get("date") or "", reverse=True)
     return {"games": games, "count": len(games)}
