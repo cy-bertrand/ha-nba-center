@@ -223,7 +223,7 @@ class NBACenterCard extends LitElement {
 
   _leaders(key, postseason = false) {
     const fragment = LEADERS[key][1];
-    const state = this._entity(key, (s) => {
+    const state = this._entity(postseason ? `playoff_${key}` : key, (s) => {
       const category = (s.attributes?.category ?? "").toLowerCase();
       return Array.isArray(s.attributes?.leaders) && category.includes(fragment) &&
         (postseason ? category.startsWith("playoffs ") : !category.startsWith("playoffs "));
