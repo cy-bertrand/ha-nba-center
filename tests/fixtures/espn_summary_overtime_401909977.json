@@ -1,0 +1,211 @@
+{
+  "header": {
+    "id": "401909977",
+    "competitions": [
+      {
+        "status": {
+          "type": {
+            "id": "3",
+            "name": "STATUS_FINAL",
+            "state": "post",
+            "completed": true,
+            "description": "Final",
+            "detail": "Final/2OT",
+            "shortDetail": "Final/2OT",
+            "altDetail": "2OT"
+          }
+        },
+        "competitors": [
+          {
+            "id": "27",
+            "homeAway": "home",
+            "winner": false,
+            "score": "140",
+            "team": {
+              "id": "27",
+              "displayName": "Washington Wizards",
+              "abbreviation": "WSH"
+            },
+            "linescores": [
+              {
+                "displayValue": "32"
+              },
+              {
+                "displayValue": "29"
+              },
+              {
+                "displayValue": "29"
+              },
+              {
+                "displayValue": "31"
+              },
+              {
+                "displayValue": "11"
+              },
+              {
+                "displayValue": "8"
+              }
+            ]
+          },
+          {
+            "id": "8",
+            "homeAway": "away",
+            "winner": true,
+            "score": "144",
+            "team": {
+              "id": "8",
+              "displayName": "Detroit Pistons",
+              "abbreviation": "DET"
+            },
+            "linescores": [
+              {
+                "displayValue": "33"
+              },
+              {
+                "displayValue": "31"
+              },
+              {
+                "displayValue": "30"
+              },
+              {
+                "displayValue": "27"
+              },
+              {
+                "displayValue": "11"
+              },
+              {
+                "displayValue": "12"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "plays": [
+    {
+      "id": "401909977156",
+      "sequenceNumber": 156,
+      "period": {
+        "number": 1,
+        "displayValue": "1st Quarter"
+      },
+      "clock": {
+        "displayValue": "0.0"
+      },
+      "type": {
+        "text": "End Period"
+      },
+      "text": "End of the 1st Quarter",
+      "homeScore": 34,
+      "awayScore": 33
+    },
+    {
+      "id": "401909977334",
+      "sequenceNumber": 334,
+      "period": {
+        "number": 2,
+        "displayValue": "2nd Quarter"
+      },
+      "clock": {
+        "displayValue": "0.0"
+      },
+      "type": {
+        "text": "End Period"
+      },
+      "text": "End of the 2nd Quarter",
+      "homeScore": 61,
+      "awayScore": 64
+    },
+    {
+      "id": "401909977500",
+      "sequenceNumber": 500,
+      "period": {
+        "number": 3,
+        "displayValue": "3rd Quarter"
+      },
+      "clock": {
+        "displayValue": "0.0"
+      },
+      "type": {
+        "text": "End Period"
+      },
+      "text": "End of the 3rd Quarter",
+      "homeScore": 92,
+      "awayScore": 94
+    },
+    {
+      "id": "401909977720",
+      "sequenceNumber": 720,
+      "period": {
+        "number": 4,
+        "displayValue": "4th Quarter"
+      },
+      "clock": {
+        "displayValue": "0.0"
+      },
+      "type": {
+        "text": "End Period"
+      },
+      "text": "End of the 4th Quarter",
+      "homeScore": 121,
+      "awayScore": 121
+    },
+    {
+      "id": "401909977796",
+      "sequenceNumber": 796,
+      "period": {
+        "number": 5,
+        "displayValue": "OT"
+      },
+      "clock": {
+        "displayValue": "0.0"
+      },
+      "type": {
+        "text": "End Period"
+      },
+      "text": "End of the 1st  Overtime",
+      "homeScore": 132,
+      "awayScore": 132
+    },
+    {
+      "id": "401909977909",
+      "sequenceNumber": 909,
+      "period": {
+        "number": 6,
+        "displayValue": "2OT"
+      },
+      "clock": {
+        "displayValue": "0.0"
+      },
+      "type": {
+        "text": "End Period"
+      },
+      "text": "End of the 2nd  Overtime",
+      "homeScore": 140,
+      "awayScore": 144
+    },
+    {
+      "id": "401909977910",
+      "sequenceNumber": 910,
+      "period": {
+        "number": 6,
+        "displayValue": "2OT"
+      },
+      "clock": {
+        "displayValue": "0.0"
+      },
+      "type": {
+        "text": "End Game"
+      },
+      "text": "End of Game",
+      "homeScore": 140,
+      "awayScore": 144
+    }
+  ],
+  "meta": {
+    "gameState": "post",
+    "lastUpdatedAt": "2026-11-13T03:14:55Z",
+    "lastPlayWallClock": "2026-11-13T03:14:55Z"
+  }
+}
