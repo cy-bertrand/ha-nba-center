@@ -180,7 +180,7 @@ class NBACenterCard extends LitElement {
     this._teamRosterLoading = false;
     this._teamRosterError = "";
     this._selectedPlayer = null;
-    this._playerSearch = ""; this._playerOverlay = null; this._playerData = null; this._playerLoading = false; this._playerError = ""; this._playerSelectedSeason = ""; this._playerSelectedPlayoffSeason = ""; this._playerPlayoffLoading = false; this._playerRequest = 0;
+    this._playerSearch = ""; this._playerOverlay = null; this._playerData = null; this._playerLoading = false; this._playerError = ""; this._playerSelectedSeason = ""; this._playerSelectedPlayoffSeason = ""; this._playerPlayoffLoading = false; this._playerPlayoffRequest += 1; this._playerPlayoffRequest = 0; this._playerRequest = 0;
     this._selectedDate = localDateISO();
     this._calendarGames = []; this._calendarLoading = false; this._calendarError = ""; this._calendarStale = false; this._calendarStaleError = ""; this._calendarRequest = 0; this._calendarInitialized = false;
     this._overlayGame = null; this._overlayDetails = null; this._overlayRequest = 0;
@@ -384,18 +384,28 @@ class NBACenterCard extends LitElement {
 
   async _loadPlayerPlayoffSeason(playerId, seasonYear) {
     if (!playerId || !Number.isInteger(seasonYear)) return;
-    this._playerSelectedPlayoffSeason = String(seasonYear); this._playerPlayoffLoading = true;
-    const request = this._playerRequest;
+    this._playerSelectedPlayoffSeason = String(seasonYear);
+    this._playerPlayoffLoading = true;
+    const playerRequest = this._playerRequest;
+    const playoffRequest = ++this._playerPlayoffRequest;
     try {
       const result = await this.hass.callWS({ type: "nba/player_data", player_id: String(playerId), postseason_year: seasonYear });
-      if (request !== this._playerRequest || !this._playerOverlay) return;
+      if (playerRequest !== this._playerRequest || playoffRequest !== this._playerPlayoffRequest || !this._playerOverlay) return;
       this._playerData = { ...this._playerData, postseason_stats: result.postseason_stats, postseason_gamelog: result.postseason_gamelog };
-    } catch (err) { if (request === this._playerRequest) this._playerError = err?.message ?? "Statistiques playoffs indisponibles."; }
-    finally { if (request === this._playerRequest) this._playerPlayoffLoading = false; }
+    } catch (err) {
+      if (playerRequest === this._playerRequest && playoffRequest === this._playerPlayoffRequest) {
+        this._playerError = err?.message ?? "Statistiques playoffs indisponibles.";
+      }
+    } finally {
+      if (playerRequest === this._playerRequest && playoffRequest === this._playerPlayoffRequest) {
+        this._playerPlayoffLoading = false;
+      }
+    }
   }
 
   _closePlayer() {
     this._playerRequest += 1;
+    this._playerPlayoffRequest += 1;
     this._playerOverlay = null; this._playerData = null; this._playerLoading = false; this._playerError = "";
   }
 
