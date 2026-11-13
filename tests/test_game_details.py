@@ -64,6 +64,38 @@ class BoxscoreParsingTests(unittest.TestCase):
         self.assertTrue(bos["players"][1]["did_not_play"])
         self.assertEqual(bos["players"][1]["reason"], "Coach's Decision")
 
+    def test_player_availability_and_disciplinary_flags_are_preserved(self):
+        raw = {"boxscore": {"players": [{
+            "team": {"id": "8", "abbreviation": "BOS"},
+            "statistics": [{
+                "names": ["MIN", "PTS"],
+                "athletes": [
+                    {"athlete": {"id": "1", "displayName": "Starter", "jersey": "7"},
+                     "starter": True, "active": True, "stats": ["32:10", "18"]},
+                    {"athlete": {"id": "2", "displayName": "Inactive", "jersey": "9"},
+                     "starter": False, "active": False, "didNotPlay": False,
+                     "reason": "COACH'S DECISION", "stats": ["DNP", "0"]},
+                    {"athlete": {"id": "3", "displayName": "DNP Player", "jersey": "11"},
+                     "starter": False, "active": False, "didNotPlay": True,
+                     "reason": "INJURY", "stats": []},
+                    {"athlete": {"id": "4", "displayName": "Ejected", "jersey": "15"},
+                     "starter": False, "active": False, "ejected": True,
+                     "stats": ["12:00", "4"]},
+                ],
+            }],
+        }]}}
+        players = parse_boxscore(raw)["player_stats"][0]["players"]
+        self.assertEqual(
+            [(p["name"], p["jersey"], p["starter"], p["active"],
+              p["did_not_play"], p["ejected"], p["reason"]) for p in players],
+            [
+                ("Starter", "7", True, True, None, None, None),
+                ("Inactive", "9", False, False, False, None, "COACH'S DECISION"),
+                ("DNP Player", "11", False, False, True, None, "INJURY"),
+                ("Ejected", "15", False, False, None, True, None),
+            ],
+        )
+
     def test_parses_play_by_play_and_scoring_state(self):
         raw = {"plays": [
             {"id": "p1", "period": {"number": 4}, "clock": {"displayValue": "02:14"},
