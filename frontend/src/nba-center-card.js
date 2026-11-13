@@ -393,18 +393,31 @@ class NBACenterCard extends LitElement {
           ${this._playerLoading ? html`<section class="empty">Chargement des statistiques du joueur…</section>` : ""}
           ${this._playerError ? html`<section class="empty"><strong>Profil détaillé indisponible</strong><p>${this._playerError}</p><button @click=${() => this._openPlayer(player.id, player)}>RÉESSAYER</button></section>` : ""}
           ${this._playerData ? html`
+            <section class="panel">
+              <div class="panel-head"><h3>FICHE JOUEUR &amp; BILAN CARRIÈRE</h3><span class="pill">CAREER</span></div>
+              <div class="player-profile-grid">
+                <div><small>ÂGE</small><strong>${value(player.age)}</strong></div>
+                <div><small>POSTE</small><strong>${value(player.position_name, player.position)}</strong></div>
+                <div><small>TAILLE</small><strong>${player.height_cm == null ? value(player.height) : `${player.height_cm} cm`}</strong></div>
+                <div><small>POIDS</small><strong>${player.weight_kg == null ? value(player.weight) : `${player.weight_kg.toLocaleString("fr-BE")} kg`}</strong></div>
+                <div><small>EXPÉRIENCE NBA</small><strong>${player.experience_years == null ? "—" : `${player.experience_years} ans`}</strong></div>
+                <div><small>N°</small><strong>${value(player.jersey)}</strong></div>
+                <div><small>UNIVERSITÉ / CLUB</small><strong>${value(player.college)}</strong></div>
+                <div><small>STATUT</small><strong>${value(player.status)}</strong></div>
+              </div>
+              ${player.injuries?.length ? html`<p class="roster-injury">ÉTAT MÉDICAL ESPN : ${player.injuries.map((injury) => value(injury.status)).filter(Boolean).join(" · ")}</p>` : ""}
+              ${overview.career_statistics?.length ? html`
+                <div class="panel-head" style="margin-top:16px"><h3>STATISTIQUES CUMULÉES EN CARRIÈRE</h3></div>
+                <div class="player-stat-grid">${["gamesPlayed","avgMinutes","avgPoints","avgRebounds","avgAssists","avgBlocks","avgSteals"].map((name) => {
+                  const item = overview.career_statistics.find((row) => row.name === name);
+                  return item ? html`<div><small>${value(item.label,item.name)}</small><strong>${value(item.display_value,item.value)}</strong></div>` : "";
+                })}</div>` : ""}
+            </section>
             <div class="player-stat-grid">${quick.map(([label,item]) => html`<div><small>${label} / MATCH</small><strong>${statLabel(item)}</strong></div>`)}</div>
             <section class="panel"><div class="panel-head"><h3>STATISTIQUES DE SAISON</h3><span class="pill">${value(seasonLabel, "SAISON")}</span></div>
               ${seasonHistory.length > 1 ? html`<div class="filters"><label class="muted" for="player-season-select">SAISON</label><select id="player-season-select" aria-label="Choisir une saison" .value=${String(selectedSeason?.year ?? "")} @change=${(event) => { this._playerSelectedSeason = event.target.value; this.requestUpdate(); }}>${seasonHistory.map((item) => html`<option value=${String(item.year)}>${item.display_name}</option>`)}</select></div>` : ""}
               ${stats.length ? html`<div class="table-wrap"><table><thead><tr><th>STATISTIQUE</th><th>VALEUR</th></tr></thead><tbody>${detailedStats.map((item) => html`<tr><td>${value(item.label,item.name)}</td><td>${value(item.display_value ?? item.value)}</td></tr>`)}</tbody></table></div>` : html`<p class="muted">Aucune autre statistique disponible pour cette saison.</p>`}
             </section>
-            ${(this._playerData.overview?.career_statistics?.length ? html`
-              <section class="panel"><div class="panel-head"><h3>MOYENNES EN CARRIÈRE</h3><span class="pill">CAREER</span></div>
-                <div class="player-stat-grid">${["gamesPlayed","avgMinutes","avgPoints","avgRebounds","avgAssists","avgBlocks","avgSteals"].map((name) => {
-                  const item = this._playerData.overview.career_statistics.find((row) => row.name === name);
-                  return item ? html`<div><small>${value(item.label,item.name)}</small><strong>${value(item.display_value,item.value)}</strong></div>` : "";
-                })}</div>
-              </section>` : "")}
             ${games.length ? html`
               <section class="panel player-gamelog"><div class="panel-head"><h3>5 DERNIERS MATCHS · STATS INDIVIDUELLES</h3><span class="pill">${this._playerData.gamelog?.boxscore_count ?? 0}/${Math.min(games.length, 5)} BOX SCORES</span></div>
                 ${games.slice(0,5).some((game) => Object.keys(game.stats ?? {}).length) ? html`<div class="table-wrap"><table><thead><tr><th>DATE</th><th>ADV.</th><th>MIN</th><th>PTS</th><th>REB</th><th>AST</th><th>STL</th><th>BLK</th></tr></thead><tbody>
