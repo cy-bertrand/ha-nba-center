@@ -18,6 +18,8 @@ assert.match(bundle, /nba\/scoreboard/, "date-based scoreboard websocket command
 assert.match(bundle, /nba\/game_details/, "game details websocket command must be used");
 assert.match(bundle, /MATCH CENTER/, "interactive match overlay must be included");
 assert.match(bundle, /BOX SCORE · JOUEURS/, "full player box score view must be included");
+assert.match(source, /game-leaders-grid/, "compact team leaders layout must be present");
+assert.match(source, /game-leader-value/, "team leader values must be visually highlighted");
 assert.match(bundle, /COMPARAISON DES ÉQUIPES/, "team statistics comparison must be included");
 assert.match(bundle, /SCORE PAR PÉRIODE/, "quarter-by-quarter scoreboard must be included");
 assert.match(source, /ÉJECTÉ/, "player ejection status must be included");
