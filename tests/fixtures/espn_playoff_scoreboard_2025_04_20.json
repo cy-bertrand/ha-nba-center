@@ -11,6 +11,7 @@
       },
       "competitions": [
         {
+          "id": "401767818",
           "type": {
             "id": "14",
             "abbreviation": "RD16"
@@ -41,6 +42,7 @@
           ],
           "notes": [
             {
+              "type": "event",
               "headline": "West 1st Round - Game 1"
             }
           ],
@@ -52,11 +54,13 @@
             "competitors": [
               {
                 "id": "25",
-                "wins": 1
+                "wins": 1,
+                "ties": 0
               },
               {
                 "id": "29",
-                "wins": 0
+                "wins": 0,
+                "ties": 0
               }
             ]
           }
@@ -74,6 +78,7 @@
       },
       "competitions": [
         {
+          "id": "401767822",
           "type": {
             "id": "14",
             "abbreviation": "RD16"
@@ -104,6 +109,7 @@
           ],
           "notes": [
             {
+              "type": "event",
               "headline": "East 1st Round - Game 1"
             }
           ],
@@ -115,11 +121,13 @@
             "competitors": [
               {
                 "id": "2",
-                "wins": 1
+                "wins": 1,
+                "ties": 0
               },
               {
                 "id": "19",
-                "wins": 0
+                "wins": 0,
+                "ties": 0
               }
             ]
           }
@@ -137,6 +145,7 @@
       },
       "competitions": [
         {
+          "id": "401767816",
           "type": {
             "id": "14",
             "abbreviation": "RD16"
@@ -167,6 +176,7 @@
           ],
           "notes": [
             {
+              "type": "event",
               "headline": "East 1st Round - Game 1"
             }
           ],
@@ -178,11 +188,13 @@
             "competitors": [
               {
                 "id": "5",
-                "wins": 1
+                "wins": 1,
+                "ties": 0
               },
               {
                 "id": "14",
-                "wins": 0
+                "wins": 0,
+                "ties": 0
               }
             ]
           }
@@ -200,6 +212,7 @@
       },
       "competitions": [
         {
+          "id": "401767823",
           "type": {
             "id": "14",
             "abbreviation": "RD16"
@@ -230,6 +243,7 @@
           ],
           "notes": [
             {
+              "type": "event",
               "headline": "West 1st Round - Game 1"
             }
           ],
@@ -241,11 +255,13 @@
             "competitors": [
               {
                 "id": "10",
-                "wins": 0
+                "wins": 0,
+                "ties": 0
               },
               {
                 "id": "9",
-                "wins": 1
+                "wins": 1,
+                "ties": 0
               }
             ]
           }
