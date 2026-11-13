@@ -180,7 +180,7 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
         regular: dict[str, list[dict]] = {}
         postseason: dict[str, list[dict]] = {}
         # ESPN utilise l'année de fin de saison NBA (ex. 2027 pour 2026-27).
-        season_year = now.year + (1 if now.month >= 7 else 0)
+        season_year = now.year + (1 if now.month >= 10 else 0)
         for key, (_label, sort) in LEADER_CATEGORIES.items():
             params = {"region": "us", "lang": "en", "contentorigin": "espn",
                       "isqualified": "true", "page": 1, "limit": LEADERS_COUNT, "sort": sort}
