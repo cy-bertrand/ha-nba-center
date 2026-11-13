@@ -81,6 +81,26 @@ class BoxscoreParsingTests(unittest.TestCase):
         self.assertEqual(plays[0]["home_score"], "98")
         self.assertFalse(plays[1]["scoring"])
 
+    def test_play_participants_are_enriched_by_espn_player_id(self):
+        raw = {
+            "boxscore": {"players": [{"team": {"id": "8"}, "statistics": [{
+                "athletes": [{"athlete": {"id": "3908845", "displayName": "John Collins",
+                                       "shortName": "J. Collins", "jersey": "20",
+                                       "position": {"abbreviation": "C"},
+                                       "headshot": {"href": "https://img.test/collins.png"}}}]
+            }]}]},
+            "plays": [{"participants": [{"athlete": {"id": "3908845"}},
+                                           {"athlete": {"id": "unknown-id"}}]}],
+        }
+        play = parse_plays(raw)[0]
+        self.assertEqual(play["participants"], ["3908845", "unknown-id"])
+        self.assertEqual(play["participant_details"][0], {
+            "id": "3908845", "name": "John Collins", "short_name": "J. Collins",
+            "jersey": "20", "position": "C", "team_id": "8",
+            "headshot": "https://img.test/collins.png",
+        })
+        self.assertEqual(play["participant_details"][1], {"id": "unknown-id", "name": None})
+
     def test_play_parser_tolerates_scalar_nested_fields(self):
         plays = parse_plays({"plays": [
             {"id": 9, "period": 3, "clock": "00:12", "type": "Timeout", "team": "2"},
