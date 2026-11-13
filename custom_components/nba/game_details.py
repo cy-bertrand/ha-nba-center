@@ -34,11 +34,16 @@ def _score(value: Any) -> int | None:
 def _classify_play(play_type: str | None, short_description: str | None,
                    text: str | None) -> str:
     """Classify common ESPN play-by-play events for consistent UI treatment."""
-    combined = " ".join(filter(None, (play_type, short_description, text))).lower()
+    structured = " ".join(filter(None, (play_type, short_description))).lower()
+    combined = structured or (text or "").lower()
     if "end game" in combined or "end of game" in combined:
         return "game_end"
     if "end period" in (play_type or "").lower() or re.search(r"end of (the )?[1-4](st|nd|rd|th)", combined):
         return "period_end"
+    # A scoring label (for example "+2 Points") takes precedence over
+    # incidental words in the play commentary.
+    if "point" in structured or "made" in (play_type or "").lower():
+        return "score"
     if "foul" in combined:
         return "foul"
     if "rebound" in combined:
@@ -57,8 +62,6 @@ def _classify_play(play_type: str | None, short_description: str | None,
         return "challenge"
     if "missed" in combined:
         return "missed_shot"
-    if "point" in combined or "made" in (play_type or "").lower():
-        return "score"
     return "other"
 
 
