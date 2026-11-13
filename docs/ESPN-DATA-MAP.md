@@ -492,3 +492,16 @@ Références officielles de contrôle :
 La conclusion précédente de cette section indiquant que Portland et Phoenix étaient inversés en 2025-26 était erronée : j'avais lu à tort une page NBA.com publiée avant la fin du Play-In comme si elle présentait le bracket final. Les résultats officiels ultérieurs confirment bien Portland 7 et Phoenix 8, exactement comme dans la capture ESPN. La conclusion précédente rejetant `playoffSeed` comme source de seeds historiques est donc remplacée par la décision ci-dessus.
 
 **Statut :** schéma ESPN standings confirmé ; seeds 1 à 8 vérifiés sur deux saisons complètes ; extraction pure disponible dans `parse_playoff_standings()` ; intégration au coordinateur et construction des positions du bracket restent à faire et devront appliquer les contrôles ci-dessus.
+
+
+
+## Validation et annotation des seeds — première implémentation pure
+
+Le module expose maintenant deux fonctions supplémentaires, sans appel réseau ni dépendance Home Assistant :
+
+- `validate_playoff_seeds(teams)` regroupe les équipes par saison et conférence. Une conférence n'est valide que si les seeds 1 à 8 sont présents une seule fois chacun et si chaque équipe possède un identifiant unique. Les entrées 9 à 15 ne sont pas nécessaires au bracket. Si un seed manque, est dupliqué ou si un identifiant est absent/dupliqué, le mapping de la conférence est vide.
+- `annotate_playoff_bracket(bracket, standings)` renvoie une copie du bracket (l'entrée n'est pas mutée) et ajoute le seed ESPN aux participants des séries lorsque la conférence a passé la validation. Pour le premier tour, `matchups_valid` n'est vrai que si les quatre affiches attendues 1–8, 2–7, 3–6 et 4–5 sont toutes présentes. Un bracket partiel ou incohérent n'est jamais présenté comme un premier tour validé.
+
+Les fixtures réduites `tests/fixtures/espn_standings_2024_25_seeds.json` et `tests/fixtures/espn_standings_2025_26_seeds.json` proviennent des deux captures JSON fournies. Les tests vérifient l'ordre complet 1 à 8 dans les deux conférences et les deux saisons, ainsi que les cas de seed manquant/dupliqué, l'absence de mutation et le refus de valider un premier tour incomplet.
+
+**Limite :** cette étape reste un traitement pur de données. Elle n'effectue pas encore la collecte ESPN, ne détermine pas automatiquement si une saison en cours est définitive et n'est pas branchée au coordinateur ni aux entités Home Assistant. La validation des seeds historiques sur deux saisons ne suffit pas à déclarer fiables les seeds d'une saison en cours.
