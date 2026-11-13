@@ -287,7 +287,7 @@ class NBACenterCard extends LitElement {
 
   _boxscorePanel(block) {
     const players = block.players ?? [];
-    const preferred = ["MIN", "FG", "3PT", "FT", "OREB", "DREB", "REB", "AST", "STL", "BLK", "TO", "PF", "+/-", "PTS"];
+    const preferred = ["MIN", "PTS", "FG", "3PT", "FT", "OREB", "DREB", "REB", "AST", "STL", "BLK", "TO", "PF", "+/-"];
     const available = new Set(players.flatMap((player) => Object.keys(player.stats ?? {})));
     const columns = [...preferred.filter((key) => available.has(key)), ...[...available].filter((key) => !preferred.includes(key))];
     const rows = [...players].sort((a, b) => Number(Boolean(b.starter)) - Number(Boolean(a.starter)));
