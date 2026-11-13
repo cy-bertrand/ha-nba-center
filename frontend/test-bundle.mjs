@@ -108,6 +108,9 @@ assert.match(source, /STATISTIQUES PLAYOFFS/, "player profile must display a sep
 assert.match(source, /_loadPlayerPlayoffSeason/, "player profile must load postseason stats for the selected year");
 assert.match(source, /SAISON PLAYOFFS/, "player profile must offer a postseason year selector");
 assert.match(source, /postseason_year: seasonYear/, "postseason selector must request the selected season from Home Assistant");
+assert.match(source, /const selectedPlayoffSeason = seasonHistory\.find/, "playoff selector must resolve its own selected season");
+assert.match(source, /this\._playerSelectedPlayoffSeason \|\| seasonHistory\[0\]\?\.year/, "playoff selector must not inherit the regular-season selection");
+assert.match(source, /selectedPlayoffSeason\?\.display_name/, "playoff season heading must use the actual NBA season label");
 assert.ok(source.includes("ÉTAT MÉDICAL</small>"), "player medical status must occupy a profile grid cell");
 assert.doesNotMatch(source, /5 DERNIERS MATCHS · PLAYOFFS/, "player profile must not duplicate the recent game log for playoffs");
 
