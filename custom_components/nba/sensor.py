@@ -18,6 +18,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     coordinator: NBACoordinator = hass.data[DOMAIN][entry.entry_id]
     entities: list[SensorEntity] = [
         NBATodayGamesSensor(coordinator),
+        NBATeamsCatalogSensor(coordinator),
         NBAStandingsSensor(coordinator, "Eastern Conference", "east"),
         NBAStandingsSensor(coordinator, "Western Conference", "west"),
     ]
@@ -175,3 +176,28 @@ class NBARecentGamesSensor(NBABaseSensor):
     def extra_state_attributes(self) -> dict[str, Any]:
         info = self.coordinator.data["teams"][self._team_id]
         return {"games": self._recent(), "team_logo": info.get("logo"), "team_id": self._team_id}
+
+
+class NBATeamsCatalogSensor(NBABaseSensor):
+    """Catalogue global des 30 franchises NBA, sans capteur par équipe."""
+
+    _attr_name = "Catalogue des équipes"
+    _attr_icon = "mdi:basketball"
+
+    def __init__(self, coordinator: NBACoordinator) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{DOMAIN}_teams_catalog"
+
+    @property
+    def native_value(self) -> int:
+        return int(self.coordinator.data.get("teams_catalog", {}).get("count", 0))
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        catalog = self.coordinator.data.get("teams_catalog", {})
+        return {
+            "teams": catalog.get("teams", []),
+            "count": catalog.get("count", 0),
+            "expected_count": catalog.get("expected_count", 30),
+            "complete": catalog.get("complete", False),
+        }
