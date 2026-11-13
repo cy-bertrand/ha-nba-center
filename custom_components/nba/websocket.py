@@ -96,6 +96,7 @@ async def websocket_get_team_roster(
     {
         vol.Required("type"): "nba/player_data",
         vol.Required("player_id"): str,
+        vol.Optional("postseason_year"): int,
     }
 )
 @websocket_api.async_response
@@ -110,7 +111,7 @@ async def websocket_get_player_data(
         connection.send_error(msg["id"], "not_ready", "L'intégration NBA n'est pas chargée.")
         return
     try:
-        result = await coordinators[0].async_get_player_data(msg["player_id"])
+        result = await coordinators[0].async_get_player_data(msg["player_id"], msg.get("postseason_year"))
     except ValueError as err:
         connection.send_error(msg["id"], "invalid_player", str(err))
         return
