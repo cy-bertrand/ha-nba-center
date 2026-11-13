@@ -90,7 +90,7 @@ def parse_plays(raw: dict[str, Any]) -> list[dict[str, Any]]:
             if athlete_id:
                 participants.append(athlete_id)
         category = _classify_play(type_text, short_description, text)
-        event_text = " ".join(filter(None, (type_text, short_description, text))).lower()
+        # Prefer ESPN structured labels for flags: free-form commentary can mention\n        # another event (for example, a timeout during a foul review) and create\n        # false positives. Keep the play text for display, not event detection.\n        event_text = " ".join(filter(None, (type_text, short_description))).lower()
         plays.append({
             "id": _text(item.get("id")),
             "sequence_number": _text(item.get("sequenceNumber")),
