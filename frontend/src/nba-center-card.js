@@ -384,6 +384,13 @@ class NBACenterCard extends LitElement {
             <section class="panel"><div class="panel-head"><h3>STATISTIQUES DE SAISON</h3><span class="pill">${value(this._playerData.stats?.season, "SAISON")}</span></div>
               ${stats.length ? html`<div class="table-wrap"><table><thead><tr><th>STATISTIQUE</th><th>VALEUR</th></tr></thead><tbody>${stats.map((item) => html`<tr><td>${value(item.label,item.name)}</td><td>${value(item.display_value ?? item.value)}</td></tr>`)}</tbody></table></div>` : html`<p class="muted">Statistiques de saison non retournées par ESPN.</p>`}
             </section>
+            ${(this._playerData.overview?.career_statistics?.length ? html`
+              <section class="panel"><div class="panel-head"><h3>MOYENNES EN CARRIÈRE</h3><span class="pill">CAREER</span></div>
+                <div class="player-stat-grid">${["gamesPlayed","avgMinutes","avgPoints","avgRebounds","avgAssists","avgBlocks","avgSteals"].map((name) => {
+                  const item = this._playerData.overview.career_statistics.find((row) => row.name === name);
+                  return item ? html`<div><small>${value(item.label,item.name)}</small><strong>${value(item.display_value,item.value)}</strong></div>` : "";
+                })}</div>
+              </section>` : "")}
             <section class="panel player-gamelog"><div class="panel-head"><h3>JOURNAL DES MATCHS</h3><span class="pill">${games.length} MATCHS</span></div>
               ${games.length ? html`<div class="table-wrap"><table><thead><tr><th>DATE</th><th>ADVERSAIRE</th><th>RÉSULTAT</th><th>SCORE</th></tr></thead><tbody>${games.map((game) => html`<tr><td>${value(game.date)}</td><td>${value(game.home_away === "@" ? "@" : "")} ${value(game.opponent,game.name)}</td><td>${value(game.result)}</td><td>${value(game.score)}</td></tr>`)}</tbody></table></div>` : html`<p class="muted">Journal des matchs non disponible dans la réponse ESPN.</p>`}
             </section>
