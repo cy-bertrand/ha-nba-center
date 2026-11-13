@@ -11,6 +11,13 @@ assert.match(bundle, /customElements\.define/, "custom element must be registere
 assert.match(bundle, /window\.customCards/, "Lovelace card metadata must be exposed");
 assert.match(bundle, /SCORES & CALENDRIER/, "scores view must be included");
 assert.match(bundle, /PLAYERS CENTER/, "players view must be included");
+assert.match(source, /\{ id: "playoffs", label: "PLAYOFFS" \}/, "sixth PLAYOFFS navigation tab must be present");
+assert.match(source, /nba\/playoff_bracket/, "playoffs view must use the Home Assistant websocket service");
+assert.match(source, /PLAYOFFS CENTER/, "dedicated playoffs center must be rendered");
+assert.match(source, /_playoffSeriesCard\(series\)/, "playoff series must have a dedicated card renderer");
+assert.match(source, /TÊTES DE SÉRIE NON VALIDÉES|Têtes de série non validées/, "unvalidated playoff seeds must be disclosed");
+assert.match(bundle, /PLAYOFFS CENTER/, "bundled card must include the playoffs center");
+assert.match(bundle, /NBA FINALS/, "bundled card must include NBA Finals");
 assert.match(bundle, /FORME RÉCENTE/, "favorite team recent form must be included");
 assert.match(source, /_teamsCatalog\(\)/, "Teams Center must read the global franchise catalog sensor");
 assert.match(source, /_teamCatalogCard\(team\)/, "Teams Center must render lightweight franchise cards");
