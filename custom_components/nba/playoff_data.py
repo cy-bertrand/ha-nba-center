@@ -400,3 +400,77 @@ def build_playoff_bracket(series: Any) -> list[dict[str, Any]]:
         })
 
     return brackets
+
+
+def parse_playoff_standings(payload: Any) -> list[dict[str, Any]]:
+    """Extrait les seeds et identifiants d'équipes des standings ESPN.
+
+    Les entrées sont classées par conférence à partir de l'arborescence
+    children[].standings.entries[]. Le champ playoffSeed est conservé comme
+    seed ESPN observé ; cette fonction ne prétend pas qu'il est toujours final.
+    """
+    root = _mapping(payload)
+    children = root.get("children")
+    if not isinstance(children, list):
+        return []
+
+    result: list[dict[str, Any]] = []
+    seen: set[tuple[str, str]] = set()
+    for group in children:
+        group = _mapping(group)
+        conference = group.get("abbreviation") or group.get("name")
+        standings = _mapping(group.get("standings"))
+        season_label = standings.get("seasonDisplayName")
+        entries = standings.get("entries")
+        if not isinstance(entries, list):
+            continue
+        for entry in entries:
+            entry = _mapping(entry)
+            team = _mapping(entry.get("team"))
+            team_id = team.get("id")
+            abbreviation = team.get("abbreviation")
+            if team_id is None or not isinstance(abbreviation, str) or not abbreviation:
+                continue
+            identity = (str(team_id), str(conference))
+            if identity in seen:
+                continue
+            seen.add(identity)
+            stats = entry.get("stats")
+            stats_by_type = {
+                item.get("type"): item
+                for item in stats if isinstance(item, dict) and isinstance(item.get("type"), str)
+            } if isinstance(stats, list) else {}
+
+            def numeric_stat(name: str) -> int | None:
+                raw = _mapping(stats_by_type.get(name)).get("value")
+                if isinstance(raw, bool) or raw is None:
+                    return None
+                try:
+                    number = float(raw)
+                except (TypeError, ValueError, OverflowError):
+                    return None
+                return int(number) if number.is_integer() else None
+
+            def display_stat(name: str) -> str | None:
+                value = _mapping(stats_by_type.get(name)).get("displayValue")
+                return value if isinstance(value, str) else None
+
+            result.append({
+                "team_id": str(team_id),
+                "abbreviation": abbreviation,
+                "name": team.get("displayName") or team.get("name"),
+                "conference": str(conference) if conference is not None else None,
+                "season": season_label if isinstance(season_label, str) else None,
+                "seed": numeric_stat("playoffseed"),
+                "clincher": display_stat("clincher"),
+                "wins": numeric_stat("wins"),
+                "losses": numeric_stat("losses"),
+                "seed_description": _mapping(stats_by_type.get("playoffseed")).get("description"),
+            })
+    result.sort(key=lambda item: (
+        item["season"] or "",
+        item["conference"] or "",
+        item["seed"] if item["seed"] is not None else 999,
+        item["team_id"],
+    ))
+    return result
