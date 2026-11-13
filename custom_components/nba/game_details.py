@@ -68,8 +68,6 @@ def _classify_play(play_type: str | None, short_description: str | None,
 def parse_plays(raw: dict[str, Any]) -> list[dict[str, Any]]:
     """Normalise summary.plays and derive score/event markers without losing source data."""
     plays: list[dict[str, Any]] = []
-    previous_home: int | None = None
-    previous_away: int | None = None
     for item in raw.get("plays") or []:
         if not isinstance(item, dict):
             continue
@@ -80,12 +78,10 @@ def parse_plays(raw: dict[str, Any]) -> list[dict[str, Any]]:
         type_text = play_type.get("text") or play_type.get("description") or _text(item.get("type"))
         text = item.get("text") or item.get("shortText")
         short_description = item.get("shortDescription")
-        home = _score(item.get("homeScore"))
-        away = _score(item.get("awayScore"))
-        score_changed = (
-            (home is not None and previous_home is not None and home != previous_home)
-            or (away is not None and previous_away is not None and away != previous_away)
-        )
+        # ESPN score snapshots can be stale or temporarily out of sequence
+        # (including on missed shots and substitutions). Its scoringPlay flag
+        # is the authoritative event marker; do not infer a basket from snapshots.
+        score_changed = bool(item.get("scoringPlay", False))
         participants = []
         for participant in item.get("participants") or []:
             athlete = _mapping(_mapping(participant).get("athlete"))
@@ -128,12 +124,6 @@ def parse_plays(raw: dict[str, Any]) -> list[dict[str, Any]]:
             "points_attempted": _text(item.get("pointsAttempted")),
             "coordinate": _coordinate(item.get("coordinate")),
         })
-        # ESPN normally provides a score snapshot on each play. Keep the last
-        # valid snapshot so sparse events do not reset score-change detection.
-        if home is not None:
-            previous_home = home
-        if away is not None:
-            previous_away = away
     return plays
 
 
