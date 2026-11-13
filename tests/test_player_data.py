@@ -150,9 +150,74 @@ class PlayerDataParserTests(unittest.TestCase):
         self.assertEqual(result["count"], 1)
         self.assertEqual(result["games"][0]["stats"]["PTS"], 32)
 
+    def test_parses_postseason_season_type_filter(self):
+        result = parse_player_stats({
+            "filters": [{
+                "displayName": "Season Type", "name": "seasontype", "value": "3",
+                "options": [
+                    {"value": "2", "displayValue": "Regular Season"},
+                    {"value": "3", "displayValue": "Playoffs"},
+                ],
+            }],
+            "categories": [{
+                "name": "averages", "displayName": "Postseason Averages",
+                "stats": [{"name": "avgPoints", "displayName": "Points Per Game",
+                           "value": 29.5, "displayValue": "29.5"}],
+            }],
+        })
+        self.assertEqual(result["season_type_id"], "3")
+        self.assertEqual(result["season_type"], "Playoffs")
+        self.assertEqual(result["statistics"][0]["value"], 29.5)
+
     def test_unexpected_gamelog_payload_is_empty(self):
         self.assertEqual(parse_player_gamelog({"events": "invalid"})["games"], [])
 
 
 if __name__ == "__main__":
     unittest.main()
+
+    def test_parses_postseason_season_type_filter(self):
+        result = parse_player_stats({
+            "filters": [{
+                "displayName": "Season Type", "name": "seasontype", "value": "3",
+                "options": [
+                    {"value": "2", "displayValue": "Regular Season"},
+                    {"value": "3", "displayValue": "Playoffs"},
+                ],
+            }],
+            "categories": [{
+                "name": "averages", "displayName": "Postseason Averages",
+                "stats": [{"name": "avgPoints", "displayName": "Points Per Game",
+                           "value": 29.5, "displayValue": "29.5"}],
+            }],
+        })
+        self.assertEqual(result["season_type_id"], "3")
+        self.assertEqual(result["season_type"], "Playoffs")
+        self.assertEqual(result["statistics"][0]["value"], 29.5)
+
+
+        self.assertEqual(parse_player_gamelog({"events": "invalid"})["games"], [])
+
+
+if __name__ == "__main__":
+    unittest.main()
+
+    def test_parses_postseason_season_type_filter(self):
+        result = parse_player_stats({
+            "filters": [{
+                "displayName": "Season Type", "name": "seasontype", "value": "3",
+                "options": [
+                    {"value": "2", "displayValue": "Regular Season"},
+                    {"value": "3", "displayValue": "Playoffs"},
+                ],
+            }],
+            "categories": [{
+                "name": "averages", "displayName": "Postseason Averages",
+                "stats": [{"name": "avgPoints", "displayName": "Points Per Game",
+                           "value": 29.5, "displayValue": "29.5"}],
+            }],
+        })
+        self.assertEqual(result["season_type_id"], "3")
+        self.assertEqual(result["season_type"], "Playoffs")
+        self.assertEqual(result["statistics"][0]["value"], 29.5)
+
