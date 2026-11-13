@@ -1,0 +1,14 @@
+{
+  "requestedSeason": {
+    "year": 2025,
+    "type": 3,
+    "name": "Postseason",
+    "displayName": "2024-25"
+  },
+  "team": {
+    "id": "2",
+    "abbreviation": "BOS",
+    "displayName": "Boston Celtics"
+  },
+  "events": []
+}
