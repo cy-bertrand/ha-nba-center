@@ -120,3 +120,44 @@ Pour les matchs de playoffs, elle décrit les trois derniers chiffres comme `RSG
 - Accès direct depuis Home Assistant/aiohttp : **non validé**.
 - Dérivation du tour à partir du game ID : **documentée par une source communautaire, à tester sur fixtures**.
 - Implémentation : **bloquée jusqu'à validation d'une source accessible et d'au moins une réponse brute**.
+
+
+
+## Piste ESPN pour récupérer les matchs de playoffs (13 novembre 2026)
+
+La documentation SportsDataverse identifie une possibilité plus cohérente avec l'architecture actuelle : réutiliser le **scoreboard ESPN** avec les paramètres de saison et de type de saison, plutôt que d'ajouter immédiatement NBA Stats API.
+
+Route candidate :
+
+`GET https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=YYYYMMDD-YYYYMMDD&seasontype=3&limit=1000`
+
+Éléments documentés :
+- `seasontype=3` désigne la postseason ;
+- `dates` accepte une date ou une plage `YYYYMMDD-YYYYMMDD` ;
+- `limit` borne le nombre d'événements retournés ;
+- les événements du scoreboard ont le même format général que celui déjà traité par `_parse_game` : identifiant, date, compétition, concurrents, scores et statut.
+
+La documentation du calendrier d'équipe ESPN confirme également les paramètres `season` et `seasontype`, ce qui pourrait servir de solution de repli ciblée. Toutefois, un appel par équipe serait moins efficace qu'un scoreboard de saison.
+
+### Ce que cette piste permet — et ne permet pas encore
+
+Si une capture brute confirme le contrat attendu, le scoreboard postseason peut fournir la liste des matchs terminés, les deux franchises, leurs scores, les dates et les statuts. On pourra alors agréger les matchs par confrontations et compter les victoires pour produire un historique des séries.
+
+En revanche, **le scoreboard seul ne prouve pas le numéro de série ni le tour**. Il ne faut pas supposer que l'ordre des matchs ou les derniers chiffres de l'identifiant ESPN constituent une clé de série sans fixtures multi-saisons qui le démontrent. Le regroupement des confrontations peut être envisagé en premier ; l'attribution du tour et le positionnement dans un tableau de bracket restent distincts et doivent être validés.
+
+### Décision de travail mise à jour
+
+1. Tester la route scoreboard postseason sur une saison complète avec une capture JSON brute, et vérifier la pagination/limite réelle ainsi que les métadonnées de saison.
+2. Vérifier que chaque événement possède deux équipes, des identifiants stables, un statut terminé et des scores cohérents.
+3. Créer des fixtures couvrant au minimum une série de quatre matchs, une série de six ou sept matchs, et plusieurs tours/saisons.
+4. Déterminer si les confrontations peuvent être regroupées sans collision (mêmes équipes rejouant en saisons différentes, séries de play-in, etc.).
+5. N'implémenter l'historique que lorsque ces tests sont concluants. Garder NBA Stats `CommonPlayoffSeries` comme source de comparaison, pas comme dépendance de production tant que son accès réseau n'est pas validé.
+
+**Statut :** meilleure piste identifiée, mais réponse brute ESPN et comportement réel de l'endpoint saisonnier non vérifiés. Aucune modification du code de production à ce stade.
+
+### Références complémentaires
+
+- https://sportsdataverse-py.sportsdataverse.org/docs/0.0.73/nba/reference/site
+- https://js.sportsdataverse.org/docs/nba/reference/cdn
+- https://rdrr.io/cran/hoopR/src/R/espn_basketball_team_helpers.R
+- https://github.com/machina-sports/sports-skills/blob/main/skills/nba-data/references/api-reference.md
