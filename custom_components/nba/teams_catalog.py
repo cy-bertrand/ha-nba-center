@@ -13,14 +13,14 @@ TEAM_GROUPS = {
     "MIA": ("Eastern Conference", "Southeast Division"), "MIL": ("Eastern Conference", "Central Division"),
     "NYK": ("Eastern Conference", "Atlantic Division"), "NY": ("Eastern Conference", "Atlantic Division"), "ORL": ("Eastern Conference", "Southeast Division"),
     "PHI": ("Eastern Conference", "Atlantic Division"), "TOR": ("Eastern Conference", "Atlantic Division"),
-    "WAS": ("Eastern Conference", "Southeast Division"), "DAL": ("Western Conference", "Southwest Division"),
+    "WAS": ("Eastern Conference", "Southeast Division"), "WSH": ("Eastern Conference", "Southeast Division"), "DAL": ("Western Conference", "Southwest Division"),
     "DEN": ("Western Conference", "Northwest Division"), "GSW": ("Western Conference", "Pacific Division"), "GS": ("Western Conference", "Pacific Division"),
     "HOU": ("Western Conference", "Southwest Division"), "LAC": ("Western Conference", "Pacific Division"),
     "LAL": ("Western Conference", "Pacific Division"), "MEM": ("Western Conference", "Southwest Division"),
     "MIN": ("Western Conference", "Northwest Division"), "NOP": ("Western Conference", "Southwest Division"), "NO": ("Western Conference", "Southwest Division"),
     "OKC": ("Western Conference", "Northwest Division"), "PHX": ("Western Conference", "Pacific Division"),
     "POR": ("Western Conference", "Northwest Division"), "SAC": ("Western Conference", "Pacific Division"),
-    "SAS": ("Western Conference", "Southwest Division"), "SA": ("Western Conference", "Southwest Division"), "UTA": ("Western Conference", "Northwest Division"),
+    "SAS": ("Western Conference", "Southwest Division"), "SA": ("Western Conference", "Southwest Division"), "UTA": ("Western Conference", "Northwest Division"), "UTAH": ("Western Conference", "Northwest Division"),
 }
 
 
