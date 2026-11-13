@@ -392,6 +392,7 @@ class NBACenterCard extends LitElement {
     const postseason = this._playerData?.postseason_stats ?? {};
     const postseasonStats = postseason.statistics ?? [];
     const games = this._playerData?.gamelog?.games ?? [];
+    const postseasonGames = this._playerData?.postseason_gamelog?.games ?? [];
     const teamCatalog = this._teamsCatalog().teams;
     const currentTeam = teamCatalog.find((team) =>
       (player.team_id != null && String(team.id) === String(player.team_id))
@@ -493,6 +494,19 @@ class NBACenterCard extends LitElement {
             <div class="player-stat-grid player-season-highlights">${quick.map(([label,item]) => html`<div><small>${label} / MATCH</small><strong>${statLabel(item)}</strong></div>`)}</div>
               ${stats.length ? html`<div class="table-wrap"><table><thead><tr><th>STATISTIQUE</th><th>VALEUR</th></tr></thead><tbody>${detailedStats.map((item) => html`<tr><td>${value(translateStat(item),item.name)}</td><td>${value(item.display_value ?? item.value)}</td></tr>`)}</tbody></table></div>` : html`<p class="muted">Aucune autre statistique disponible pour cette saison.</p>`}
             </section>
+            ${postseasonGames.length ? html`
+              <section class="panel player-gamelog player-postseason-gamelog"><div class="panel-head"><h3>5 DERNIERS MATCHS · PLAYOFFS</h3><span class="pill">${this._playerData.postseason_gamelog?.boxscore_count ?? 0}/${Math.min(postseasonGames.length, 5)} BOX SCORES</span></div>
+                ${postseasonGames.slice(0,5).some((game) => Object.keys(game.stats ?? {}).length) ? html`<div class="player-game-list">
+                  ${postseasonGames.slice(0,5).map((game) => {
+                    const stats = game.stats ?? {};
+                    const pick = (...keys) => {
+                      const key = keys.find((candidate) => stats[candidate] !== undefined && stats[candidate] !== null && stats[candidate] !== "");
+                      return key ? stats[key] : "—";
+                    };
+                    const statLine = `${pick("MIN","minutes")}m · ${pick("PTS","points")}p · ${pick("REB","rebounds")}r · ${pick("AST","assists")}a · ${pick("STL","steals")}stl · ${pick("BLK","blocks")}blk`;
+                    return html`<div class="player-game-row"><div class="player-game-meta"><strong>${formatGameDate(game.date)}</strong><span>${game.home_away === "@" ? "@" : "vs"} ${value(game.opponent_abbreviation, value(game.opponent))}</span></div><div class="player-game-stats">${statLine}</div></div>`;
+                  })}</div>` : html`<p class="muted">Les box scores des rencontres de playoffs ne sont pas encore disponibles.</p>`}
+              </section>` : ""}
             <section class="panel player-postseason-panel">
               <div class="panel-head"><h3>STATISTIQUES PLAYOFFS</h3><span class="pill">${value(postseason.season, "POSTSEASON")}</span></div>
               ${postseasonStats.length ? html`
