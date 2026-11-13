@@ -91,3 +91,7 @@ assert.match(bundle, /leader-button/, "bundled season leader rows must be clicka
 assert.match(bundle, /TOP 10 · SAISON/, "bundled Players Center must show top-ten leaderboards");
 assert.match(bundle, /this\._leaderPanel\([a-z],10\)/, "bundled Players Center must render ten players per leaderboard");
 assert.match(bundle, /opponent_abbreviation/, "bundled recent player games must use opponent abbreviations");
+
+assert.match(source, /postseason_stats/, "player profile must receive separate playoff statistics");
+assert.match(source, /STATISTIQUES PLAYOFFS/, "player profile must display a separate postseason section");
+assert.match(source, /seasontype: 3/, "postseason statistics must be requested with ESPN season type 3");
