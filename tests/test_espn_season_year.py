@@ -18,11 +18,11 @@ class ESPNSeasonYearTests(unittest.TestCase):
         self.assertTrue(season_matches_espn_year("2025-26", 2026))
 
     def test_does_not_match_start_year_or_another_season(self):
-        self.assertFalse(_season_matches_espn_year("2022-23", 2022))
-        self.assertFalse(_season_matches_espn_year("2023-24", 2023))
+        self.assertFalse(season_matches_espn_year("2022-23", 2022))
+        self.assertFalse(season_matches_espn_year("2023-24", 2023))
 
     def test_accepts_full_year_label(self):
-        self.assertTrue(_season_matches_espn_year("2023", 2023))
+        self.assertTrue(season_matches_espn_year("2023", 2023))
 
 
 if __name__ == "__main__":
