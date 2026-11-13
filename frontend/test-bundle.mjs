@@ -24,6 +24,7 @@ assert.match(source, /ÉJECTÉ/, "player ejection status must be included");
 assert.match(bundle, /period_display/, "ESPN period display labels must be used in play-by-play");
 assert.match(source, /_quarterScorePanel\(\)/, "quarter score panel renderer must be present");
 assert.match(source, /player\.ejected/, "player ejection metadata must be rendered");
+assert.match(source, /const preferred = \["MIN", "PTS", "FG"/, "player points must appear immediately after minutes in the box score");
 assert.match(bundle, /player-table/, "responsive player statistics table must be included");
 assert.match(bundle, /type="date"/, "calendar date picker must be included");
 assert.match(bundle, /sensor\.nba_matchs_du_jour/, "existing NBA sensor default must be mapped");
