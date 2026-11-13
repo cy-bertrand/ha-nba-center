@@ -273,7 +273,7 @@ def parse_player_stats(raw: dict[str, Any]) -> dict[str, Any]:
 
 
 def parse_player_gamelog(raw: dict[str, Any]) -> dict[str, Any]:
-    """Normalise le journal ESPN dont events est un dictionnaire indexé par event ID."""
+    """Normalise le gamelog ESPN, y compris les stats imbriquées dans seasonTypes."""
     events = raw.get("events")
     if isinstance(events, dict):
         source = list(events.values())
@@ -283,11 +283,37 @@ def parse_player_gamelog(raw: dict[str, Any]) -> dict[str, Any]:
         nested = _mapping(raw.get("gameLog")).get("events")
         source = list(nested.values()) if isinstance(nested, dict) else nested if isinstance(nested, list) else []
 
+    # Certaines réponses ESPN ne placent que les métadonnées dans events :
+    # les lignes statistiques sont alors dans seasonTypes[].categories[].events[].
+    nested_stats: dict[str, dict[str, Any]] = {}
+    season_types = raw.get("seasonTypes")
+    if isinstance(season_types, list):
+        for season_type in season_types:
+            season_block = _mapping(season_type)
+            for category in season_block.get("categories", []) if isinstance(season_block.get("categories"), list) else []:
+                category_block = _mapping(category)
+                names = category_block.get("names") or category_block.get("labels") or []
+                labels = category_block.get("labels") or names
+                rows = category_block.get("events")
+                if not isinstance(rows, list):
+                    continue
+                for row in rows:
+                    item = _mapping(row)
+                    event_id = _text(item.get("eventId") or item.get("id"))
+                    values = item.get("stats") or item.get("values")
+                    if not event_id or not isinstance(values, list):
+                        continue
+                    nested_stats[event_id] = {
+                        str(names[index] if index < len(names) else labels[index] if index < len(labels) else f"stat_{index}"): _number(value)
+                        for index, value in enumerate(values)
+                    }
+
     games: list[dict[str, Any]] = []
     for row in source:
         event = _mapping(row)
         if not event:
             continue
+        event_id = _text(event.get("id") or event.get("eventId"))
         stats = event.get("stats")
         if isinstance(stats, dict):
             stat_values = {str(key): _number(value) for key, value in stats.items()}
@@ -299,18 +325,16 @@ def parse_player_gamelog(raw: dict[str, Any]) -> dict[str, Any]:
                 if isinstance(names, list) and index < len(names) and isinstance(names[index], str)
             }
         else:
-            # L'endpoint gamelog fourni ne contient pas les statistiques individuelles,
-            # seulement les métadonnées de rencontre.
-            stat_values = {}
+            stat_values = nested_stats.get(event_id or "", {})
         opponent = _mapping(event.get("opponent"))
         team = _mapping(event.get("team"))
         games.append({
-            "id": _text(event.get("id") or event.get("eventId")),
+            "id": event_id,
             "date": _text(event.get("date") or event.get("gameDate")),
             "name": _text(event.get("name") or event.get("shortName")),
             "result": _text(event.get("gameResult") or event.get("result")),
             "score": _text(event.get("score")),
-            "home_away": _text(event.get("atVs")),
+            "home_away": _text(event.get("atVs") or event.get("homeAway")),
             "team": _text(team.get("abbreviation")),
             "opponent": _text(opponent.get("displayName") or opponent.get("abbreviation") or event.get("opponentDisplayName")),
             "opponent_abbreviation": _text(opponent.get("abbreviation") or opponent.get("shortDisplayName")
