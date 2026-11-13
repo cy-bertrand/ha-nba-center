@@ -371,3 +371,31 @@ Résultats attendus et vérifiés par les tests :
 - Oklahoma City–Indiana (Finales NBA) : Oklahoma City gagne 4–3.
 
 Ces tests valident la reconstruction des séries à partir des événements du calendrier, sans dépendre des résumés `series` d'ESPN. Le bracket et l'enchaînement automatique des équipes qualifiées entre les tours restent hors périmètre : ils ne doivent pas être inférés à partir du seul libellé de série.
+
+
+## Reconstruction du parcours du bracket — prototype pur
+
+Le module expose également `build_playoff_bracket(series)`. Il organise les séries par saison et par conférence lorsque le libellé ESPN permet de reconnaître le tour.
+
+### Liens entre les tours
+
+- Les tours reconnus sont le premier tour, les demi-finales de conférence, les finales de conférence et les NBA Finals.
+- Les séries Est et Ouest sont conservées séparément ; les NBA Finals sont placées dans une section distincte.
+- Un lien vers le tour suivant n'est créé que si le vainqueur explicite d'une série apparaît comme l'une des deux équipes dans une série du tour immédiatement suivant.
+- Les liens entrants et sortants sont exposés via `advanced_from` et `advances_to`.
+- Les libellés inconnus restent dans `unplaced` au lieu d'être affectés arbitrairement à une conférence ou à un tour.
+- Le Play-In n'est pas intégré au bracket postseason.
+
+### Limites explicites
+
+Cette version reconstruit un **parcours des équipes vérifiable**, pas encore un tableau officiel complet :
+- les têtes de série et les positions 1 à 8 ne sont pas disponibles dans les fixtures actuelles ;
+- les emplacements de branches et les croisements théoriques ne sont donc pas inventés ;
+- une série sans vainqueur explicite ne produit aucun lien sortant ;
+- le prototype ne récupère pas encore les séries des équipes absentes des calendriers fournis.
+
+### Validation
+
+Les tests utilisent le calendrier complet OKC 2024-25 : le vainqueur de la première série est relié aux demi-finales, puis au vainqueur des finales Ouest et enfin aux NBA Finals. Des tests défensifs vérifient qu'aucune progression n'est inventée lorsqu'une équipe n'apparaît pas dans la série suivante, et que les tours non reconnus restent non classés.
+
+Aucune intégration au coordinateur Home Assistant ni aucun capteur n'est modifié à ce stade.
