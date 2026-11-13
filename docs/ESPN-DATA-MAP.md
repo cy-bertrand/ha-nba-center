@@ -526,3 +526,26 @@ Le test vérifie également que le parcours OKC jusqu'au titre reste correctemen
 La capture standings 2025-26 permet de valider les seeds, mais aucune capture de matchs postseason 2025-26 n'est actuellement présente dans les fixtures. Il serait trompeur d'annoncer la reconstruction des huit affiches ou du parcours de cette saison sur cette base.
 
 **Prochaine donnée nécessaire pour compléter la validation historique :** les calendriers postseason ESPN des équipes qualifiées, ou des scoreboards ESPN couvrant tous les jours de playoffs, pour les séries absentes. Aucune requête réseau n'est ajoutée à l'intégration et aucune donnée de match n'est synthétisée.
+
+## Première intégration Home Assistant — bracket à la demande
+
+Le bracket est maintenant accessible via la commande WebSocket `nba/playoff_bracket`, avec le paramètre entier `season_year` (année de fin de saison, par exemple `2025` pour 2024-25).
+
+- La collecte ne se déclenche pas au démarrage et n'est pas ajoutée au cycle normal de mise à jour du coordinateur.
+- À la demande, le coordinateur récupère les standings ESPN de la saison, valide séparément les seeds Est/Ouest, puis charge les calendriers postseason des équipes dont les seeds 1 à 8 sont valides.
+- Les calendriers sont interrogés avec `season=<season_year>&seasontype=3`, par groupes de quatre requêtes simultanées au maximum.
+- Les matchs sont normalisés, les séries et les liens entre tours sont reconstruits, puis les seeds vérifiés sont attachés aux participants.
+- Le résultat signale `available`, `games_count`, `series_count`, les erreurs de validation des seeds et les calendriers indisponibles.
+- Le résultat est mis en cache une heure par saison. Une erreur sur le calendrier d'une équipe n'empêche pas de conserver les données des autres équipes.
+
+Exemple de message frontend :
+
+```javascript
+hass.callWS({
+  type: "nba/playoff_bracket",
+  season_year: 2025,
+});
+```
+
+Cette première tranche expose les données au frontend mais ne modifie pas encore la carte Lovelace. Elle ne prétend pas non plus compléter une série si ESPN ne renvoie pas son calendrier. Pour une saison dont les seeds ne sont pas validés, la conférence concernée reste sans mapping de seeds et ses calendriers ne sont pas interrogés.
+
