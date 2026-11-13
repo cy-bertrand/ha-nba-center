@@ -371,6 +371,7 @@ class NBACenterCard extends LitElement {
     const selectedSeason = seasonHistory.find((item) => String(item.year) === String(this._playerSelectedSeason)) ?? seasonHistory[0];
     const stats = selectedSeason?.statistics ?? this._playerData?.stats?.statistics ?? [];
     const seasonLabel = selectedSeason?.display_name ?? this._playerData?.stats?.season ?? "SAISON";
+    const games = this._playerData?.gamelog?.games ?? [];
     const stat = (...names) => stats.find((item) => names.includes(String(item.name).toLowerCase()) || names.includes(String(item.label).toLowerCase()));
     const quickDefinitions = [
       ["MIN", ["avgminutes", "minutespergame", "minutes", "minutes per game"]],
@@ -404,6 +405,18 @@ class NBACenterCard extends LitElement {
                   return item ? html`<div><small>${value(item.label,item.name)}</small><strong>${value(item.display_value,item.value)}</strong></div>` : "";
                 })}</div>
               </section>` : "")}
+            ${games.length ? html`
+              <section class="panel player-gamelog"><div class="panel-head"><h3>5 DERNIERS MATCHS · STATS INDIVIDUELLES</h3><span class="pill">${this._playerData.gamelog?.boxscore_count ?? 0}/${Math.min(games.length, 5)} BOX SCORES</span></div>
+                ${games.slice(0,5).some((game) => Object.keys(game.stats ?? {}).length) ? html`<div class="table-wrap"><table><thead><tr><th>DATE</th><th>ADV.</th><th>MIN</th><th>PTS</th><th>REB</th><th>AST</th><th>STL</th><th>BLK</th></tr></thead><tbody>
+                  ${games.slice(0,5).map((game) => {
+                    const stats = game.stats ?? {};
+                    const pick = (...keys) => {
+                      const key = keys.find((candidate) => stats[candidate] !== undefined && stats[candidate] !== null && stats[candidate] !== "");
+                      return key ? stats[key] : "—";
+                    };
+                    return html`<tr><td>${value(game.date)}</td><td>${value(game.home_away === "@" ? "@" : "")} ${value(game.opponent)}</td><td>${pick("MIN","minutes")}</td><td>${pick("PTS","points")}</td><td>${pick("REB","rebounds")}</td><td>${pick("AST","assists")}</td><td>${pick("STL","steals")}</td><td>${pick("BLK","blocks")}</td></tr>`;
+                  })}</tbody></table></div>` : html`<p class="muted">Les box scores individuels ne sont pas encore disponibles pour ces rencontres.</p>`}
+              </section>` : ""}
             ${Object.keys(this._playerData.errors ?? {}).length ? html`<p class="muted">Certaines sources ESPN sont indisponibles : ${Object.keys(this._playerData.errors).join(" · ")}</p>` : ""}
           ` : ""}
         </div>
