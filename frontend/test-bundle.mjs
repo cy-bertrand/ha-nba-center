@@ -18,6 +18,11 @@ assert.match(source, /nba\/team_roster/, "franchise detail must load its roster 
 assert.match(source, /_teamRosterPanel\(\)/, "franchise roster overlay must be rendered");
 assert.match(source, /roster-injury/, "player injury status must be visible when supplied");
 assert.match(source, /roster-headshot/, "roster player headshots must be supported");
+assert.match(source, /team-season-summary/, "team detail must show the season standings summary");
+assert.match(source, /teamRoster\.standing\.wins/, "team detail must show the wins/losses record");
+assert.match(source, /teamRoster\.schedule\?\.recent/, "team detail must show recent form when available");
+assert.match(source, /FICHE JOUEUR/, "roster players must open an individual profile");
+assert.match(source, /RETOUR À L'EFFECTIF/, "player profile must return to the roster");
 assert.match(bundle, /EFFECTIF/, "bundled card must include the franchise roster overlay");
 assert.match(source, /FAVORI/, "Teams Center must distinguish favorite franchises");
 assert.match(source, /Rechercher une équipe/, "Teams Center must include franchise search");
