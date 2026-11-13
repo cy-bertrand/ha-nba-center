@@ -580,4 +580,16 @@ def annotate_playoff_bracket(bracket: Any, standings: Any) -> dict[str, Any] | N
                     if isinstance(team.get("seed"), int)
                 )),
             )
+    # NBA Finals mix one participant from each conference; annotate them
+    # only with seeds from independently validated conference mappings.
+    final_seed_by_id: dict[str, int] = {}
+    for conference in ("East", "West"):
+        seed_data = season_data.get("conferences", {}).get(conference, {})
+        if seed_data.get("valid"):
+            final_seed_by_id.update({
+                str(team_id): seed for seed, team_id in seed_data["seeds"].items()
+            })
+    for series_item in result.get("finals", []):
+        for team in series_item.get("teams", []):
+            team["seed"] = final_seed_by_id.get(str(team.get("id")))
     return result
