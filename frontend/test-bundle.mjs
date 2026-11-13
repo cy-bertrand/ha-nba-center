@@ -12,6 +12,12 @@ assert.match(bundle, /window\.customCards/, "Lovelace card metadata must be expo
 assert.match(bundle, /SCORES & CALENDRIER/, "scores view must be included");
 assert.match(bundle, /PLAYERS CENTER/, "players view must be included");
 assert.match(bundle, /FORME RÉCENTE/, "favorite team recent form must be included");
+assert.match(source, /_teamsCatalog\(\)/, "Teams Center must read the global franchise catalog sensor");
+assert.match(source, /_teamCatalogCard\(team\)/, "Teams Center must render lightweight franchise cards");
+assert.match(source, /FAVORIS/, "Teams Center must distinguish favorite franchises");
+assert.match(source, /Rechercher une équipe/, "Teams Center must include franchise search");
+assert.match(source, /EAST/, "Teams Center must include conference filtering");
+assert.match(source, /WEST/, "Teams Center must include conference filtering");
 assert.match(bundle, /EASTERN CONFERENCE/, "standings view must be included");
 assert.match(bundle, /Filtrer une équipe/, "interactive team search must be included");
 assert.match(bundle, /nba\/scoreboard/, "date-based scoreboard websocket command must be used");
