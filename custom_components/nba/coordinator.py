@@ -15,6 +15,7 @@ from homeassistant.util import dt as dt_util
 from .scoreboard_utils import async_load_scoreboard, parse_score
 from .game_details import parse_boxscore, parse_game_state, parse_plays
 from .teams_catalog import parse_teams_catalog
+from .team_roster import parse_team_roster
 
 from .const import (
     CONF_NOTIFY_END,
@@ -33,6 +34,7 @@ from .const import (
     STANDINGS_URL,
     SUMMARY_URL,
     TEAM_SCHEDULE_URL,
+    TEAM_ROSTER_URL,
     TEAMS_URL,
 )
 
@@ -82,6 +84,8 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._scoreboard_lock = asyncio.Lock()
         self._teams_catalog: dict[str, Any] = {"teams": [], "count": 0, "expected_count": 30, "complete": False}
         self._teams_catalog_fetched: datetime | None = None
+        self._team_roster_cache: dict[str, tuple[datetime, dict[str, Any]]] = {}
+        self._team_roster_locks: dict[str, asyncio.Lock] = {}
 
     async def _get(self, url: str, params: dict | None = None) -> dict:
         async with self.session.get(url, params=params, timeout=20) as resp:
@@ -350,6 +354,44 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "recent": recent,
         }
 
+
+    async def async_get_team_roster(self, team_id: str) -> dict[str, Any]:
+        """Charge à la demande l'effectif d'une franchise, avec cache d'une heure."""
+        team_id = str(team_id).strip()
+        known_teams = {
+            str(team.get("id"))
+            for team in self._teams_catalog.get("teams", [])
+            if isinstance(team, dict) and team.get("id") is not None
+        }
+        if team_id not in known_teams:
+            raise ValueError("Identifiant de franchise NBA inconnu")
+        now = dt_util.utcnow()
+        cached = self._team_roster_cache.get(team_id)
+        if cached and (now - cached[0]).total_seconds() < 3600:
+            return cached[1]
+
+        lock = self._team_roster_locks.setdefault(team_id, asyncio.Lock())
+        async with lock:
+            now = dt_util.utcnow()
+            cached = self._team_roster_cache.get(team_id)
+            if cached and (now - cached[0]).total_seconds() < 3600:
+                return cached[1]
+            raw = await self._get(TEAM_ROSTER_URL.format(team_id=team_id))
+            parsed = parse_team_roster(raw)
+            if not parsed["players"]:
+                raise ValueError("ESPN n'a renvoyé aucun joueur pour cette franchise")
+            team = next(
+                (item for item in self._teams_catalog.get("teams", [])
+                 if str(item.get("id")) == team_id),
+                {},
+            )
+            result = {
+                "team": team,
+                **parsed,
+                "fetched_at": now.isoformat(),
+            }
+            self._team_roster_cache[team_id] = (now, result)
+            return result
 
     async def async_get_scoreboard_for_local_date(self, local_date: str) -> dict[str, Any]:
         """Return games for a calendar day in the Home Assistant timezone."""
