@@ -213,6 +213,11 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
         rows: list[dict] = []
         for i, item in enumerate(raw.get("athletes", [])[:LEADERS_COUNT], start=1):
             athlete = item.get("athlete", {})
+            athlete_team = athlete.get("team") if isinstance(athlete.get("team"), dict) else {}
+            team_logos = athlete_team.get("logos") or athlete.get("teamLogos") or []
+            team_logo = athlete_team.get("logo")
+            if not team_logo and team_logos and isinstance(team_logos[0], dict):
+                team_logo = team_logos[0].get("href")
             value = None
             for ci, ni in positions:
                 try:
@@ -230,7 +235,12 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     "rank": i,
                     "id": str(athlete.get("id")) if athlete.get("id") is not None else None,
                     "player": athlete.get("displayName"),
-                    "team": athlete.get("teamShortName") or athlete.get("teamName"),
+                    "team": athlete_team.get("abbreviation") or athlete.get("teamAbbreviation")
+                            or athlete.get("teamShortName") or athlete.get("teamName"),
+                    "team_abbreviation": athlete_team.get("abbreviation") or athlete.get("teamAbbreviation"),
+                    "team_id": str(athlete_team.get("id") or athlete.get("teamId"))
+                               if athlete_team.get("id") or athlete.get("teamId") else None,
+                    "team_logo": team_logo,
                     "headshot": (athlete.get("headshot") or {}).get("href"),
                     "value": round(float(value), 1) if isinstance(value, (int, float)) else value,
                 }
