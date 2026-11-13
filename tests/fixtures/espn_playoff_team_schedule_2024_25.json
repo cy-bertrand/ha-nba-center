@@ -10,5 +10,765 @@
     "abbreviation": "BOS",
     "displayName": "Boston Celtics"
   },
-  "events": []
+  "events": [
+    {
+      "id": "401767822",
+      "date": "2025-04-20T19:30Z",
+      "name": "Orlando Magic at Boston Celtics",
+      "shortName": "ORL @ BOS",
+      "season": {
+        "year": 2025,
+        "displayName": "2024-25"
+      },
+      "seasonType": {
+        "id": "3",
+        "type": 3,
+        "name": "Postseason",
+        "abbreviation": "post"
+      },
+      "competitions": [
+        {
+          "id": "401767822",
+          "type": {
+            "id": "14",
+            "text": "Round of 16"
+          },
+          "competitors": [
+            {
+              "id": "2",
+              "homeAway": "home",
+              "winner": true,
+              "team": {
+                "id": "2",
+                "abbreviation": "BOS"
+              },
+              "score": {
+                "value": 103,
+                "displayValue": "103"
+              }
+            },
+            {
+              "id": "19",
+              "homeAway": "away",
+              "winner": false,
+              "team": {
+                "id": "19",
+                "abbreviation": "ORL"
+              },
+              "score": {
+                "value": 86,
+                "displayValue": "86"
+              }
+            }
+          ],
+          "notes": [
+            {
+              "type": "event",
+              "headline": "East 1st Round - Game 1"
+            }
+          ],
+          "status": {
+            "type": {
+              "id": "3",
+              "name": "STATUS_FINAL",
+              "state": "post",
+              "completed": true,
+              "description": "Final",
+              "detail": "Final"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "401768029",
+      "date": "2025-04-23T23:00Z",
+      "name": "Orlando Magic at Boston Celtics",
+      "shortName": "ORL @ BOS",
+      "season": {
+        "year": 2025,
+        "displayName": "2024-25"
+      },
+      "seasonType": {
+        "id": "3",
+        "type": 3,
+        "name": "Postseason",
+        "abbreviation": "post"
+      },
+      "competitions": [
+        {
+          "id": "401768029",
+          "type": {
+            "id": "14",
+            "text": "Round of 16"
+          },
+          "competitors": [
+            {
+              "id": "2",
+              "homeAway": "home",
+              "winner": true,
+              "team": {
+                "id": "2",
+                "abbreviation": "BOS"
+              },
+              "score": {
+                "value": 109,
+                "displayValue": "109"
+              }
+            },
+            {
+              "id": "19",
+              "homeAway": "away",
+              "winner": false,
+              "team": {
+                "id": "19",
+                "abbreviation": "ORL"
+              },
+              "score": {
+                "value": 100,
+                "displayValue": "100"
+              }
+            }
+          ],
+          "notes": [
+            {
+              "type": "event",
+              "headline": "East 1st Round - Game 2"
+            }
+          ],
+          "status": {
+            "type": {
+              "id": "3",
+              "name": "STATUS_FINAL",
+              "state": "post",
+              "completed": true,
+              "description": "Final",
+              "detail": "Final"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "401768030",
+      "date": "2025-04-25T23:00Z",
+      "name": "Boston Celtics at Orlando Magic",
+      "shortName": "BOS @ ORL",
+      "season": {
+        "year": 2025,
+        "displayName": "2024-25"
+      },
+      "seasonType": {
+        "id": "3",
+        "type": 3,
+        "name": "Postseason",
+        "abbreviation": "post"
+      },
+      "competitions": [
+        {
+          "id": "401768030",
+          "type": {
+            "id": "14",
+            "text": "Round of 16"
+          },
+          "competitors": [
+            {
+              "id": "19",
+              "homeAway": "home",
+              "winner": true,
+              "team": {
+                "id": "19",
+                "abbreviation": "ORL"
+              },
+              "score": {
+                "value": 95,
+                "displayValue": "95"
+              }
+            },
+            {
+              "id": "2",
+              "homeAway": "away",
+              "winner": false,
+              "team": {
+                "id": "2",
+                "abbreviation": "BOS"
+              },
+              "score": {
+                "value": 93,
+                "displayValue": "93"
+              }
+            }
+          ],
+          "notes": [
+            {
+              "type": "event",
+              "headline": "East 1st Round - Game 3"
+            }
+          ],
+          "status": {
+            "type": {
+              "id": "3",
+              "name": "STATUS_FINAL",
+              "state": "post",
+              "completed": true,
+              "description": "Final",
+              "detail": "Final"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "401768031",
+      "date": "2025-04-27T19:30Z",
+      "name": "Boston Celtics at Orlando Magic",
+      "shortName": "BOS @ ORL",
+      "season": {
+        "year": 2025,
+        "displayName": "2024-25"
+      },
+      "seasonType": {
+        "id": "3",
+        "type": 3,
+        "name": "Postseason",
+        "abbreviation": "post"
+      },
+      "competitions": [
+        {
+          "id": "401768031",
+          "type": {
+            "id": "14",
+            "text": "Round of 16"
+          },
+          "competitors": [
+            {
+              "id": "19",
+              "homeAway": "home",
+              "winner": false,
+              "team": {
+                "id": "19",
+                "abbreviation": "ORL"
+              },
+              "score": {
+                "value": 98,
+                "displayValue": "98"
+              }
+            },
+            {
+              "id": "2",
+              "homeAway": "away",
+              "winner": true,
+              "team": {
+                "id": "2",
+                "abbreviation": "BOS"
+              },
+              "score": {
+                "value": 107,
+                "displayValue": "107"
+              }
+            }
+          ],
+          "notes": [
+            {
+              "type": "event",
+              "headline": "East 1st Round - Game 4"
+            }
+          ],
+          "status": {
+            "type": {
+              "id": "3",
+              "name": "STATUS_FINAL",
+              "state": "post",
+              "completed": true,
+              "description": "Final",
+              "detail": "Final"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "401768032",
+      "date": "2025-04-30T23:00Z",
+      "name": "Orlando Magic at Boston Celtics",
+      "shortName": "ORL @ BOS",
+      "season": {
+        "year": 2025,
+        "displayName": "2024-25"
+      },
+      "seasonType": {
+        "id": "3",
+        "type": 3,
+        "name": "Postseason",
+        "abbreviation": "post"
+      },
+      "competitions": [
+        {
+          "id": "401768032",
+          "type": {
+            "id": "14",
+            "text": "Round of 16"
+          },
+          "competitors": [
+            {
+              "id": "2",
+              "homeAway": "home",
+              "winner": true,
+              "team": {
+                "id": "2",
+                "abbreviation": "BOS"
+              },
+              "score": {
+                "value": 120,
+                "displayValue": "120"
+              }
+            },
+            {
+              "id": "19",
+              "homeAway": "away",
+              "winner": false,
+              "team": {
+                "id": "19",
+                "abbreviation": "ORL"
+              },
+              "score": {
+                "value": 89,
+                "displayValue": "89"
+              }
+            }
+          ],
+          "notes": [
+            {
+              "type": "event",
+              "headline": "East 1st Round - Game 5"
+            }
+          ],
+          "status": {
+            "type": {
+              "id": "3",
+              "name": "STATUS_FINAL",
+              "state": "post",
+              "completed": true,
+              "description": "Final",
+              "detail": "Final"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "401769746",
+      "date": "2025-05-05T23:00Z",
+      "name": "New York Knicks at Boston Celtics",
+      "shortName": "NY @ BOS",
+      "season": {
+        "year": 2025,
+        "displayName": "2024-25"
+      },
+      "seasonType": {
+        "id": "3",
+        "type": 3,
+        "name": "Postseason",
+        "abbreviation": "post"
+      },
+      "competitions": [
+        {
+          "id": "401769746",
+          "type": {
+            "id": "15",
+            "text": "Quarterfinal"
+          },
+          "competitors": [
+            {
+              "id": "2",
+              "homeAway": "home",
+              "winner": false,
+              "team": {
+                "id": "2",
+                "abbreviation": "BOS"
+              },
+              "score": {
+                "value": 105,
+                "displayValue": "105"
+              }
+            },
+            {
+              "id": "18",
+              "homeAway": "away",
+              "winner": true,
+              "team": {
+                "id": "18",
+                "abbreviation": "NY"
+              },
+              "score": {
+                "value": 108,
+                "displayValue": "108"
+              }
+            }
+          ],
+          "notes": [
+            {
+              "type": "event",
+              "headline": "East Semifinals - Game 1"
+            }
+          ],
+          "status": {
+            "type": {
+              "id": "3",
+              "name": "STATUS_FINAL",
+              "state": "post",
+              "completed": true,
+              "description": "Final",
+              "detail": "Final"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "401769747",
+      "date": "2025-05-07T23:00Z",
+      "name": "New York Knicks at Boston Celtics",
+      "shortName": "NY @ BOS",
+      "season": {
+        "year": 2025,
+        "displayName": "2024-25"
+      },
+      "seasonType": {
+        "id": "3",
+        "type": 3,
+        "name": "Postseason",
+        "abbreviation": "post"
+      },
+      "competitions": [
+        {
+          "id": "401769747",
+          "type": {
+            "id": "15",
+            "text": "Quarterfinal"
+          },
+          "competitors": [
+            {
+              "id": "2",
+              "homeAway": "home",
+              "winner": false,
+              "team": {
+                "id": "2",
+                "abbreviation": "BOS"
+              },
+              "score": {
+                "value": 90,
+                "displayValue": "90"
+              }
+            },
+            {
+              "id": "18",
+              "homeAway": "away",
+              "winner": true,
+              "team": {
+                "id": "18",
+                "abbreviation": "NY"
+              },
+              "score": {
+                "value": 91,
+                "displayValue": "91"
+              }
+            }
+          ],
+          "notes": [
+            {
+              "type": "event",
+              "headline": "East Semifinals - Game 2"
+            }
+          ],
+          "status": {
+            "type": {
+              "id": "3",
+              "name": "STATUS_FINAL",
+              "state": "post",
+              "completed": true,
+              "description": "Final",
+              "detail": "Final"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "401769748",
+      "date": "2025-05-10T19:30Z",
+      "name": "Boston Celtics at New York Knicks",
+      "shortName": "BOS @ NY",
+      "season": {
+        "year": 2025,
+        "displayName": "2024-25"
+      },
+      "seasonType": {
+        "id": "3",
+        "type": 3,
+        "name": "Postseason",
+        "abbreviation": "post"
+      },
+      "competitions": [
+        {
+          "id": "401769748",
+          "type": {
+            "id": "15",
+            "text": "Quarterfinal"
+          },
+          "competitors": [
+            {
+              "id": "18",
+              "homeAway": "home",
+              "winner": false,
+              "team": {
+                "id": "18",
+                "abbreviation": "NY"
+              },
+              "score": {
+                "value": 93,
+                "displayValue": "93"
+              }
+            },
+            {
+              "id": "2",
+              "homeAway": "away",
+              "winner": true,
+              "team": {
+                "id": "2",
+                "abbreviation": "BOS"
+              },
+              "score": {
+                "value": 115,
+                "displayValue": "115"
+              }
+            }
+          ],
+          "notes": [
+            {
+              "type": "event",
+              "headline": "East Semifinals - Game 3"
+            }
+          ],
+          "status": {
+            "type": {
+              "id": "3",
+              "name": "STATUS_FINAL",
+              "state": "post",
+              "completed": true,
+              "description": "Final",
+              "detail": "Final"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "401769749",
+      "date": "2025-05-12T23:30Z",
+      "name": "Boston Celtics at New York Knicks",
+      "shortName": "BOS @ NY",
+      "season": {
+        "year": 2025,
+        "displayName": "2024-25"
+      },
+      "seasonType": {
+        "id": "3",
+        "type": 3,
+        "name": "Postseason",
+        "abbreviation": "post"
+      },
+      "competitions": [
+        {
+          "id": "401769749",
+          "type": {
+            "id": "15",
+            "text": "Quarterfinal"
+          },
+          "competitors": [
+            {
+              "id": "18",
+              "homeAway": "home",
+              "winner": true,
+              "team": {
+                "id": "18",
+                "abbreviation": "NY"
+              },
+              "score": {
+                "value": 121,
+                "displayValue": "121"
+              }
+            },
+            {
+              "id": "2",
+              "homeAway": "away",
+              "winner": false,
+              "team": {
+                "id": "2",
+                "abbreviation": "BOS"
+              },
+              "score": {
+                "value": 113,
+                "displayValue": "113"
+              }
+            }
+          ],
+          "notes": [
+            {
+              "type": "event",
+              "headline": "East Semifinals - Game 4"
+            }
+          ],
+          "status": {
+            "type": {
+              "id": "3",
+              "name": "STATUS_FINAL",
+              "state": "post",
+              "completed": true,
+              "description": "Final",
+              "detail": "Final"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "401769750",
+      "date": "2025-05-14T23:00Z",
+      "name": "New York Knicks at Boston Celtics",
+      "shortName": "NY @ BOS",
+      "season": {
+        "year": 2025,
+        "displayName": "2024-25"
+      },
+      "seasonType": {
+        "id": "3",
+        "type": 3,
+        "name": "Postseason",
+        "abbreviation": "post"
+      },
+      "competitions": [
+        {
+          "id": "401769750",
+          "type": {
+            "id": "15",
+            "text": "Quarterfinal"
+          },
+          "competitors": [
+            {
+              "id": "2",
+              "homeAway": "home",
+              "winner": true,
+              "team": {
+                "id": "2",
+                "abbreviation": "BOS"
+              },
+              "score": {
+                "value": 127,
+                "displayValue": "127"
+              }
+            },
+            {
+              "id": "18",
+              "homeAway": "away",
+              "winner": false,
+              "team": {
+                "id": "18",
+                "abbreviation": "NY"
+              },
+              "score": {
+                "value": 102,
+                "displayValue": "102"
+              }
+            }
+          ],
+          "notes": [
+            {
+              "type": "event",
+              "headline": "East Semifinals - Game 5"
+            }
+          ],
+          "status": {
+            "type": {
+              "id": "3",
+              "name": "STATUS_FINAL",
+              "state": "post",
+              "completed": true,
+              "description": "Final",
+              "detail": "Final"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "401769751",
+      "date": "2025-05-17T00:00Z",
+      "name": "Boston Celtics at New York Knicks",
+      "shortName": "BOS @ NY",
+      "season": {
+        "year": 2025,
+        "displayName": "2024-25"
+      },
+      "seasonType": {
+        "id": "3",
+        "type": 3,
+        "name": "Postseason",
+        "abbreviation": "post"
+      },
+      "competitions": [
+        {
+          "id": "401769751",
+          "type": {
+            "id": "15",
+            "text": "Quarterfinal"
+          },
+          "competitors": [
+            {
+              "id": "18",
+              "homeAway": "home",
+              "winner": true,
+              "team": {
+                "id": "18",
+                "abbreviation": "NY"
+              },
+              "score": {
+                "value": 119,
+                "displayValue": "119"
+              }
+            },
+            {
+              "id": "2",
+              "homeAway": "away",
+              "winner": false,
+              "team": {
+                "id": "2",
+                "abbreviation": "BOS"
+              },
+              "score": {
+                "value": 81,
+                "displayValue": "81"
+              }
+            }
+          ],
+          "notes": [
+            {
+              "type": "event",
+              "headline": "East Semifinals - Game 6"
+            }
+          ],
+          "status": {
+            "type": {
+              "id": "3",
+              "name": "STATUS_FINAL",
+              "state": "post",
+              "completed": true,
+              "description": "Final",
+              "detail": "Final"
+            }
+          }
+        }
+      ]
+    }
+  ]
 }
