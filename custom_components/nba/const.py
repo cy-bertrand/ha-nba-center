@@ -15,6 +15,7 @@ TEAM_ROSTER_URL = f"{BASE_URL}/teams/{{team_id}}/roster"
 SUMMARY_URL = f"{BASE_URL}/summary"
 # Leaders de la saison (marqueurs, passeurs, ...)
 LEADERS_URL = "https://site.web.api.espn.com/apis/common/v3/sports/basketball/nba/statistics/byathlete"
+PLAYER_DATA_URL = "https://site.web.api.espn.com/apis/common/v3/sports/basketball/nba/athletes/{player_id}/{resource}"
 
 # Catégories de leaders : clé -> (libellé, nom du tri ESPN)
 LEADER_CATEGORIES = {
