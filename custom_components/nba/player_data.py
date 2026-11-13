@@ -94,20 +94,22 @@ def _stat_rows(raw: dict[str, Any]) -> list[dict[str, Any]]:
         labels = statistics.get("labels") or []
         displays = statistics.get("displayNames") or []
         splits = statistics.get("splits")
+        split = {}
+        values = statistics.get("values")
         if isinstance(splits, list):
             split = next((item for item in splits if "regular" in str(_mapping(item).get("displayName", "")).lower()), splits[0] if splits else {})
             values = _mapping(split).get("stats")
-            if isinstance(values, list):
-                for index, value in enumerate(values):
-                    name = names[index] if index < len(names) else f"stat_{index}"
-                    rows.append({
-                        "name": str(name),
-                        "label": _text(displays[index] if index < len(displays) else None)
-                            or _text(labels[index] if index < len(labels) else None) or str(name),
-                        "value": _number(value),
-                        "display_value": _text(value),
-                        "category": _text(_mapping(split).get("displayName")) or "Saison",
-                    })
+        if isinstance(values, list):
+            for index, value in enumerate(values):
+                name = names[index] if index < len(names) else f"stat_{index}"
+                rows.append({
+                    "name": str(name),
+                    "label": _text(displays[index] if index < len(displays) else None)
+                        or _text(labels[index] if index < len(labels) else None) or str(name),
+                    "value": _number(value),
+                    "display_value": _text(value),
+                    "category": _text(_mapping(split).get("displayName")) or "Saison",
+                })
     return rows
 
 def parse_player_stats(raw: dict[str, Any]) -> dict[str, Any]:
