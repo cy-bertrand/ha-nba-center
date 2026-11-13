@@ -69,6 +69,17 @@ class TeamsCatalogParserTests(unittest.TestCase):
         self.assertEqual(teams["LAL"]["conference"], "Western Conference")
         self.assertEqual(teams["LAL"]["division"], "Pacific Division")
 
+    def test_utah_and_washington_espn_aliases_have_conferences(self):
+        result = parse_teams_catalog({"teams": [
+            {"team": {"id": "26", "displayName": "Utah Jazz", "abbreviation": "UTAH"}},
+            {"team": {"id": "27", "displayName": "Washington Wizards", "abbreviation": "WSH"}},
+        ]})
+        teams = {team["abbreviation"]: team for team in result["teams"]}
+        self.assertEqual(teams["UTAH"]["conference"], "Western Conference")
+        self.assertEqual(teams["UTAH"]["division"], "Northwest Division")
+        self.assertEqual(teams["WSH"]["conference"], "Eastern Conference")
+        self.assertEqual(teams["WSH"]["division"], "Southeast Division")
+
     def test_optional_conference_and_division_metadata(self):
         result = parse_teams_catalog({"teams": [{
             "team": {
