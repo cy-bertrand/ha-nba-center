@@ -143,13 +143,13 @@ class BoxscoreParsingTests(unittest.TestCase):
         self.assertEqual(plays[2]["action_category"], "timeout")
         self.assertFalse(plays[2]["is_foul"])
 
-    def test_score_change_uses_consecutive_valid_score_snapshots(self):
+    def test_score_change_uses_espn_scoring_play_marker(self):
         plays = parse_plays({"plays": [
-            {"homeScore": 0, "awayScore": 0},
-            {"homeScore": 2, "awayScore": 0},
-            {"homeScore": None, "awayScore": None},
-            {"homeScore": 2, "awayScore": 3},
-            {"homeScore": 2, "awayScore": 3},
+            {"homeScore": 0, "awayScore": 0, "scoringPlay": False},
+            {"homeScore": 2, "awayScore": 0, "scoringPlay": True},
+            {"homeScore": 2, "awayScore": 0, "scoringPlay": False},
+            {"homeScore": 2, "awayScore": 3, "scoringPlay": True},
+            {"homeScore": 2, "awayScore": 3, "scoringPlay": False},
         ]})
         self.assertEqual([p["score_changed"] for p in plays],
                          [False, True, False, True, False])
