@@ -3,7 +3,7 @@ import json
 import unittest
 from pathlib import Path
 
-from custom_components.nba.playoff_data import parse_playoff_event, parse_playoff_payload
+from custom_components.nba.playoff_data import (\n    build_playoff_series,\n    parse_playoff_event,\n    parse_playoff_payload,\n)
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -55,6 +55,41 @@ class PlayoffPayloadTests(unittest.TestCase):
         self.assertIsNone(games[0]["game_number"])
         self.assertIn("Play-In", games[0]["label"])
 
+
+    def test_reconstructs_both_celtics_series_from_real_team_schedule(self):
+        games = parse_playoff_payload(load_fixture("espn_playoff_team_schedule_2024_25.json"))
+        series = build_playoff_series(games)
+        self.assertEqual(len(series), 2)
+        first_round = next(item for item in series if item["round_label"] == "East 1st Round")
+        semifinals = next(item for item in series if item["round_label"] == "East Semifinals")
+        self.assertEqual(first_round["status"], "completed")
+        self.assertEqual(first_round["games_played"], 5)
+        self.assertEqual(first_round["winner"]["abbreviation"], "BOS")
+        self.assertEqual([team["wins"] for team in first_round["teams"]], [4, 1])
+        self.assertEqual(semifinals["status"], "completed")
+        self.assertEqual(semifinals["games_played"], 6)
+        self.assertEqual(semifinals["winner"]["abbreviation"], "NY")
+        self.assertEqual([team["wins"] for team in semifinals["teams"]], [4, 2])
+
+    def test_reconstructs_all_four_okc_series_from_real_team_schedule(self):
+        games = parse_playoff_payload(load_fixture("espn_playoff_team_schedule_okc_2024_25.json"))
+        series = build_playoff_series(games)
+        self.assertEqual(len(games), 23)
+        self.assertEqual(len(series), 4)
+        by_round = {item["round_label"]: item for item in series}
+        self.assertEqual(by_round["West 1st Round"]["games_played"], 4)
+        self.assertEqual(by_round["West 1st Round"]["winner"]["abbreviation"], "OKC")
+        self.assertEqual(by_round["West Semifinals"]["games_played"], 7)
+        self.assertEqual(by_round["West Semifinals"]["winner"]["abbreviation"], "OKC")
+        self.assertEqual(by_round["West Finals"]["games_played"], 5)
+        self.assertEqual(by_round["West Finals"]["winner"]["abbreviation"], "OKC")
+        self.assertEqual(by_round["NBA Finals"]["games_played"], 7)
+        self.assertEqual(by_round["NBA Finals"]["winner"]["abbreviation"], "OKC")
+
+    def test_play_in_is_not_grouped_into_best_of_seven_series(self):
+        games = parse_playoff_payload(load_fixture("espn_playin_scoreboard_2025_04_16.json"))
+        self.assertEqual(build_playoff_series(games), [])
+
     def test_regular_season_and_invalid_events_are_ignored(self):
         self.assertIsNone(parse_playoff_event({"id": "regular", "season": {"type": 2}}))
         self.assertIsNone(parse_playoff_event({"id": "missing", "season": {"type": 3}}))
@@ -102,6 +137,51 @@ class DefensiveParsingTests(unittest.TestCase):
         }
         parsed = parse_playoff_event(event)
         self.assertEqual([team["score"] for team in parsed["teams"]], [87, 82])
+
+
+    def test_only_completed_games_with_explicit_winner_count(self):
+        games = []
+        for number in range(1, 5):
+            games.append({
+                "id": str(number),
+                "season_year": 2025,
+                "phase": "playoffs",
+                "round_label": "East 1st Round",
+                "game_number": number,
+                "date": f"2025-04-{20 + number:02d}T00:00Z",
+                "completed": True,
+                "teams": [
+                    {"id": "1", "abbreviation": "AAA", "name": "Team A", "winner": True},
+                    {"id": "2", "abbreviation": "BBB", "name": "Team B", "winner": False},
+                ],
+            })
+        games[3]["completed"] = None
+        games[2]["teams"][0]["winner"] = None
+        series = build_playoff_series(games)[0]
+        self.assertEqual(series["teams"][0]["wins"], 2)
+        self.assertEqual(series["status"], "in_progress")
+        self.assertEqual(series["unknown_results"], 2)
+        self.assertIsNone(series["winner"])
+
+    def test_more_than_seven_games_is_flagged_inconsistent(self):
+        games = []
+        for number in range(1, 9):
+            games.append({
+                "id": str(number),
+                "season_year": 2025,
+                "phase": "playoffs",
+                "round_label": "NBA Finals",
+                "game_number": number,
+                "completed": True,
+                "teams": [
+                    {"id": "1", "abbreviation": "AAA", "winner": number <= 4},
+                    {"id": "2", "abbreviation": "BBB", "winner": number > 4},
+                ],
+            })
+        series = build_playoff_series(games)[0]
+        self.assertEqual(series["status"], "inconsistent")
+        self.assertIn("more_than_7_games", series["issues"])
+        self.assertIsNone(series["winner"])
 
     def test_schedule_score_object_and_scoreboard_string_are_both_supported(self):
         event = {
