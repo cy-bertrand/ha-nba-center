@@ -5,6 +5,7 @@ Il normalise les deux variantes observées : calendrier d'équipe et scoreboard.
 """
 from __future__ import annotations
 
+import copy
 import re
 from typing import Any
 
@@ -326,7 +327,7 @@ def build_playoff_bracket(series: Any) -> list[dict[str, Any]]:
         label = item.get("round_label")
         if not isinstance(year, int) or not isinstance(label, str):
             continue
-        by_season.setdefault(year, []).append(item)
+        by_season.setdefault(year, []).append(copy.deepcopy(item))
 
     brackets = []
     for year, season_series in sorted(by_season.items()):
@@ -505,7 +506,9 @@ def validate_playoff_seeds(teams: Any) -> dict[str, Any]:
         for item in entries:
             seed = item.get("seed")
             if isinstance(seed, int) and not isinstance(seed, bool) and 1 <= seed <= 8:
-                seeds.setdefault(seed, []).append(str(item["team_id"]))
+                team_id = item.get("team_id")
+                if team_id is not None:
+                    seeds.setdefault(seed, []).append(str(team_id))
         for seed in range(1, 9):
             count = len(seeds.get(seed, []))
             if count == 0:
