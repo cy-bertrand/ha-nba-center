@@ -63,10 +63,39 @@ async def websocket_get_game_details(
     connection.send_result(msg["id"], result)
 
 
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "nba/team_roster",
+        vol.Required("team_id"): str,
+    }
+)
+@websocket_api.async_response
+async def websocket_get_team_roster(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Return the cached on-demand roster for one NBA franchise."""
+    coordinators = list(hass.data.get(DOMAIN, {}).values())
+    if not coordinators:
+        connection.send_error(msg["id"], "not_ready", "L'intégration NBA n'est pas chargée.")
+        return
+    try:
+        result = await coordinators[0].async_get_team_roster(msg["team_id"])
+    except ValueError as err:
+        connection.send_error(msg["id"], "invalid_team", str(err))
+        return
+    except Exception as err:  # noqa: BLE001 - recoverable ESPN/network failure
+        connection.send_error(msg["id"], "api_error", str(err))
+        return
+    connection.send_result(msg["id"], result)
+
+
 def async_register(hass: HomeAssistant) -> None:
     """Register NBA Center websocket commands once per HA instance."""
     if hass.data.get("nba_center_websocket_registered"):
         return
     websocket_api.async_register_command(hass, websocket_get_scoreboard)
     websocket_api.async_register_command(hass, websocket_get_game_details)
+    websocket_api.async_register_command(hass, websocket_get_team_roster)
     hass.data["nba_center_websocket_registered"] = True
