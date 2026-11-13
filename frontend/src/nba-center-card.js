@@ -306,10 +306,15 @@ class NBACenterCard extends LitElement {
       </section>`;
   }
 
+  _awayFirst(items, homeAwayFor = (item) => item.home_away) {
+    return [...(items ?? [])].sort((a, b) => {
+      const rank = (item) => homeAwayFor(item) === "away" ? 0 : 1;
+      return rank(a) - rank(b);
+    });
+  }
+
   _quarterScorePanel() {
-    const teams = [...(this._overlayDetails?.teams ?? [])].sort((a, b) =>
-      (a.home_away === "away" ? 0 : 1) - (b.home_away === "away" ? 0 : 1)
-    );
+    const teams = this._awayFirst(this._overlayDetails?.teams);
     const periods = Math.max(0, ...teams.map((team) => team.quarters?.length ?? 0));
     if (!periods || !teams.length) return "";
     const labels = Array.from({ length: periods }, (_, index) =>
@@ -330,7 +335,7 @@ class NBACenterCard extends LitElement {
   }
 
   _teamStatsPanel() {
-    const teams = this._overlayDetails?.team_stats ?? [];
+    const teams = this._awayFirst(this._overlayDetails?.team_stats);
     if (!teams.length) return "";
     const keys = [...new Set(teams.flatMap((team) => (team.statistics ?? []).map((stat) => stat.name)))];
     return html`
@@ -542,13 +547,13 @@ class NBACenterCard extends LitElement {
             </div><p class="muted" style="text-align:center">${value(this._overlayGame.date_text)} · ${value(this._overlayGame.detail, this._gameStatus(this._overlayGame).label)}</p>
             ${this._overlayLoading ? html`<section class="empty">Chargement du résumé…</section>` : ""}
             ${(this._overlayError || this._overlayDetails?.error) ? html`<section class="empty"><p>${value(this._overlayError || this._overlayDetails?.error, "Détails du match indisponibles.")}</p><button @click=${() => this._openGame(this._overlayGame)}>RÉESSAYER</button></section>` : ""}
-            ${this._overlayDetails?.teams?.length ? html`<div class="grid">${this._overlayDetails.teams.map((team) => html`
+            ${this._overlayDetails?.teams?.length ? html`<div class="grid">${this._awayFirst(this._overlayDetails.teams).map((team) => html`
               <section class="panel"><div class="panel-head"><h3>${value(team.abbr, team.name)}</h3><span class="pill">${value(team.score)}</span></div>
                 ${(team.top_players ?? []).map((player) => html`<div class="top-player"><strong>${value(player.player)}</strong><small>${value(player.category)} · ${value(player.value)}</small></div>`)}</section>`)}</div>` : ""}
             ${this._quarterScorePanel()}
             ${this._overlayDetails?.has_boxscore ? html`
               <div class="boxscore-section"><div class="section-kicker">FULL GAME BREAKDOWN</div><h3>BOX SCORE · JOUEURS</h3>
-                <div class="boxscore-grid">${(this._overlayDetails.player_stats ?? []).map((block) => this._boxscorePanel(block))}</div>
+                <div class="boxscore-grid">${this._awayFirst(this._overlayDetails.player_stats, (block) => this._overlayDetails.team_stats?.find((team) => team.team_id === block.team_id)?.home_away).map((block) => this._boxscorePanel(block))}</div>
                 ${this._teamStatsPanel()}
               </div>` : ""}
             ${this._playByPlayPanel()}
