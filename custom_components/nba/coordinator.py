@@ -51,6 +51,20 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
+def _season_matches_espn_year(season: str, espn_year: int) -> bool:
+    """Vérifie une saison NBA YYYY-YY contre l'année ESPN de fin."""
+    value = str(season or "").strip()
+    parts = value.split("-")
+    if len(parts) == 2 and parts[0].isdigit() and parts[1].isdigit():
+        start = int(parts[0])
+        suffix = int(parts[1])
+        end = (start // 100) * 100 + suffix if suffix < 100 else suffix
+        if end < start:
+            end += 100
+        return end == espn_year
+    return value.isdigit() and int(value) == espn_year
+
+
 def _to_int(value: Any) -> int:
     """Convertit un score ESPN en entier (accepte nombre, texte ou dictionnaire)."""
     if isinstance(value, dict):
@@ -504,10 +518,9 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     parsed_postseason = parse_player_stats(postseason_raw)
                     if parsed_postseason.get("season_type_id") == "3":
                         returned_season = str(parsed_postseason.get("season") or "")
-                        returned_start = returned_season.split("-")[0]
-                        # ESPN peut ignorer le paramètre season et renvoyer le dernier split playoffs.
-                        # Ne jamais présenter ce split sous l'année demandée.
-                        if postseason_year is None or (returned_start.isdigit() and int(returned_start) == season_year):
+                        # ESPN attend l'année de fin : 2023 correspond à 2022-23.
+                        # Comparer le libellé complet sur son année de fin évite le décalage d'un an.
+                        if _season_matches_espn_year(returned_season, season_year):
                             postseason_stats = parsed_postseason
                         else:
                             _LOGGER.debug(
