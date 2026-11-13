@@ -51,6 +51,20 @@ class PlayerDataParserTests(unittest.TestCase):
         self.assertEqual(result["statistics"][-1]["value"], 30.3)
         self.assertEqual(result["statistics"][-1]["season"], "2026-27")
 
+    def test_exposes_career_split_separately(self):
+        result = parse_player_stats({"statistics": {
+            "labels": ["GP", "PTS"],
+            "names": ["gamesPlayed", "avgPoints"],
+            "displayNames": ["Games Played", "Points Per Game"],
+            "splits": [
+                {"displayName": "Regular Season", "stats": ["12", "30.3"]},
+                {"displayName": "Career", "stats": ["193", "23.8"]},
+            ],
+        }})
+        self.assertEqual(result["career_statistics"][0]["value"], 193)
+        self.assertEqual(result["career_statistics"][1]["value"], 23.8)
+        self.assertEqual(result["statistics"][1]["value"], 30.3)
+
     def test_parses_real_espn_overview_splits(self):
         result = parse_player_stats({"statistics": {
             "labels": ["GP", "MIN", "REB", "AST", "PTS"],
