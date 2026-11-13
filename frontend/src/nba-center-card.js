@@ -123,6 +123,7 @@ class NBACenterCard extends LitElement {
     .leader:last-child{border-bottom:0}
     .leader-button{width:100%;min-width:0;margin:0;padding:8px 0;border:0;border-radius:7px;background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer}
     .leader-button:hover{background:#1b2a40}
+    .leader-button:active{transform:translateY(1px)}
     .leader-button:focus-visible{outline:2px solid #f2c45f;outline-offset:2px}
     .rank{color:#8190a7;font-size:10px;font-weight:900}
     .avatar{width:32px;height:32px;object-fit:cover;border-radius:50%;background:#25344a}
