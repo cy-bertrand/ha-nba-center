@@ -503,7 +503,17 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     )
                     parsed_postseason = parse_player_stats(postseason_raw)
                     if parsed_postseason.get("season_type_id") == "3":
-                        postseason_stats = parsed_postseason
+                        returned_season = str(parsed_postseason.get("season") or "")
+                        returned_start = returned_season.split("-")[0]
+                        # ESPN peut ignorer le paramètre season et renvoyer le dernier split playoffs.
+                        # Ne jamais présenter ce split sous l'année demandée.
+                        if postseason_year is None or not returned_start.isdigit() or int(returned_start) == season_year:
+                            postseason_stats = parsed_postseason
+                        else:
+                            _LOGGER.debug(
+                                "ESPN a renvoyé les playoffs %s au lieu de %s pour le joueur %s",
+                                returned_season, season_year, player_id,
+                            )
                     else:
                         _LOGGER.debug(
                             "ESPN n'a pas confirmé le split playoffs pour le joueur %s / saison %s",
