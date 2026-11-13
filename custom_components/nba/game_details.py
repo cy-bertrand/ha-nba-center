@@ -90,6 +90,7 @@ def parse_plays(raw: dict[str, Any]) -> list[dict[str, Any]]:
             if athlete_id:
                 participants.append(athlete_id)
         category = _classify_play(type_text, short_description, text)
+        event_text = " ".join(filter(None, (type_text, short_description, text))).lower()
         plays.append({
             "id": _text(item.get("id")),
             "sequence_number": _text(item.get("sequenceNumber")),
@@ -108,6 +109,14 @@ def parse_plays(raw: dict[str, Any]) -> list[dict[str, Any]]:
             "action_category": category,
             "is_period_end": category == "period_end",
             "is_game_end": category == "game_end",
+            "is_foul": "foul" in event_text,
+            "is_turnover": "turnover" in event_text,
+            "is_rebound": "rebound" in event_text,
+            "is_timeout": "timeout" in event_text,
+            "is_substitution": "substitution" in event_text,
+            "is_missed_shot": "missed" in event_text,
+            "is_challenge": "challenge" in event_text,
+            "is_violation": "violation" in event_text or "goaltending" in event_text,
             "shooting": bool(item.get("shootingPlay", False)),
             "participants": participants,
             "wallclock": item.get("wallclock"),
