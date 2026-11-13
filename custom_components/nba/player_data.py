@@ -184,6 +184,20 @@ def _overview_splits(raw: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:
 
 
 
+def season_matches_espn_year(season: str, espn_year: int) -> bool:
+    """Compare un libellé NBA YYYY-YY à l'année de fin utilisée par ESPN."""
+    value = str(season or "").strip()
+    parts = value.split("-")
+    if len(parts) == 2 and parts[0].isdigit() and parts[1].isdigit():
+        start = int(parts[0])
+        suffix = int(parts[1])
+        end = (start // 100) * 100 + suffix if suffix < 100 else suffix
+        if end < start:
+            end += 100
+        return end == espn_year
+    return value.isdigit() and int(value) == espn_year
+
+
 def _season_history(raw: dict[str, Any]) -> list[dict[str, Any]]:
     """Fusionne les catégories ESPN par saison pour construire un historique complet."""
     seasons: dict[str, dict[str, Any]] = {}
