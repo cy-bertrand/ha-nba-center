@@ -8,6 +8,7 @@ from custom_components.nba.playoff_data import (
     build_playoff_series,
     parse_playoff_event,
     parse_playoff_payload,
+    parse_playoff_standings,
 )
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -261,3 +262,64 @@ class DefensiveParsingTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class PlayoffStandingsTests(unittest.TestCase):
+    def test_extracts_conference_seed_and_clincher_without_assuming_seed_is_official(self):
+        def entry(team_id, abbr, seed, clincher):
+            return {
+                "team": {"id": str(team_id), "abbreviation": abbr, "displayName": abbr},
+                "stats": [
+                    {"type": "playoffseed", "value": float(seed), "displayValue": str(seed),
+                     "description": "Projected seed in the NBA Playoffs, according to BPI"},
+                    {"type": "clincher", "value": 7.0, "displayValue": clincher},
+                    {"type": "wins", "value": 45.0, "displayValue": "45"},
+                    {"type": "losses", "value": 37.0, "displayValue": "37"},
+                ],
+            }
+
+        payload = {
+            "children": [
+                {"name": "Eastern Conference", "abbreviation": "East", "standings": {
+                    "seasonDisplayName": "2025-26",
+                    "entries": [
+                        entry(20, "PHI", 7, "xp"),
+                        entry(19, "ORL", 8, "xp"),
+                        entry(14, "MIA", 10, "pb"),
+                    ],
+                }},
+                {"name": "Western Conference", "abbreviation": "West", "standings": {
+                    "seasonDisplayName": "2025-26",
+                    "entries": [
+                        entry(22, "POR", 7, "xp"),
+                        entry(21, "PHX", 8, "xp"),
+                    ],
+                }},
+            ],
+        }
+
+        teams = parse_playoff_standings(payload)
+        by_abbr = {team["abbreviation"]: team for team in teams}
+        self.assertEqual(len(teams), 5)
+        self.assertEqual(by_abbr["POR"]["seed"], 7)
+        self.assertEqual(by_abbr["PHX"]["seed"], 8)
+        self.assertEqual(by_abbr["POR"]["conference"], "West")
+        self.assertEqual(by_abbr["PHI"]["conference"], "East")
+        self.assertEqual(by_abbr["MIA"]["clincher"], "pb")
+        self.assertEqual(by_abbr["POR"]["season"], "2025-26")
+        self.assertIn("Projected seed", by_abbr["POR"]["seed_description"])
+
+    def test_missing_or_malformed_standings_return_empty_or_partial_data(self):
+        self.assertEqual(parse_playoff_standings({}), [])
+        payload = {"children": [{
+            "abbreviation": "East",
+            "standings": {"entries": [
+                {"team": {"id": "1", "abbreviation": "AAA"}, "stats": []},
+                {"team": {"id": "2"}, "stats": []},
+                {"team": {"abbreviation": "BBB"}, "stats": []},
+            ]},
+        }]}
+        teams = parse_playoff_standings(payload)
+        self.assertEqual(len(teams), 1)
+        self.assertIsNone(teams[0]["seed"])
+        self.assertIsNone(teams[0]["clincher"])
