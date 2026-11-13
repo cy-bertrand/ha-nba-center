@@ -1,0 +1,164 @@
+{
+  "header": {
+    "id": "401909977",
+    "competitions": [
+      {
+        "status": {
+          "displayClock": "2:40",
+          "period": 1,
+          "type": {
+            "id": "2",
+            "name": "STATUS_IN_PROGRESS",
+            "state": "in",
+            "completed": false,
+            "description": "In Progress",
+            "detail": "2:40 - 1st Quarter",
+            "shortDetail": "2:40 - 1st"
+          },
+          "displayPeriod": "1st"
+        },
+        "competitors": [
+          {
+            "id": "27",
+            "homeAway": "home",
+            "score": "32",
+            "team": {
+              "abbreviation": "WSH",
+              "displayName": "Washington Wizards"
+            }
+          },
+          {
+            "id": "8",
+            "homeAway": "away",
+            "score": "26",
+            "team": {
+              "abbreviation": "DET",
+              "displayName": "Detroit Pistons"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "plays": [
+    {
+      "id": "4019099777",
+      "sequenceNumber": "7",
+      "type": {
+        "id": "92",
+        "text": "Jump Shot"
+      },
+      "text": "Daniss Jenkins makes 27-foot three point jumper (Ausar Thompson assists)",
+      "shortDescription": "+3 Points",
+      "period": {
+        "number": 1,
+        "displayValue": "1st Quarter"
+      },
+      "clock": {
+        "displayValue": "11:52"
+      },
+      "scoringPlay": true,
+      "scoreValue": 3,
+      "homeScore": 0,
+      "awayScore": 3,
+      "team": {
+        "id": "8"
+      },
+      "participants": [
+        {
+          "athlete": {
+            "id": "5107199"
+          }
+        },
+        {
+          "athlete": {
+            "id": "4684742"
+          }
+        }
+      ],
+      "wallclock": "2026-11-13T00:12:25Z",
+      "shootingPlay": true,
+      "coordinate": {
+        "x": 16,
+        "y": 26
+      },
+      "pointsAttempted": 3
+    },
+    {
+      "id": "40190997712",
+      "sequenceNumber": "12",
+      "type": {
+        "id": "155",
+        "text": "Defensive Rebound"
+      },
+      "text": "Alex Sarr defensive rebound",
+      "shortDescription": "Rebound",
+      "period": {
+        "number": 1,
+        "displayValue": "1st Quarter"
+      },
+      "clock": {
+        "displayValue": "11:09"
+      },
+      "scoringPlay": false,
+      "scoreValue": 0,
+      "homeScore": 2,
+      "awayScore": 3,
+      "team": {
+        "id": "27"
+      },
+      "participants": [
+        {
+          "athlete": {
+            "id": "5160992"
+          }
+        }
+      ],
+      "wallclock": "2026-11-13T00:13:08Z",
+      "shootingPlay": false,
+      "coordinate": {
+        "x": 50,
+        "y": 8
+      },
+      "pointsAttempted": 0
+    },
+    {
+      "id": "40190997792",
+      "sequenceNumber": "92",
+      "type": {
+        "id": "584",
+        "text": "Substitution"
+      },
+      "text": "Javonte Green enters the game for John Collins",
+      "shortDescription": "Substitution",
+      "period": {
+        "number": 1,
+        "displayValue": "1st Quarter"
+      },
+      "clock": {
+        "displayValue": "4:54"
+      },
+      "team": {
+        "id": "8"
+      },
+      "participants": [
+        {
+          "athlete": {
+            "id": "2596112"
+          }
+        },
+        {
+          "athlete": {
+            "id": "3908845"
+          }
+        }
+      ]
+    }
+  ],
+  "meta": {
+    "lastUpdatedAt": "2026-11-13T00:27:42Z",
+    "firstPlayWallClock": "2026-11-13T00:12:17Z",
+    "lastPlayWallClock": "2026-11-13T00:27:42Z",
+    "gameState": "in"
+  }
+}
