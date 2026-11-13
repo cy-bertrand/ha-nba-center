@@ -4,7 +4,8 @@ import unittest
 from pathlib import Path
 
 from custom_components.nba.playoff_data import (
-    build_playoff_bracket,\n    build_playoff_series,
+    build_playoff_bracket,
+    build_playoff_series,
     parse_playoff_event,
     parse_playoff_payload,
 )
