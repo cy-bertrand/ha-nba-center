@@ -1,0 +1,142 @@
+"""Tests du parsing global des résumés ESPN, sans dépendance à Home Assistant."""
+import importlib
+import sys
+import types
+import unittest
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def _module(name, package=False):
+    mod = types.ModuleType(name)
+    if package:
+        mod.__path__ = []
+    sys.modules[name] = mod
+    return mod
+
+
+def _load_coordinator():
+    # Le coordinateur importe Home Assistant, mais _parse_summary est une
+    # fonction pure. Des stubs minimaux permettent de tester le vrai code
+    # sans installer ni démarrer Home Assistant.
+    ha = _module("homeassistant", package=True)
+    config_entries = _module("homeassistant.config_entries")
+    config_entries.ConfigEntry = type("ConfigEntry", (), {})
+    core = _module("homeassistant.core")
+    core.HomeAssistant = type("HomeAssistant", (), {})
+    helpers = _module("homeassistant.helpers", package=True)
+    aiohttp = _module("homeassistant.helpers.aiohttp_client")
+    aiohttp.async_get_clientsession = lambda hass: None
+    update = _module("homeassistant.helpers.update_coordinator")
+    class DataUpdateCoordinator:
+        @classmethod
+        def __class_getitem__(cls, item):
+            return cls
+    update.DataUpdateCoordinator = DataUpdateCoordinator
+    update.UpdateFailed = type("UpdateFailed", (Exception,), {})
+    util = _module("homeassistant.util", package=True)
+    dt = _module("homeassistant.util.dt")
+    dt.parse_datetime = lambda value: None
+    dt.as_local = lambda value: value
+    util.dt = dt
+
+    custom = _module("custom_components", package=True)
+    custom.__path__ = [str(ROOT / "custom_components")]
+    nba = _module("custom_components.nba", package=True)
+    nba.__path__ = [str(ROOT / "custom_components" / "nba")]
+    return importlib.import_module("custom_components.nba.coordinator")
+
+
+coordinator = _load_coordinator()
+parse_summary = coordinator.NBACoordinator._parse_summary
+
+
+class SummaryLeadersTests(unittest.TestCase):
+    def _raw(self, leaders_marker=True):
+        raw = {
+            "header": {"competitions": [{
+                "status": {"type": {"completed": True}},
+                "competitors": [
+                    {"id": "8", "homeAway": "home", "score": "101",
+                     "team": {"abbreviation": "WSH", "displayName": "Washington Wizards"}},
+                    {"id": "9", "homeAway": "away", "score": "99",
+                     "team": {"abbreviation": "DET", "displayName": "Detroit Pistons"}},
+                ],
+            }]},
+            "plays": [{"id": "p1", "text": "End of Game"}],
+            "boxscore": {"teams": [{"team": {"id": "8"}, "statistics": [
+                {"name": "rebounds", "displayValue": "40"}
+            ]}]},
+        }
+        if leaders_marker:
+            raw["leaders"] = []
+        return raw
+
+    def test_missing_leaders_does_not_affect_score_boxscore_or_plays(self):
+        result = parse_summary("game-1", self._raw(leaders_marker=False))
+        self.assertTrue(result["final"])
+        self.assertEqual([(t["abbr"], t["score"]) for t in result["teams"]],
+                         [("WSH", 101), ("DET", 99)])
+        self.assertEqual(result["team_stats"][0]["statistics"][0]["value"], "40")
+        self.assertEqual(result["plays"][0]["id"], "p1")
+        self.assertNotIn("top_players", result["teams"][0])
+
+    def test_leader_without_athlete_is_skipped_but_next_category_survives(self):
+        raw = self._raw()
+        raw["leaders"] = [{"team": {"id": "8"}, "leaders": [
+            {"name": "points", "leaders": []},
+            {"name": "rebounds", "leaders": [
+                {"athlete": {"displayName": "Player A"}, "displayValue": "12"}
+            ]},
+        ]}]
+        result = parse_summary("game-1", raw)
+        self.assertEqual(result["teams"][0]["top_players"], [
+            {"category": "rebounds", "player": "Player A", "headshot": None, "value": "12"}
+        ])
+
+    def test_malformed_category_does_not_discard_later_categories(self):
+        raw = self._raw()
+        raw["leaders"] = [{"team": {"id": "8"}, "leaders": [
+            None,
+            {"name": "assists", "leaders": [
+                {"athlete": {"displayName": "Player B", "headshot": "https://img.test/b.png"},
+                 "displayValue": "9"}
+            ]},
+        ]}]
+        result = parse_summary("game-1", raw)
+        self.assertEqual(result["teams"][0]["top_players"][0]["player"], "Player B")
+        self.assertEqual(result["teams"][0]["top_players"][0]["headshot"], "https://img.test/b.png")
+
+    def test_malformed_team_leader_block_does_not_discard_other_team(self):
+        raw = self._raw()
+        raw["leaders"] = [
+            None,
+            {"team": {"id": "9", "abbreviation": "DET"}, "leaders": [
+                {"name": "points", "leaders": [
+                    {"athlete": {"displayName": "Player C", "headshot": {"href": "img-c"}},
+                     "displayValue": "20"}
+                ]}
+            ]},
+        ]
+        result = parse_summary("game-1", raw)
+        det = next(team for team in result["teams"] if team.get("abbr") == "DET")
+        self.assertEqual(det["top_players"][0]["player"], "Player C")
+        self.assertEqual(det["top_players"][0]["headshot"], "img-c")
+
+    def test_malformed_leader_list_and_empty_leader_objects_are_safe(self):
+        raw = self._raw()
+        raw["leaders"] = [
+            {"team": {"id": "8"}, "leaders": "invalid"},
+            {"team": {"id": "9"}, "leaders": [
+                {"name": "blocks", "leaders": [None, {}]}
+            ]},
+        ]
+        result = parse_summary("game-1", raw)
+        self.assertTrue(result["final"])
+        self.assertEqual(result["teams"][0]["score"], 101)
+        self.assertEqual(result["teams"][1]["top_players"], [])
+
+
+if __name__ == "__main__":
+    unittest.main()
