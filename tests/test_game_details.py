@@ -11,9 +11,17 @@ module = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(module)
 parse_boxscore = module.parse_boxscore
 parse_plays = module.parse_plays
+parse_game_state = module.parse_game_state
 
 
 class BoxscoreParsingTests(unittest.TestCase):
+    def test_home_away_is_read_from_team_block_or_team_object(self):
+        raw = {"boxscore": {"teams": [
+            {"team": {"id": "1", "abbreviation": "WSH"}, "homeAway": "home"},
+            {"team": {"id": "2", "abbreviation": "DET", "homeAway": "away"},
+        ]}}
+        parsed = parse_boxscore(raw)
+        self.assertEqual([team["home_away"] for team in parsed["team_stats"]], ["home", "away"])
     def test_parses_team_stats_and_player_rows_by_team(self):
         raw = {
             "boxscore": {
@@ -81,6 +89,26 @@ class BoxscoreParsingTests(unittest.TestCase):
         self.assertEqual(plays[0]["type"], "Timeout")
         self.assertIsNone(plays[0]["team_id"])
 
+    def test_live_header_score_is_kept_separate_from_stale_play_scores(self):
+        raw = {
+            "header": {"id": "401909977", "competitions": [{
+                "status": {"period": 1, "displayClock": "2:40", "displayPeriod": "1st Quarter",
+                           "type": {"state": "in", "completed": False, "detail": "2:40 - 1st Quarter"}},
+                "competitors": [
+                    {"id": "8", "homeAway": "home", "score": "32", "team": {"abbreviation": "WSH", "displayName": "Washington Wizards"}},
+                    {"id": "9", "homeAway": "away", "score": "26", "team": {"abbreviation": "DET", "displayName": "Detroit Pistons"}},
+                ],
+            }]},
+            "meta": {"gameState": "in", "lastUpdatedAt": "2026-11-13T00:27:42Z", "lastPlayWallClock": "2026-11-13T00:27:42Z"},
+            "plays": [{"homeScore": 32, "awayScore": 24, "scoringPlay": False}],
+        }
+        state = parse_game_state(raw)
+        play = parse_plays(raw)[0]
+        self.assertEqual(state["state"], "in")
+        self.assertEqual(state["clock"], "2:40")
+        self.assertEqual([team["score"] for team in state["competitors"]], [32, 26])
+        self.assertEqual(play["away_score"], "24")
+        self.assertEqual(state["score_source"], "header.competitions[0].competitors")
     def test_missing_plays_is_empty(self):
         self.assertEqual(parse_plays({}), [])
 
