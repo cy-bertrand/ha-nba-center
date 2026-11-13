@@ -474,3 +474,101 @@ def parse_playoff_standings(payload: Any) -> list[dict[str, Any]]:
         item["team_id"],
     ))
     return result
+
+
+
+def validate_playoff_seeds(teams: Any) -> dict[str, Any]:
+    """Valide les seeds ESPN 1..8 par saison/conférence.
+
+    Les équipes 9..15 sont conservées hors du bracket. Une conférence n'est
+    exploitable que si chaque seed 1..8 apparaît une fois et si les IDs sont
+    uniques. Les résultats incomplets ou ambigus ne produisent aucun mapping.
+    """
+    if not isinstance(teams, (list, tuple)):
+        teams = []
+    groups: dict[tuple[str, str], list[dict[str, Any]]] = {}
+    for team in teams:
+        if not isinstance(team, dict):
+            continue
+        season = team.get("season")
+        conference = team.get("conference")
+        if isinstance(season, str) and season and conference in ("East", "West"):
+            groups.setdefault((season, conference), []).append(team)
+
+    seasons: dict[str, dict[str, Any]] = {}
+    for (season, conference), entries in sorted(groups.items()):
+        ids = [str(item.get("team_id")) for item in entries if item.get("team_id") is not None]
+        seeds: dict[int, list[str]] = {}
+        errors: list[str] = []
+        if len(ids) != len(entries) or len(set(ids)) != len(ids):
+            errors.append("duplicate_or_missing_team_ids")
+        for item in entries:
+            seed = item.get("seed")
+            if isinstance(seed, int) and not isinstance(seed, bool) and 1 <= seed <= 8:
+                seeds.setdefault(seed, []).append(str(item["team_id"]))
+        for seed in range(1, 9):
+            count = len(seeds.get(seed, []))
+            if count == 0:
+                errors.append(f"missing_seed_{seed}")
+            elif count > 1:
+                errors.append(f"duplicate_seed_{seed}")
+        valid = not errors and len(seeds) == 8
+        season_result = seasons.setdefault(season, {"conferences": {}})
+        season_result["conferences"][conference] = {
+            "valid": valid,
+            "errors": errors,
+            "seeds": {seed: ids[0] for seed, ids in sorted(seeds.items())} if valid else {},
+        }
+    return {"seasons": seasons}
+
+
+def annotate_playoff_bracket(bracket: Any, standings: Any) -> dict[str, Any] | None:
+    """Retourne une copie du bracket annotée avec les seeds validés.
+
+    Les seeds sont attachés aux participants de chaque série. Les affiches du
+    premier tour sont contrôlées contre 1-8, 2-7, 3-6 et 4-5 ; aucune position
+    de match n'est attribuée si le contrôle des quatre séries est incomplet ou
+    incohérent. L'entrée n'est jamais mutée.
+    """
+    import copy
+
+    if not isinstance(bracket, dict) or not isinstance(standings, dict):
+        return None
+    result = copy.deepcopy(bracket)
+    season = str(result.get("season_year"))
+    season_data = standings.get("seasons", {}).get(season)
+    if not isinstance(season_data, dict):
+        return result
+    for conference in ("East", "West"):
+        seed_data = season_data.get("conferences", {}).get(conference, {})
+        if not seed_data.get("valid"):
+            continue
+        seed_by_id = {str(team_id): seed for seed, team_id in seed_data["seeds"].items()}
+        rounds = result.get("conferences", {}).get(conference, [])
+        first_round = next((item for item in rounds if _round_metadata(item.get("round_label", ""))[1] == 1), None)
+        for round_data in rounds:
+            for series_item in round_data.get("series", []):
+                for team in series_item.get("teams", []):
+                    team["seed"] = seed_by_id.get(str(team.get("id")))
+        if first_round is None:
+            continue
+        series_items = first_round.get("series", [])
+        actual = set()
+        for series_item in series_items:
+            team_seeds = sorted(
+                team.get("seed") for team in series_item.get("teams", [])
+                if isinstance(team.get("seed"), int)
+            )
+            if len(team_seeds) == 2:
+                actual.add(tuple(team_seeds))
+        expected = {(1, 8), (2, 7), (3, 6), (4, 5)}
+        first_round["matchups_valid"] = len(series_items) == 4 and actual == expected
+        if first_round["matchups_valid"]:
+            first_round["series"] = sorted(
+                series_items,
+                key=lambda item: tuple(sorted(
+                    team.get("seed") for team in item.get("teams", [])
+                    if isinstance(team.get("seed"), int)
+                )),
+            )
+    return result
