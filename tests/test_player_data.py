@@ -163,8 +163,10 @@ class PlayerDataParserTests(unittest.TestCase):
             ],
             "categories": [{
                 "name": "averages", "displayName": "Postseason Averages",
-                "stats": [{"name": "avgPoints", "displayName": "Points Per Game",
-                           "value": 29.5, "displayValue": "29.5"}],
+                "names": ["gamesPlayed", "avgPoints"],
+                "labels": ["GP", "PTS"],
+                "displayNames": ["Games Played", "Points Per Game"],
+                "totals": ["12", "29.5"],
             }],
         })
         self.assertEqual(result["season"], "2026-27")
