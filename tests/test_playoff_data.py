@@ -407,3 +407,71 @@ class ValidatedSeedTests(unittest.TestCase):
         ], "West": []}, "finals": [], "unplaced": []}
         annotated = annotate_playoff_bracket(bracket, standings)
         self.assertFalse(annotated["conferences"]["East"][0]["matchups_valid"])
+
+
+
+class HistoricalBracketSeedIntegrationTests(unittest.TestCase):
+    def test_real_2024_25_okc_and_celtics_series_receive_verified_seeds(self):
+        standings = validate_playoff_seeds(
+            parse_playoff_standings(load_fixture("espn_standings_2024_25_seeds.json"))
+        )
+        okc_games = parse_playoff_payload(
+            load_fixture("espn_playoff_team_schedule_okc_2024_25.json")
+        )
+        celtics_games = parse_playoff_payload(
+            load_fixture("espn_playoff_team_schedule_2024_25.json")
+        )
+        all_series = build_playoff_series(okc_games + celtics_games)
+        brackets = build_playoff_bracket(all_series)
+        self.assertEqual(len(brackets), 1)
+        bracket = annotate_playoff_bracket(brackets[0], standings)
+
+        west_first = next(
+            item for item in bracket["conferences"]["West"]
+            if item["round_label"] == "West 1st Round"
+        )
+        okc_memphis = next(
+            item for item in west_first["series"]
+            if {team["abbreviation"] for team in item["teams"]} == {"OKC", "MEM"}
+        )
+        self.assertEqual(
+            {team["abbreviation"]: team["seed"] for team in okc_memphis["teams"]},
+            {"OKC": 1, "MEM": 8},
+        )
+
+        east_first = next(
+            item for item in bracket["conferences"]["East"]
+            if item["round_label"] == "East 1st Round"
+        )
+        bos_orlando = next(
+            item for item in east_first["series"]
+            if {team["abbreviation"] for team in item["teams"]} == {"BOS", "ORL"}
+        )
+        self.assertEqual(
+            {team["abbreviation"]: team["seed"] for team in bos_orlando["teams"]},
+            {"BOS": 2, "ORL": 7},
+        )
+        # Only two of the eight first-round series are present in these captures.
+        # The parser must not mark the partial historical bracket as complete.
+        self.assertFalse(west_first["matchups_valid"])
+        self.assertFalse(east_first["matchups_valid"])
+
+        west_semis = next(
+            item for item in bracket["conferences"]["West"]
+            if item["round_label"] == "West Semifinals"
+        )
+        okc_denver = next(
+            item for item in west_semis["series"]
+            if {team["abbreviation"] for team in item["teams"]} == {"OKC", "DEN"}
+        )
+        self.assertEqual(
+            {team["abbreviation"]: team["seed"] for team in okc_denver["teams"]},
+            {"OKC": 1, "DEN": 4},
+        )
+        nba_finals = bracket["finals"][0]
+        self.assertEqual(
+            {team["abbreviation"]: team["seed"] for team in nba_finals["teams"]},
+            {"OKC": 1, "IND": 4},
+        )
+        self.assertEqual(okc_denver["winner"]["abbreviation"], "OKC")
+        self.assertEqual(nba_finals["winner"]["abbreviation"], "OKC")
