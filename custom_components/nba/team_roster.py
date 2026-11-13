@@ -49,8 +49,8 @@ def parse_team_roster(raw: dict[str, Any]) -> dict[str, Any]:
         experience = _mapping(athlete.get("experience"))
         height_text = _text(athlete.get("displayHeight"))
         weight_text = _text(athlete.get("displayWeight"))
-        height_match = re.search(r"(\\d+)\\s*'\\s*(\\d+)", height_text or "")
-        weight_match = re.search(r"(\\d+(?:\\.\\d+)?)", weight_text or "")
+        height_match = re.search(r"(\d+)\s*'\s*(\d+)", height_text or "")
+        weight_match = re.search(r"(\d+(?:\\.\d+)?)", weight_text or "")
         height_cm = round((int(height_match.group(1)) * 12 + int(height_match.group(2))) * 2.54) if height_match else None
         weight_kg = round(float(weight_match.group(1)) * 0.45359237, 1) if weight_match else None
         players.append({
