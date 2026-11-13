@@ -60,7 +60,7 @@ class CompletedSummaryFixtureTests(unittest.TestCase):
             [("Carson Cooper", "COACH'S DECISION"),
              ("Caris LeVert", "COACH'S DECISION")],
         )
-        self.assertTrue(all(player["stats_by_key"] == {} for player in []))  # no synthetic stats
+        self.assertTrue(all(value is None for player in dnp\n                                for value in player["stats_by_key"].values()))
 
     def test_full_play_by_play_volume_and_event_categories(self):
         self.assertEqual(len(self.plays), 515)
