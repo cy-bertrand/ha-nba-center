@@ -128,5 +128,19 @@ class BoxscoreParsingTests(unittest.TestCase):
         self.assertEqual(plays[-1]["type"], "End Game")
 
 
+    def test_event_flags_can_describe_compound_events(self):
+        plays = parse_plays({"plays": [
+            {"type": {"text": "Offensive Foul Turnover"}, "text": "Player offensive foul turnover"},
+            {"type": {"text": "Defensive Rebound"}, "shortDescription": "Rebound"},
+            {"type": {"text": "End Period"}, "text": "End of the 2nd Quarter",
+             "shortDescription": "Halftime"},
+        ]})
+        self.assertEqual(plays[0]["action_category"], "foul")
+        self.assertTrue(plays[0]["is_foul"])
+        self.assertTrue(plays[0]["is_turnover"])
+        self.assertTrue(plays[1]["is_rebound"])
+        self.assertTrue(plays[2]["is_period_end"])
+
+
 if __name__ == "__main__":
     unittest.main()
