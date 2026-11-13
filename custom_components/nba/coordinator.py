@@ -377,30 +377,45 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER.debug("Résumé %s : en-tête inattendu (%s)", game_id, err)
             lines = {}
 
-        # Meilleurs joueurs : on prend les leaders de chaque équipe si présents
-        try:
-            for block in raw.get("leaders", []) or []:
-                tid = str((block.get("team") or {}).get("id", ""))
-                entry = lines.setdefault(tid, {"abbr": (block.get("team") or {}).get("abbreviation"),
-                                               "quarters": []})
+        # Meilleurs joueurs : une entrée ESPN invalide ne doit pas masquer
+        # les catégories suivantes ni les leaders de l'autre équipe.
+        leaders = raw.get("leaders")
+        if isinstance(leaders, list):
+            for block in leaders:
+                if not isinstance(block, dict):
+                    continue
+                team = block.get("team") if isinstance(block.get("team"), dict) else {}
+                tid = str(team.get("id", ""))
+                entry = lines.setdefault(tid, {
+                    "abbr": team.get("abbreviation"),
+                    "quarters": [],
+                })
                 top: list[dict] = []
-                for cat in block.get("leaders", []) or []:
-                    leader = (cat.get("leaders") or [{}])[0]
-                    athlete = leader.get("athlete") or {}
-                    if not athlete:
-                        continue
-                    top.append(
-                        {
+                categories = block.get("leaders")
+                if isinstance(categories, list):
+                    for cat in categories:
+                        if not isinstance(cat, dict):
+                            continue
+                        category_leaders = cat.get("leaders")
+                        if not isinstance(category_leaders, list):
+                            continue
+                        leader = next(
+                            (item for item in category_leaders if isinstance(item, dict)),
+                            None,
+                        )
+                        if leader is None:
+                            continue
+                        athlete = leader.get("athlete")
+                        if not isinstance(athlete, dict) or not athlete:
+                            continue
+                        headshot = athlete.get("headshot")
+                        top.append({
                             "category": cat.get("displayName") or cat.get("name"),
                             "player": athlete.get("displayName"),
-                            "headshot": (athlete.get("headshot") or {}).get("href")
-                            if isinstance(athlete.get("headshot"), dict) else athlete.get("headshot"),
+                            "headshot": headshot.get("href") if isinstance(headshot, dict) else headshot,
                             "value": leader.get("displayValue"),
-                        }
-                    )
+                        })
                 entry["top_players"] = top
-        except (KeyError, IndexError, TypeError, AttributeError) as err:
-            _LOGGER.debug("Résumé %s : leaders inattendus (%s)", game_id, err)
 
         result["teams"] = list(lines.values())
         return result
