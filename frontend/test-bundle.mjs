@@ -75,8 +75,11 @@ assert.match(source, /team_id: this\._teamOverlay\?\.id/, "opening a player from
 assert.match(bundle, /team_id:this\._teamOverlay\?\.id/, "bundled roster player selection must preserve the franchise ID");
 assert.match(source, /team_logo: this\._teamOverlay\?\.logo/, "roster player profile must carry the current team logo");
 assert.match(bundle, /team_logo:this\._teamOverlay\?\.logo/, "bundled roster player profile must carry the current team logo");
-assert.match(source, /grid-template-columns:68px 50px minmax\(0,1fr\)/, "last five game rows must display date, opponent and stats on one line");
-assert.match(bundle, /grid-template-columns:68px 50px minmax\(0,1fr\)/, "bundled last five game rows must display date, opponent and stats on one line");
+assert.match(source, /\.player-game-row\{display:grid;grid-template-columns:minmax\(0,1fr\)/, "last five game rows must use a compact stacked layout");
+assert.match(bundle, /\.player-game-row\{display:grid;grid-template-columns:minmax\(0,1fr\)/, "bundled last five game rows must use a compact stacked layout");
+assert.match(source, /\.player-game-meta\{display:flex;align-items:center/, "game date and opponent must share one line");
+assert.match(source, /\.player-game-stats\{display:flex;flex-wrap:nowrap/, "game statistics must stay on one line");
+assert.match(bundle, /\.player-game-stats\{display:flex;flex-wrap:nowrap/, "bundled game statistics must stay on one line");
 
 console.log("NBA Center frontend bundle and feature checks passed.");
 
