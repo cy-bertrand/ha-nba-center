@@ -492,37 +492,53 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
                         player_id, season_year, err,
                     )
 
-            # ESPN gamelog ne fournit que les métadonnées des rencontres.
-            # On enrichit les cinq plus récentes via les box scores déjà normalisés.
-            for game in gamelog["games"][:5]:
-                game_id = game.get("id")
-                if not game_id:
-                    continue
+            postseason_gamelog: dict[str, Any] = {"games": [], "count": 0, "boxscore_count": 0}
+            if postseason_stats and season_year:
                 try:
-                    summary = await self.async_get_game_details(game_id)
-                except Exception as err:  # noqa: BLE001 - le profil reste utilisable sans box score
-                    _LOGGER.debug("Box score joueur %s / match %s indisponible: %s", player_id, game_id, err)
-                    continue
-                found = next(
-                    (
-                        player
-                        for team in summary.get("player_stats", [])
-                        for player in team.get("players", [])
-                        if str(player.get("id") or "") == player_id
-                    ),
-                    None,
-                )
-                if found:
-                    game["stats"] = found.get("stats_by_key") or found.get("stats") or {}
-                    game["player_name"] = found.get("name")
-                    game["did_not_play"] = bool(found.get("did_not_play"))
-            gamelog["boxscore_count"] = sum(bool(game.get("stats")) for game in gamelog["games"])
+                    raw_postseason_log = await self._get(
+                        PLAYER_DATA_URL.format(player_id=player_id, resource="gamelog"),
+                        params={"season": season_year, "seasontype": 3},
+                    )
+                    postseason_gamelog = parse_player_gamelog(raw_postseason_log)
+                except Exception as err:  # noqa: BLE001 - les playoffs ne bloquent jamais le profil
+                    _LOGGER.debug("Journal playoffs ESPN indisponible pour le joueur %s: %s", player_id, err)
+
+            # Les gamelogs ESPN fournissent parfois uniquement les métadonnées.
+            # Les cinq rencontres récentes sont enrichies via les box scores normalisés.
+            async def enrich_recent_games(log: dict[str, Any], label: str) -> None:
+                for game in log["games"][:5]:
+                    game_id = game.get("id")
+                    if not game_id:
+                        continue
+                    try:
+                        summary = await self.async_get_game_details(game_id)
+                    except Exception as err:  # noqa: BLE001 - le profil reste utilisable sans box score
+                        _LOGGER.debug("Box score %s joueur %s / match %s indisponible: %s", label, player_id, game_id, err)
+                        continue
+                    found = next(
+                        (
+                            player
+                            for team in summary.get("player_stats", [])
+                            for player in team.get("players", [])
+                            if str(player.get("id") or "") == player_id
+                        ),
+                        None,
+                    )
+                    if found:
+                        game["stats"] = found.get("stats_by_key") or found.get("stats") or {}
+                        game["player_name"] = found.get("name")
+                        game["did_not_play"] = bool(found.get("did_not_play"))
+                log["boxscore_count"] = sum(bool(game.get("stats")) for game in log["games"][:5])
+
+            await enrich_recent_games(gamelog, "saison régulière")
+            await enrich_recent_games(postseason_gamelog, "playoffs")
             result = {
                 "player_id": player_id,
                 "overview": overview,
                 "stats": stats,
                 "postseason_stats": postseason_stats,
                 "gamelog": gamelog,
+                "postseason_gamelog": postseason_gamelog,
                 "errors": errors,
                 "available": bool(overview["statistics"] or stats["statistics"] or gamelog["games"]),
                 "fetched_at": now.isoformat(),
