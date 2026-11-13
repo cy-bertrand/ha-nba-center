@@ -391,7 +391,7 @@ class NBACenterCard extends LitElement {
     );
     const formatGameDate = (raw) => {
       const date = String(raw ?? "").split("T")[0];
-      const match = date.match(/^(\\d{4})-(\\d{2})-(\\d{2})$/);
+      const match = date.match(/^(\d{4})-(\d{2})-(\d{2})$/);
       return match ? `${match[3]}/${match[2]}/${match[1]}` : (date || "—");
     };
     const translateStat = (item) => {
