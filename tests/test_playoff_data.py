@@ -6,9 +6,11 @@ from pathlib import Path
 from custom_components.nba.playoff_data import (
     build_playoff_bracket,
     build_playoff_series,
+    annotate_playoff_bracket,
     parse_playoff_event,
     parse_playoff_payload,
     parse_playoff_standings,
+    validate_playoff_seeds,
 )
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -323,3 +325,85 @@ class PlayoffStandingsTests(unittest.TestCase):
         self.assertEqual(len(teams), 1)
         self.assertIsNone(teams[0]["seed"])
         self.assertIsNone(teams[0]["clincher"])
+
+
+
+class ValidatedSeedTests(unittest.TestCase):
+    def test_real_historical_standings_have_complete_unique_seeds(self):
+        expected = {
+            "2024-25": {
+                "East": ["CLE", "BOS", "NY", "IND", "MIL", "DET", "ORL", "MIA"],
+                "West": ["OKC", "HOU", "LAL", "DEN", "LAC", "MIN", "GS", "MEM"],
+            },
+            "2025-26": {
+                "East": ["DET", "BOS", "NY", "CLE", "TOR", "ATL", "PHI", "ORL"],
+                "West": ["OKC", "SA", "DEN", "LAL", "HOU", "MIN", "POR", "PHX"],
+            },
+        }
+        for fixture, season, conferences in (
+            ("espn_standings_2024_25_seeds.json", "2024-25", expected["2024-25"]),
+            ("espn_standings_2025_26_seeds.json", "2025-26", expected["2025-26"]),
+        ):
+            parsed = parse_playoff_standings(load_fixture(fixture))
+            validated = validate_playoff_seeds(parsed)["seasons"][season]["conferences"]
+            by_id = {item["team_id"]: item for item in parsed}
+            for conference, abbreviations in conferences.items():
+                self.assertTrue(validated[conference]["valid"], validated[conference]["errors"])
+                actual = [
+                    next(item["abbreviation"] for item in parsed
+                         if item["conference"] == conference and item["seed"] == seed)
+                    for seed in range(1, 9)
+                ]
+                self.assertEqual(actual, abbreviations)
+
+    def test_missing_or_duplicate_seed_invalidates_entire_conference(self):
+        teams = [
+            {"season": "2025-26", "conference": "East", "team_id": str(seed),
+             "abbreviation": str(seed), "seed": seed}
+            for seed in range(1, 9)
+        ]
+        teams[-1]["seed"] = 7
+        result = validate_playoff_seeds(teams)["seasons"]["2025-26"]["conferences"]["East"]
+        self.assertFalse(result["valid"])
+        self.assertEqual(result["seeds"], {})
+        self.assertIn("duplicate_seed_7", result["errors"])
+        self.assertIn("missing_seed_8", result["errors"])
+
+    def test_bracket_annotation_is_non_mutating_and_checks_first_round_pairings(self):
+        standings = validate_playoff_seeds([
+            {"season": "2025-26", "conference": "East", "team_id": str(seed),
+             "seed": seed} for seed in range(1, 9)
+        ])
+        original = {
+            "season_year": 2026,
+            "conferences": {"East": [
+                {"round_label": "East 1st Round", "series": [
+                    {"id": "a", "teams": [{"id": "1"}, {"id": "8"}]},
+                    {"id": "b", "teams": [{"id": "2"}, {"id": "7"}]},
+                    {"id": "c", "teams": [{"id": "3"}, {"id": "6"}]},
+                    {"id": "d", "teams": [{"id": "4"}, {"id": "5"}]},
+                ]}
+            ], "West": []},
+            "finals": [], "unplaced": [],
+        }
+        annotated = annotate_playoff_bracket(original, standings)
+        self.assertTrue(annotated["conferences"]["East"][0]["matchups_valid"])
+        self.assertNotIn("seed", original["conferences"]["East"][0]["series"][0]["teams"][0])
+        self.assertEqual(
+            [tuple(team["seed"] for team in item["teams"])
+             for item in annotated["conferences"]["East"][0]["series"]],
+            [(1, 8), (2, 7), (3, 6), (4, 5)],
+        )
+
+    def test_partial_first_round_is_not_claimed_valid(self):
+        standings = validate_playoff_seeds([
+            {"season": "2025-26", "conference": "East", "team_id": str(seed),
+             "seed": seed} for seed in range(1, 9)
+        ])
+        bracket = {"season_year": 2026, "conferences": {"East": [
+            {"round_label": "East 1st Round", "series": [
+                {"id": "a", "teams": [{"id": "1"}, {"id": "8"}]}
+            ]}
+        ], "West": []}, "finals": [], "unplaced": []}
+        annotated = annotate_playoff_bracket(bracket, standings)
+        self.assertFalse(annotated["conferences"]["East"][0]["matchups_valid"])
