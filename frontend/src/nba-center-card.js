@@ -141,6 +141,7 @@ class NBACenterCard extends LitElement {
     .overlay-team img{width:54px;height:54px;object-fit:contain}.overlay-team strong{display:block;margin-top:7px;font-size:12px}
     .overlay-score{font-size:24px;font-weight:950;color:#f2c45f}.overlay-actions{display:flex;align-items:center;gap:7px}.overlay-refresh{min-width:0;padding:8px 10px;border:1px solid #34465f;color:#e8bb58;font-size:9px}.overlay-refresh:disabled{opacity:.55;cursor:wait}.overlay-close{min-width:38px;padding:8px;border:1px solid #34465f}
     .top-player{padding:12px 0;border-top:1px solid #ffffff12}.top-player strong{display:block;font-size:12px}.top-player small{color:#aab6ca}
+    .quarter-score-panel{margin-top:12px}.quarter-score-panel table{width:100%;border-collapse:collapse;font-size:10px}.quarter-score-panel th,.quarter-score-panel td{padding:9px 8px;text-align:center;border-bottom:1px solid #ffffff10;font-variant-numeric:tabular-nums}.quarter-score-panel th:first-child,.quarter-score-panel td:first-child{text-align:left}.quarter-score-panel td:last-child{color:#f2c45f;font-weight:900}
     .boxscore-section{margin-top:22px}.section-kicker{color:#e8b74e;font-size:9px;font-weight:900;letter-spacing:.2em;margin-bottom:5px}.boxscore-section>h3{margin:0 0 12px}
     .boxscore-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.boxscore-panel{padding:10px;min-width:0}.player-table-wrap{overflow-x:auto;max-width:100%}.player-table{width:100%;border-collapse:collapse;font-size:10px;white-space:nowrap}.player-table th,.player-table td{padding:8px 6px;text-align:right;border-bottom:1px solid #ffffff10;font-variant-numeric:tabular-nums}.player-table th:first-child,.player-table td:first-child{text-align:left;position:sticky;left:0;background:#111d2c}.player-table th{color:#94a5bc;font-size:8px;letter-spacing:.08em}.player-table tr.starter td{background-color:#17263a}.player-table tr.dnp td{color:#75849a}
     .playbyplay-panel{margin-top:12px}.play-controls{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
@@ -288,7 +289,7 @@ class NBACenterCard extends LitElement {
     const players = block.players ?? [];
     const preferred = ["MIN", "FG", "3PT", "FT", "OREB", "DREB", "REB", "AST", "STL", "BLK", "TO", "PF", "+/-", "PTS"];
     const available = new Set(players.flatMap((player) => Object.keys(player.stats ?? {})));
-    const columns = preferred.filter((key) => available.has(key));
+    const columns = [...preferred.filter((key) => available.has(key)), ...[...available].filter((key) => !preferred.includes(key))];
     const rows = [...players].sort((a, b) => Number(Boolean(b.starter)) - Number(Boolean(a.starter)));
     return html`
       <section class="panel boxscore-panel">
@@ -297,11 +298,34 @@ class NBACenterCard extends LitElement {
           <thead><tr><th>JOUEUR</th>${columns.map((key) => html`<th>${key}</th>`)}</tr></thead>
           <tbody>${rows.map((player) => html`
             <tr class="${player.starter ? "starter" : ""} ${player.did_not_play ? "dnp" : ""}">
-              <td><span class="player-cell">${player.headshot ? html`<img src=${player.headshot} alt="" loading="lazy">` : ""}<span>${value(player.name)}<small>${player.position ? `${player.position} · ` : ""}${player.did_not_play ? value(player.reason, "DNP") : player.starter ? "TITULAIRE" : ""}</small></span></span></td>
+              <td><span class="player-cell">${player.headshot ? html`<img src=${player.headshot} alt="" loading="lazy">` : ""}<span>${value(player.name)}<small>${[player.jersey ? `#${player.jersey}` : "", player.position || "", player.ejected ? "ÉJECTÉ" : player.did_not_play ? `DNP · ${value(player.reason, "NON PRIS EN JEU")}` : player.starter ? "TITULAIRE" : player.active ? "ACTIF" : ""].filter(Boolean).join(" · ")}</small></span></span></td>
               ${columns.map((key) => html`<td>${value(player.stats?.[key])}</td>`)}
             </tr>`)}
           </tbody>
         </table></div>` : html`<p class="muted">Statistiques individuelles indisponibles.</p>`}
+      </section>`;
+  }
+
+  _quarterScorePanel() {
+    const teams = [...(this._overlayDetails?.teams ?? [])].sort((a, b) =>
+      (a.home_away === "away" ? 0 : 1) - (b.home_away === "away" ? 0 : 1)
+    );
+    const periods = Math.max(0, ...teams.map((team) => team.quarters?.length ?? 0));
+    if (!periods || !teams.length) return "";
+    const labels = Array.from({ length: periods }, (_, index) =>
+      index < 4 ? `Q${index + 1}` : index === 4 ? "OT" : `${index - 4 + 1}OT`
+    );
+    return html`
+      <section class="panel quarter-score-panel">
+        <div class="panel-head"><h3>SCORE PAR PÉRIODE</h3><span class="pill">${periods > 4 ? "PROLONGATION" : "TEMPS RÉGLEMENTAIRE"}</span></div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>ÉQUIPE</th>${labels.map((label) => html`<th>${label}</th>`)}<th>TOTAL</th></tr></thead>
+          <tbody>${teams.map((team) => html`
+            <tr><td>${value(team.abbr, team.name)}</td>
+              ${labels.map((_, index) => html`<td>${value(team.quarters?.[index])}</td>`)}
+              <td>${value(team.score)}</td>
+            </tr>`)}</tbody>
+        </table></div>
       </section>`;
   }
 
@@ -337,7 +361,7 @@ class NBACenterCard extends LitElement {
         </div>
         <ol class="play-list">${rows.map((play) => html`
           <li class="play-row ${play.scoring ? "scoring" : ""}">
-            <span class="play-clock">Q${value(play.period)}<small>${value(play.clock)}</small></span>
+            <span class="play-clock">${value(play.period_display, Number(play.period) > 4 ? (Number(play.period) === 5 ? "OT" : `${Number(play.period) - 4}OT`) : `Q${value(play.period)}`)}<small>${value(play.clock)}</small></span>
             <span class="play-copy">${value(play.text, play.type || "Action")}${play.scoring ? html`<small>MARQUE · +${value(play.score_value, "?")} PT</small>` : ""}</span>
             <span class="play-score">${play.away_score != null || play.home_score != null ? `${value(play.away_score)}–${value(play.home_score)}` : ""}</span>
           </li>`)}</ol>
@@ -520,8 +544,8 @@ class NBACenterCard extends LitElement {
             ${(this._overlayError || this._overlayDetails?.error) ? html`<section class="empty"><p>${value(this._overlayError || this._overlayDetails?.error, "Détails du match indisponibles.")}</p><button @click=${() => this._openGame(this._overlayGame)}>RÉESSAYER</button></section>` : ""}
             ${this._overlayDetails?.teams?.length ? html`<div class="grid">${this._overlayDetails.teams.map((team) => html`
               <section class="panel"><div class="panel-head"><h3>${value(team.abbr, team.name)}</h3><span class="pill">${value(team.score)}</span></div>
-                ${team.quarters?.length ? html`<div class="muted">QUART-TEMPS · ${team.quarters.join(" / ")}</div>` : ""}
                 ${(team.top_players ?? []).map((player) => html`<div class="top-player"><strong>${value(player.player)}</strong><small>${value(player.category)} · ${value(player.value)}</small></div>`)}</section>`)}</div>` : ""}
+            ${this._quarterScorePanel()}
             ${this._overlayDetails?.has_boxscore ? html`
               <div class="boxscore-section"><div class="section-kicker">FULL GAME BREAKDOWN</div><h3>BOX SCORE · JOUEURS</h3>
                 <div class="boxscore-grid">${(this._overlayDetails.player_stats ?? []).map((block) => this._boxscorePanel(block))}</div>
