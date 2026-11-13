@@ -58,7 +58,7 @@ class NBACenterCard extends LitElement {
     _showAllPlays: { state: true }, _scoringOnly: { state: true },
     _teamSearch: { state: true }, _teamConference: { state: true },
     _teamOverlay: { state: true }, _teamRoster: { state: true }, _teamRosterLoading: { state: true }, _teamRosterError: { state: true },
-    _playerSearch: { state: true }, _playerOverlay: { state: true }, _playerData: { state: true }, _playerLoading: { state: true }, _playerError: { state: true }, _playerRequest: { state: true },
+    _playerSearch: { state: true }, _playerOverlay: { state: true }, _playerData: { state: true }, _playerLoading: { state: true }, _playerError: { state: true }, _playerRequest: { state: true }, _playerSelectedSeason: { state: true }, _playerSelectedPlayoffSeason: { state: true }, _playerPlayoffLoading: { state: true },
     _playoffData: { state: true }, _playoffLoading: { state: true }, _playoffError: { state: true }, _playoffSeason: { state: true }, _playoffRequest: { state: true },
   };
 
