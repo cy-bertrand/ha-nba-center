@@ -34,6 +34,8 @@ class TeamRosterParserTests(unittest.TestCase):
         self.assertEqual(luka["position"], "G")
         self.assertEqual(luka["injuries"][0]["status"], "Day-To-Day")
         self.assertEqual(luka["experience_years"], 9)
+        self.assertEqual(luka["height_cm"], 203)
+        self.assertEqual(luka["weight_kg"], 104.3)
 
     def test_skips_invalid_and_duplicate_players(self):
         result = parse_team_roster({"athletes": [
