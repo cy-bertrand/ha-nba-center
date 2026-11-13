@@ -57,6 +57,7 @@ class NBACenterCard extends LitElement {
     _showAllPlays: { state: true }, _scoringOnly: { state: true },
     _teamSearch: { state: true }, _teamConference: { state: true },
     _teamOverlay: { state: true }, _teamRoster: { state: true }, _teamRosterLoading: { state: true }, _teamRosterError: { state: true },
+    _playerSearch: { state: true }, _playerOverlay: { state: true }, _playerData: { state: true }, _playerLoading: { state: true }, _playerError: { state: true }, _playerRequest: { state: true },
   };
 
   static styles = css`
@@ -155,7 +156,8 @@ class NBACenterCard extends LitElement {
     .play-score{font-size:10px;font-weight:900;color:#aab6ca;font-variant-numeric:tabular-nums}
     .play-more{display:block;margin:10px auto 0;border:1px solid #2b3b52;background:#101a29;color:#e8bb58}.player-cell{display:flex;align-items:center;gap:6px;min-width:112px;white-space:normal}.player-cell img{width:25px;height:25px;object-fit:contain;border-radius:50%}.player-cell small{display:block;color:#91a0b5;font-size:8px;margin-top:2px}.team-stats-panel{margin-top:12px}.team-stats-panel table{width:100%;border-collapse:collapse;font-size:10px}.team-stats-panel th,.team-stats-panel td{padding:8px;text-align:right;border-bottom:1px solid #ffffff10}.team-stats-panel th:first-child,.team-stats-panel td:first-child{text-align:left;color:#aab6ca}
     @media(max-width:620px){.overlay{padding:8px}.overlay-panel{max-height:94vh}.boxscore-grid{grid-template-columns:1fr}.player-table th,.player-table td{padding:7px 5px}}
-    .team-roster-heading{display:flex;align-items:center;gap:12px}.roster-list{display:grid;gap:7px}.roster-player{display:grid;grid-template-columns:42px minmax(0,1fr) auto;align-items:center;gap:10px;padding:9px;border:1px solid #ffffff10;border-radius:10px;background:#101a29}.roster-headshot{width:40px;height:40px;object-fit:cover;border-radius:50%;background:#25344a}.roster-placeholder{background:#25344a}.roster-player-info{min-width:0}.roster-player-button{width:100%;text-align:left;color:inherit;font:inherit;cursor:pointer}.roster-player-button:hover,.roster-player-button:focus-visible{background:#1c2a40;border-color:#8da9d8;outline:none}.player-profile-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-top:12px}.player-profile-grid>div{display:flex;flex-direction:column;gap:4px;padding:10px;background:#ffffff08;border-radius:8px}.player-profile-grid small{color:#8290a5;font-size:9px;letter-spacing:.07em}.player-profile-grid strong{font-size:13px;color:#eef3fb}.team-season-summary{margin-bottom:14px}.roster-player-info strong{display:block;font-size:11px}.roster-player-info small{display:block;color:#91a0b5;font-size:9px;margin-top:3px}.roster-player-info .roster-injury{color:#ffb66d}.roster-number{text-align:right}.roster-number strong{display:block;color:#f2c45f;font-size:12px}.roster-number small{display:block;color:#91a0b5;font-size:8px;margin-top:3px}.team-roster-overlay{width:min(620px,100%)}.team-roster-overlay .overlay-body{max-height:calc(90vh - 86px);overflow-y:auto;overscroll-behavior:contain;scroll-behavior:smooth}.catalog-favorite-tracking{display:grid;gap:5px;margin-top:10px;padding-top:9px;border-top:1px solid #ffffff12;color:#aab6ca;font-size:9px;line-height:1.4;letter-spacing:.04em}\n    .footer{display:flex;justify-content:space-between;gap:10px;padding:12px 22px;color:#738199;border-top:1px solid #ffffff12;font-size:9px;letter-spacing:.06em}
+    .team-roster-heading{display:flex;align-items:center;gap:12px}.roster-list{display:grid;gap:7px}.roster-player{display:grid;grid-template-columns:42px minmax(0,1fr) auto;align-items:center;gap:10px;padding:9px;border:1px solid #ffffff10;border-radius:10px;background:#101a29}.roster-headshot{width:40px;height:40px;object-fit:cover;border-radius:50%;background:#25344a}.roster-placeholder{background:#25344a}.roster-player-info{min-width:0}.roster-player-button{width:100%;text-align:left;color:inherit;font:inherit;cursor:pointer}.roster-player-button:hover,.roster-player-button:focus-visible{background:#1c2a40;border-color:#8da9d8;outline:none}.player-profile-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-top:12px}.player-profile-grid>div{display:flex;flex-direction:column;gap:4px;padding:10px;background:#ffffff08;border-radius:8px}.player-profile-grid small{color:#8290a5;font-size:9px;letter-spacing:.07em}.player-profile-grid strong{font-size:13px;color:#eef3fb}.team-season-summary{margin-bottom:14px}.roster-player-info strong{display:block;font-size:11px}.roster-player-info small{display:block;color:#91a0b5;font-size:9px;margin-top:3px}.roster-player-info .roster-injury{color:#ffb66d}.roster-number{text-align:right}.roster-number strong{display:block;color:#f2c45f;font-size:12px}.roster-number small{display:block;color:#91a0b5;font-size:8px;margin-top:3px}.team-roster-overlay{width:min(620px,100%)}.team-roster-overlay .overlay-body{max-height:calc(90vh - 86px);overflow-y:auto;overscroll-behavior:contain;scroll-behavior:smooth}.catalog-favorite-tracking{display:grid;gap:5px;margin-top:10px;padding-top:9px;border-top:1px solid #ffffff12;color:#aab6ca;font-size:9px;line-height:1.4;letter-spacing:.04em}
+    .player-result{display:grid;grid-template-columns:24px 38px minmax(0,1fr) auto;align-items:center;gap:9px;width:100%;padding:9px 7px;border-bottom:1px solid #ffffff10;text-align:left;color:inherit;border-radius:8px}.player-result:hover{background:#1b2a40}.player-result:last-child{border-bottom:0}.player-profile-overlay{width:min(760px,100%)}.player-profile-overlay .overlay-body{max-height:calc(90vh - 80px);overflow:auto;overscroll-behavior:contain}.player-stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:8px;margin:12px 0}.player-stat-grid>div{padding:10px;border-radius:8px;background:#ffffff08}.player-stat-grid small{display:block;color:#91a0b5;font-size:8px;letter-spacing:.08em}.player-stat-grid strong{display:block;margin-top:5px;color:#f2c45f;font-size:16px}.player-gamelog{margin-top:14px}.player-gamelog table{min-width:520px}.player-gamelog td:not(:first-child),.player-gamelog th:not(:first-child){text-align:right}\n    .footer{display:flex;justify-content:space-between;gap:10px;padding:12px 22px;color:#738199;border-top:1px solid #ffffff12;font-size:9px;letter-spacing:.06em}
     @media(max-width:620px){.hero{padding:20px 17px 17px}main{padding:15px}nav{padding:8px 7px}button{min-width:66px;padding:9px 10px}.grid{grid-template-columns:1fr}.game{grid-template-columns:1fr;gap:7px}.status{text-align:left}.matchup{gap:6px}.team-name{font-size:10px}.score{font-size:15px}.footer{padding:11px 15px}.meta{margin-top:11px}}
   `;
 
@@ -171,6 +173,7 @@ class NBACenterCard extends LitElement {
     this._teamRosterLoading = false;
     this._teamRosterError = "";
     this._selectedPlayer = null;
+    this._playerSearch = ""; this._playerOverlay = null; this._playerData = null; this._playerLoading = false; this._playerError = ""; this._playerRequest = 0;
     this._selectedDate = localDateISO();
     this._calendarGames = []; this._calendarLoading = false; this._calendarError = ""; this._calendarStale = false; this._calendarStaleError = ""; this._calendarRequest = 0; this._calendarInitialized = false;
     this._overlayGame = null; this._overlayDetails = null; this._overlayRequest = 0;
@@ -337,6 +340,58 @@ class NBACenterCard extends LitElement {
           </div>
         </section>
       </div>`;
+  }
+
+  async _openPlayer(playerId, source = {}) {
+    if (!playerId) return;
+    const request = ++this._playerRequest;
+    this._playerOverlay = { ...source, id: String(playerId), name: source.player ?? source.name ?? "Joueur NBA" };
+    this._playerData = null; this._playerError = ""; this._playerLoading = true;
+    try {
+      const result = await this.hass.callWS({ type: "nba/player_data", player_id: String(playerId) });
+      if (request !== this._playerRequest) return;
+      this._playerData = result;
+    } catch (err) {
+      if (request !== this._playerRequest) return;
+      this._playerError = err?.message ?? "Données du joueur indisponibles.";
+    } finally {
+      if (request === this._playerRequest) this._playerLoading = false;
+    }
+  }
+
+  _closePlayer() {
+    this._playerRequest += 1;
+    this._playerOverlay = null; this._playerData = null; this._playerLoading = false; this._playerError = "";
+  }
+
+  _playerProfilePanel() {
+    const player = this._playerOverlay ?? {};
+    const overview = this._playerData?.overview ?? {};
+    const stats = this._playerData?.stats?.statistics ?? [];
+    const games = this._playerData?.gamelog?.games ?? [];
+    const stat = (...names) => stats.find((item) => names.includes(String(item.name).toLowerCase()) || names.includes(String(item.label).toLowerCase()));
+    const quick = [["PTS",stat("pts","points","points per game")],["REB",stat("reb","rebounds","rebounds per game")],["AST",stat("ast","assists","assists per game")],["STL",stat("stl","steals","steals per game")],["BLK",stat("blk","blocks","blocks per game")]];
+    const statLabel = (item) => item?.display_value ?? (item?.value == null ? "—" : item.value);
+    return html`<div class="overlay" @click=${(event) => { if (event.target === event.currentTarget) this._closePlayer(); }}>
+      <section class="overlay-panel player-profile-overlay" role="dialog" aria-modal="true" aria-label="Profil joueur">
+        <header class="overlay-head"><div class="team-roster-heading">${player.headshot ? html`<img class="roster-headshot" src=${player.headshot} alt="">` : ""}<div><h2>${value(overview.athlete?.name, player.name)}</h2><div class="muted">${value(player.team)} · PROFIL JOUEUR</div></div></div>
+          <button class="overlay-close" aria-label="Fermer le profil joueur" @click=${() => this._closePlayer()}>✕</button></header>
+        <div class="overlay-body">
+          ${this._playerLoading ? html`<section class="empty">Chargement des statistiques du joueur…</section>` : ""}
+          ${this._playerError ? html`<section class="empty"><strong>Profil détaillé indisponible</strong><p>${this._playerError}</p><button @click=${() => this._openPlayer(player.id, player)}>RÉESSAYER</button></section>` : ""}
+          ${this._playerData ? html`
+            <div class="player-stat-grid">${quick.map(([label,item]) => html`<div><small>${label} / MATCH</small><strong>${statLabel(item)}</strong></div>`)}</div>
+            <section class="panel"><div class="panel-head"><h3>STATISTIQUES DE SAISON</h3><span class="pill">${value(this._playerData.stats?.season, "SAISON")}</span></div>
+              ${stats.length ? html`<div class="table-wrap"><table><thead><tr><th>STATISTIQUE</th><th>VALEUR</th></tr></thead><tbody>${stats.map((item) => html`<tr><td>${value(item.label,item.name)}</td><td>${value(item.display_value ?? item.value)}</td></tr>`)}</tbody></table></div>` : html`<p class="muted">Statistiques de saison non retournées par ESPN.</p>`}
+            </section>
+            <section class="panel player-gamelog"><div class="panel-head"><h3>JOURNAL DES MATCHS</h3><span class="pill">${games.length} MATCHS</span></div>
+              ${games.length ? html`<div class="table-wrap"><table><thead><tr><th>DATE</th><th>ADVERSAIRE</th><th>RÉSULTAT</th><th>PTS</th><th>REB</th><th>AST</th></tr></thead><tbody>${games.map((game) => html`<tr><td>${value(game.date)}</td><td>${value(game.opponent,game.name)}</td><td>${value(game.result)}</td><td>${value(game.stats?.PTS ?? game.stats?.points)}</td><td>${value(game.stats?.REB ?? game.stats?.rebounds)}</td><td>${value(game.stats?.AST ?? game.stats?.assists)}</td></tr>`)}</tbody></table></div>` : html`<p class="muted">Journal des matchs non disponible dans la réponse ESPN.</p>`}
+            </section>
+            ${Object.keys(this._playerData.errors ?? {}).length ? html`<p class="muted">Certaines sources ESPN sont indisponibles : ${Object.keys(this._playerData.errors).join(" · ")}</p>` : ""}
+          ` : ""}
+        </div>
+      </section>
+    </div>`;
   }
 
   _selectRosterPlayer(player) {
@@ -654,8 +709,23 @@ class NBACenterCard extends LitElement {
   }
 
   _playersView() {
-    return html`<div class="head"><h2>PLAYERS CENTER</h2><span class="pill">LEADERS NBA</span></div>
-      <div class="grid">${Object.keys(LEADERS).map((key) => this._leaderPanel(key,10))}</div>`;
+    const term = this._playerSearch.trim().toLowerCase();
+    const rows = new Map();
+    for (const key of Object.keys(LEADERS)) for (const player of this._leaders(key).rows) {
+      const id = String(player.id ?? player.player_id ?? player.athlete_id ?? "");
+      const name = value(player.player, "");
+      if (!id || !name) continue;
+      const current = rows.get(id) ?? { ...player, id, categories: [] };
+      current.categories.push(`${LEADERS[key][0]} · ${value(player.value)}`);
+      rows.set(id, current);
+    }
+    const players = [...rows.values()].filter((player) => !term || `${player.player} ${player.team ?? ""}`.toLowerCase().includes(term)).sort((a,b) => a.player.localeCompare(b.player));
+    return html`<div class="head"><h2>PLAYERS CENTER</h2><span class="pill">${players.length} JOUEURS IDENTIFIÉS</span></div>
+      <div class="filters"><input type="search" aria-label="Rechercher un joueur NBA" placeholder="Rechercher un joueur ou une équipe…" .value=${this._playerSearch} @input=${(event) => { this._playerSearch = event.target.value ?? ""; }}></div>
+      <p class="muted">Profils accessibles depuis les leaders de saison disponibles. Le catalogue complet des effectifs reste consultable dans TEAMS.</p>
+      ${players.length ? html`<section class="panel"><div class="panel-head"><h3>JOUEURS À SUIVRE</h3><span class="pill">PROFILS</span></div>
+        ${players.map((player,index) => html`<button class="player-result" type="button" @click=${() => this._openPlayer(player.id, player)}><span class="rank">${index+1}</span>${player.headshot ? html`<img class="avatar" src=${player.headshot} alt="" loading="lazy">` : html`<span class="avatar"></span>`}<span class="player">${player.player}<small>${value(player.team)} · ${player.categories.join(" · ")}</small></span><span class="stat">›</span></button>`)}</section>` : html`<section class="empty"><strong>${term ? "Aucun joueur correspondant" : "Aucun profil joueur disponible"}</strong><p>${term ? "Essaie un autre nom ou une équipe." : "Les identifiants des joueurs apparaîtront ici lorsque les leaders ESPN seront chargés."}</p></section>`}
+      <div class="grid" style="margin-top:12px">${Object.keys(LEADERS).map((key) => this._leaderPanel(key,5))}</div>`;
   }
 
   _statsView() {
@@ -704,7 +774,9 @@ class NBACenterCard extends LitElement {
               </div>` : ""}
             ${this._playByPlayPanel()}
             ${!this._overlayLoading && !this._overlayError && !this._overlayDetails?.error && !this._overlayDetails?.teams?.length && !this._overlayDetails?.has_boxscore ? html`<section class="empty"><p>Le résumé détaillé n’est pas encore disponible pour cette rencontre.</p></section>` : ""}            </div></section></div>` : ""}
-        ${this._teamOverlay ? this._teamRosterPanel() : ""}\n        <footer class="footer"><span>NBA CENTER · ${active.label}</span><span>DATA VIA HOME ASSISTANT</span></footer>
+        ${this._teamOverlay ? this._teamRosterPanel() : ""}
+        ${this._playerOverlay ? this._playerProfilePanel() : ""}
+        <footer class="footer"><span>NBA CENTER · ${active.label}</span><span>DATA VIA HOME ASSISTANT</span></footer>
       </ha-card>`;
   }
 
