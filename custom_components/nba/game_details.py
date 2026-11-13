@@ -65,9 +65,41 @@ def _classify_play(play_type: str | None, short_description: str | None,
     return "other"
 
 
+def _player_index(raw: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    """Indexe les joueurs du box-score par identifiant ESPN stable."""
+    index: dict[str, dict[str, Any]] = {}
+    for block in _mapping(raw.get("boxscore")).get("players") or []:
+        if not isinstance(block, dict):
+            continue
+        team_id = _text(_mapping(block.get("team")).get("id"))
+        for group in block.get("statistics") or []:
+            if not isinstance(group, dict):
+                continue
+            for row in group.get("athletes") or []:
+                if not isinstance(row, dict):
+                    continue
+                athlete = _mapping(row.get("athlete"))
+                athlete_id = _text(athlete.get("id"))
+                if not athlete_id:
+                    continue
+                position = _mapping(athlete.get("position"))
+                headshot = athlete.get("headshot")
+                index[athlete_id] = {
+                    "id": athlete_id,
+                    "name": athlete.get("displayName") or athlete.get("fullName"),
+                    "short_name": athlete.get("shortName"),
+                    "jersey": athlete.get("jersey"),
+                    "position": position.get("abbreviation") or row.get("position"),
+                    "team_id": team_id,
+                    "headshot": _mapping(headshot).get("href") if isinstance(headshot, dict) else headshot,
+                }
+    return index
+
+
 def parse_plays(raw: dict[str, Any]) -> list[dict[str, Any]]:
-    """Normalise summary.plays and derive score/event markers without losing source data."""
+    """Normalise summary.plays and enrich participants via ESPN athlete IDs."""
     plays: list[dict[str, Any]] = []
+    players = _player_index(raw)
     for item in raw.get("plays") or []:
         if not isinstance(item, dict):
             continue
@@ -88,6 +120,7 @@ def parse_plays(raw: dict[str, Any]) -> list[dict[str, Any]]:
             athlete_id = _text(athlete.get("id"))
             if athlete_id:
                 participants.append(athlete_id)
+        participant_details = [dict(players.get(pid, {"id": pid, "name": None})) for pid in participants]
         category = _classify_play(type_text, short_description, text)
         # Use ESPN's structured labels for flags; free-form commentary can
         # mention unrelated events and cause false positives.
@@ -120,6 +153,7 @@ def parse_plays(raw: dict[str, Any]) -> list[dict[str, Any]]:
             "is_violation": "violation" in event_text or "goaltending" in event_text,
             "shooting": bool(item.get("shootingPlay", False)),
             "participants": participants,
+            "participant_details": participant_details,
             "wallclock": item.get("wallclock"),
             "points_attempted": _text(item.get("pointsAttempted")),
             "coordinate": _coordinate(item.get("coordinate")),
