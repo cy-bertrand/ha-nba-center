@@ -173,7 +173,7 @@ class NBACenterCard extends LitElement {
     this._teamRosterLoading = false;
     this._teamRosterError = "";
     this._selectedPlayer = null;
-    this._playerSearch = ""; this._playerOverlay = null; this._playerData = null; this._playerLoading = false; this._playerError = ""; this._playerRequest = 0;
+    this._playerSearch = ""; this._playerOverlay = null; this._playerData = null; this._playerLoading = false; this._playerError = ""; this._playerSelectedSeason = ""; this._playerRequest = 0; this._playerSelectedSeason = "";
     this._selectedDate = localDateISO();
     this._calendarGames = []; this._calendarLoading = false; this._calendarError = ""; this._calendarStale = false; this._calendarStaleError = ""; this._calendarRequest = 0; this._calendarInitialized = false;
     this._overlayGame = null; this._overlayDetails = null; this._overlayRequest = 0;
@@ -346,7 +346,7 @@ class NBACenterCard extends LitElement {
     if (!playerId) return;
     const request = ++this._playerRequest;
     this._playerOverlay = { ...source, id: String(playerId), name: source.player ?? source.name ?? "Joueur NBA" };
-    this._playerData = null; this._playerError = ""; this._playerLoading = true;
+    this._playerData = null; this._playerError = ""; this._playerLoading = true; this._playerSelectedSeason = "";
     try {
       const result = await this.hass.callWS({ type: "nba/player_data", player_id: String(playerId) });
       if (request !== this._playerRequest) return;
@@ -367,8 +367,10 @@ class NBACenterCard extends LitElement {
   _playerProfilePanel() {
     const player = this._playerOverlay ?? {};
     const overview = this._playerData?.overview ?? {};
-    const stats = this._playerData?.stats?.statistics ?? [];
-    const games = this._playerData?.gamelog?.games ?? [];
+    const seasonHistory = this._playerData?.stats?.season_history ?? [];
+    const selectedSeason = seasonHistory.find((item) => String(item.year) === String(this._playerSelectedSeason)) ?? seasonHistory[0];
+    const stats = selectedSeason?.statistics ?? this._playerData?.stats?.statistics ?? [];
+    const seasonLabel = selectedSeason?.display_name ?? this._playerData?.stats?.season ?? "SAISON";
     const stat = (...names) => stats.find((item) => names.includes(String(item.name).toLowerCase()) || names.includes(String(item.label).toLowerCase()));
     const quick = [["PTS",stat("pts","points","points per game","avgpoints")],["REB",stat("reb","rebounds","rebounds per game","avgrebounds")],["AST",stat("ast","assists","assists per game","avgassists")],["STL",stat("stl","steals","steals per game","avgsteals")],["BLK",stat("blk","blocks","blocks per game","avgblocks")]];
     const statLabel = (item) => item?.display_value ?? (item?.value == null ? "—" : item.value);
@@ -381,7 +383,8 @@ class NBACenterCard extends LitElement {
           ${this._playerError ? html`<section class="empty"><strong>Profil détaillé indisponible</strong><p>${this._playerError}</p><button @click=${() => this._openPlayer(player.id, player)}>RÉESSAYER</button></section>` : ""}
           ${this._playerData ? html`
             <div class="player-stat-grid">${quick.map(([label,item]) => html`<div><small>${label} / MATCH</small><strong>${statLabel(item)}</strong></div>`)}</div>
-            <section class="panel"><div class="panel-head"><h3>STATISTIQUES DE SAISON</h3><span class="pill">${value(this._playerData.stats?.season, "SAISON")}</span></div>
+            <section class="panel"><div class="panel-head"><h3>STATISTIQUES DE SAISON</h3><span class="pill">${value(seasonLabel, "SAISON")}</span></div>
+              ${seasonHistory.length > 1 ? html`<div class="filters"><label class="muted" for="player-season-select">SAISON</label><select id="player-season-select" aria-label="Choisir une saison" .value=${String(selectedSeason?.year ?? "")} @change=${(event) => { this._playerSelectedSeason = event.target.value; }}>${seasonHistory.map((item) => html`<option value=${String(item.year)}>${item.display_name}</option>`)}</select></div>` : ""}
               ${stats.length ? html`<div class="table-wrap"><table><thead><tr><th>STATISTIQUE</th><th>VALEUR</th></tr></thead><tbody>${stats.map((item) => html`<tr><td>${value(item.label,item.name)}</td><td>${value(item.display_value ?? item.value)}</td></tr>`)}</tbody></table></div>` : html`<p class="muted">Statistiques de saison non retournées par ESPN.</p>`}
             </section>
             ${(this._playerData.overview?.career_statistics?.length ? html`
@@ -391,9 +394,6 @@ class NBACenterCard extends LitElement {
                   return item ? html`<div><small>${value(item.label,item.name)}</small><strong>${value(item.display_value,item.value)}</strong></div>` : "";
                 })}</div>
               </section>` : "")}
-            <section class="panel player-gamelog"><div class="panel-head"><h3>JOURNAL DES MATCHS</h3><span class="pill">${games.length} MATCHS</span></div>
-              ${games.length ? html`<div class="table-wrap"><table><thead><tr><th>DATE</th><th>ADVERSAIRE</th><th>RÉSULTAT</th><th>SCORE</th></tr></thead><tbody>${games.map((game) => html`<tr><td>${value(game.date)}</td><td>${value(game.home_away === "@" ? "@" : "")} ${value(game.opponent,game.name)}</td><td>${value(game.result)}</td><td>${value(game.score)}</td></tr>`)}</tbody></table></div>` : html`<p class="muted">Journal des matchs non disponible dans la réponse ESPN.</p>`}
-            </section>
             ${Object.keys(this._playerData.errors ?? {}).length ? html`<p class="muted">Certaines sources ESPN sont indisponibles : ${Object.keys(this._playerData.errors).join(" · ")}</p>` : ""}
           ` : ""}
         </div>
