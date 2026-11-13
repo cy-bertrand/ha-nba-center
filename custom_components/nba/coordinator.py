@@ -17,6 +17,14 @@ from .game_details import parse_boxscore, parse_game_state, parse_plays
 from .teams_catalog import parse_teams_catalog
 from .team_roster import parse_team_roster
 from .player_data import parse_player_gamelog, parse_player_stats
+from .playoff_data import (
+    annotate_playoff_bracket,
+    build_playoff_bracket,
+    build_playoff_series,
+    parse_playoff_payload,
+    parse_playoff_standings,
+    validate_playoff_seeds,
+)
 
 from .const import (
     CONF_NOTIFY_END,
@@ -91,6 +99,8 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._team_roster_locks: dict[str, asyncio.Lock] = {}
         self._player_data_cache: dict[str, tuple[datetime, dict[str, Any]]] = {}
         self._player_data_locks: dict[str, asyncio.Lock] = {}
+        self._playoff_cache: dict[int, tuple[datetime, dict[str, Any]]] = {}
+        self._playoff_locks: dict[int, asyncio.Lock] = {}
 
     async def _get(self, url: str, params: dict | None = None) -> dict:
         async with self.session.get(url, params=params, timeout=20) as resp:
@@ -585,6 +595,90 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 )
                 raise RuntimeError("ESPN n'a renvoyé aucune donnée exploitable pour ce joueur")
             self._player_data_cache[player_id] = (now, result)
+            return result
+
+
+    async def async_get_playoff_bracket(self, season_year: int) -> dict[str, Any]:
+        """Charge à la demande le bracket d'une saison, sans requêtes au démarrage.
+
+        ESPN attend l'année de fin de saison (ex. 2025 pour 2024-25).
+        Seules les 16 équipes disposant d'un seed 1..8 validé sont interrogées.
+        """
+        if isinstance(season_year, bool) or not isinstance(season_year, int) or not 2000 <= season_year <= 2100:
+            raise ValueError("Saison NBA invalide")
+        now = dt_util.utcnow()
+        cached = self._playoff_cache.get(season_year)
+        if cached and (now - cached[0]).total_seconds() < 3600:
+            return cached[1]
+
+        lock = self._playoff_locks.setdefault(season_year, asyncio.Lock())
+        async with lock:
+            now = dt_util.utcnow()
+            cached = self._playoff_cache.get(season_year)
+            if cached and (now - cached[0]).total_seconds() < 3600:
+                return cached[1]
+
+            raw_standings = await self._get(STANDINGS_URL, params={"season": season_year})
+            parsed_standings = parse_playoff_standings(raw_standings)
+            validated = validate_playoff_seeds(parsed_standings)
+            season_label = next(
+                (item.get("season") for item in parsed_standings if item.get("season")),
+                None,
+            )
+            season_data = validated.get("seasons", {}).get(season_label, {}).get("conferences", {})
+            team_ids: list[str] = []
+            seed_errors: dict[str, list[str]] = {}
+            for conference in ("East", "West"):
+                info = season_data.get(conference, {})
+                if info.get("valid"):
+                    team_ids.extend(str(team_id) for team_id in info.get("seeds", {}).values())
+                else:
+                    seed_errors[conference] = info.get("errors", ["standings_unavailable"])
+
+            semaphore = asyncio.Semaphore(4)
+
+            async def load_team_schedule(team_id: str) -> tuple[str, dict[str, Any] | None, str | None]:
+                async with semaphore:
+                    try:
+                        payload = await self._get(
+                            TEAM_SCHEDULE_URL.format(team_id=team_id),
+                            params={"season": season_year, "seasontype": 3},
+                        )
+                        return team_id, payload, None
+                    except Exception as err:  # noqa: BLE001 - un calendrier manquant ne bloque pas les autres
+                        _LOGGER.debug("Calendrier playoffs ESPN indisponible pour %s/%s: %s", season_year, team_id, err)
+                        return team_id, None, str(err)
+
+            loaded = await asyncio.gather(*(load_team_schedule(team_id) for team_id in dict.fromkeys(team_ids)))
+            games = []
+            schedule_errors = {}
+            for team_id, payload, error in loaded:
+                if payload is not None:
+                    games.extend(parse_playoff_payload(payload))
+                elif error:
+                    schedule_errors[team_id] = error
+
+            series = build_playoff_series(games)
+            brackets = build_playoff_bracket(series)
+            bracket = next((item for item in brackets if item.get("season_year") == season_year), None)
+            if bracket is None:
+                bracket = {
+                    "season_year": season_year,
+                    "conferences": {"East": [], "West": []},
+                    "finals": [],
+                    "unplaced": [],
+                }
+            annotated = annotate_playoff_bracket(bracket, validated) or bracket
+            result = {
+                **annotated,
+                "available": bool(games),
+                "games_count": len({game.get("id") for game in games if game.get("id")}),
+                "series_count": len(series),
+                "seed_errors": seed_errors,
+                "schedule_errors": schedule_errors,
+                "fetched_at": now.isoformat(),
+            }
+            self._playoff_cache[season_year] = (now, result)
             return result
 
     async def async_get_scoreboard_for_local_date(self, local_date: str) -> dict[str, Any]:
