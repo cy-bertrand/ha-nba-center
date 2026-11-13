@@ -209,3 +209,55 @@ Cette stratégie suffit potentiellement pour un historique des confrontations et
 ### Référence complémentaire
 
 - https://github.com/yassinbenelhajlahsen/Scorva
+
+
+
+## Validation sur réponses ESPN réelles — 13 novembre 2026
+
+Deux réponses brutes fournies depuis les endpoints ESPN ont été inspectées et réduites en fixtures ciblées dans `tests/fixtures/`.
+
+### Calendrier d'équipe historique — Boston Celtics, saison 2024-25
+
+Réponse demandée avec `season=2025&seasontype=3`.
+
+Constats sur cette capture :
+- `requestedSeason` confirme explicitement `year=2025`, `type=3`, `displayName=2024-25`.
+- `events` contient 11 matchs des Celtics : cinq contre Orlando au premier tour, puis six contre New York en demi-finale de conférence.
+- Chaque événement porte `seasonType.id="3"` et `seasonType.type=3`.
+- Chaque `competitions[0]` contient `notes[0].headline`, avec des libellés tels que `East 1st Round - Game 1` et `East Semifinals - Game 6`.
+- `competitions[0].type` fournit aussi une classification : `Round of 16` au premier tour et `Quarterfinal` au tour suivant.
+- Les deux équipes, le score, le booléen `winner` et le statut final sont présents dans les événements de cette capture.
+- L'objet de saison au niveau racine (`season`) correspond à la saison courante de la réponse, pas à la saison historique demandée. Pour identifier la saison des matchs, utiliser `requestedSeason` et/ou les champs `season` de chaque événement, jamais le seul `season` racine.
+
+Cette capture confirme le format du calendrier d'équipe pour cette saison et cette franchise. Elle ne démontre pas à elle seule que les 30 calendriers d'équipe peuvent être récupérés sans restriction, ni qu'un calendrier d'équipe suffit à produire le tableau complet de la ligue.
+
+### Scoreboard d'une journée de playoffs — 5 juin 2025
+
+Réponse demandée avec `dates=20250605&seasontype=3`. L'événement est daté du 6 juin en UTC, ce qui explique le décalage de date dans le JSON.
+
+Constats :
+- L'événement contient `season.type=3`.
+- Le libellé `NBA Finals - Game 1` est présent dans `competitions[0].notes[0].headline`.
+- Les concurrents, scores et vainqueurs sont disponibles dans `competitions[0].competitors`.
+- Un objet `competitions[0].series` est présent sur cette capture : `summary` donne le score de la série, `completed` son état, `totalCompetitions` le nombre prévu de matchs et `competitors[].wins` le nombre de victoires de chaque équipe.
+
+**Précision importante :** l'objet `series` est présent dans le scoreboard fourni, mais absent des événements du calendrier d'équipe fourni. Le parseur devra donc le traiter comme un enrichissement facultatif, et non comme un champ garanti sur tous les endpoints.
+
+### Décision technique après fixtures réelles
+
+La piste ESPN est désormais confirmée au niveau du schéma réel pour :
+1. détecter les matchs de postseason ;
+2. lire le tour et le numéro du match à partir du libellé ESPN ;
+3. récupérer les scores et les vainqueurs ;
+4. exploiter, lorsqu'il est présent, le résumé ESPN de la série et le nombre de victoires.
+
+La reconstruction des séries ne doit pas dépendre exclusivement de `series`, puisque ce champ n'apparaît pas dans la capture du calendrier d'équipe. Les labels `notes[].headline` sont la meilleure clé explicite observée dans les deux réponses. Il faudra conserver le texte source et gérer les champs absents.
+
+Le comportement d'une récupération complète de la postseason reste à valider : ces fixtures représentent un calendrier d'une équipe et un seul événement du scoreboard, pas une saison entière. La prochaine étape est donc un parseur pur testé sur ces fixtures, puis une vérification de la couverture et de la stratégie de collecte avant toute intégration dans le coordinateur.
+
+### Fixtures enregistrées
+
+- `tests/fixtures/espn_playoff_team_schedule_2024_25.json` — les 11 matchs postseason du calendrier des Celtics, avec les champs utiles au parseur.
+- `tests/fixtures/espn_playoff_scoreboard_2025_06_05.json` — le match NBA Finals Game 1 IND–OKC, incluant l'objet `series`.
+
+Les fixtures sont volontairement réduites aux champs nécessaires pour les tests ; elles conservent les structures imbriquées réelles utilisées par le parseur.
