@@ -60,6 +60,17 @@ assert.match(source, /request !== this\._calendarRequest/, "stale calendar respo
 assert.match(source, /_calendarStaleError/, "stale cache errors must be exposed to the user");
 assert.match(source, /value\(away\.score\).*value\(home\.score\)/s, "match score must be displayed away first, home second");
 assert.match(source, /this\._overlayGame\.away\?\.name[\s\S]*this\._overlayGame\.home\?\.name/, "Match Center overlay must show away team before home team");
+assert.match(source, /grid-template-columns:repeat\\(3,minmax\\(0,1fr\\)\\)/, "player profile and average-stat grids must use three compact columns");
+assert.match(bundle, /grid-template-columns:repeat\\(3,minmax\\(0,1fr\\)\\)/, "bundled player profile and average-stat grids must use three compact columns");
+assert.match(source, /player-season-picker/, "season selector must have a dedicated placement above season averages");
+assert.match(bundle, /player-season-picker/, "bundled season selector must be placed above season averages");
+assert.match(source, /team_id: this\\._teamOverlay\\?\\.id/, "opening a player from a roster must preserve the franchise ID");
+assert.match(bundle, /team_id:this\\._teamOverlay\\?\\.id/, "bundled roster player selection must preserve the franchise ID");
+assert.match(source, /team_logo: this\\._teamOverlay\\?\\.logo/, "roster player profile must carry the current team logo");
+assert.match(bundle, /team_logo:this\\._teamOverlay\\?\\.logo/, "bundled roster player profile must carry the current team logo");
+assert.match(source, /grid-template-columns:82px minmax\\(64px,auto\\) minmax\\(0,1fr\\)/, "last five game rows must display date, opponent and stats on one line");
+assert.match(bundle, /grid-template-columns:82px minmax\\(64px,auto\\) minmax\\(0,1fr\\)/, "bundled last five game rows must display date, opponent and stats on one line");
+
 console.log("NBA Center frontend bundle and feature checks passed.");
 
 if (!source.includes("_playByPlayPanel") || !source.includes("POINTS SEULEMENT") || !bundle.includes("FIL DU MATCH")) {
