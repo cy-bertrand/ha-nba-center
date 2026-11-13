@@ -1,7 +1,15 @@
 """Tests de correspondance des saisons NBA avec le paramètre ESPN."""
+import importlib.util
 import unittest
+from pathlib import Path
 
-from custom_components.nba.player_data import season_matches_espn_year
+ROOT = Path(__file__).resolve().parents[1]
+SPEC = importlib.util.spec_from_file_location(
+    "nba_player_data_test", ROOT / "custom_components" / "nba" / "player_data.py"
+)
+PLAYER_DATA = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(PLAYER_DATA)
+season_matches_espn_year = PLAYER_DATA.season_matches_espn_year
 
 
 class ESPNSeasonYearTests(unittest.TestCase):
