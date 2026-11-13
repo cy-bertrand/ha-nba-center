@@ -1,6 +1,9 @@
 name: Build NBA Center frontend
 
 on:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
       - main
