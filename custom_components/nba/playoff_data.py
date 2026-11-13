@@ -171,3 +171,123 @@ def parse_playoff_payload(payload: Any) -> list[dict[str, Any]]:
         if result is not None:
             parsed.append(result)
     return parsed
+
+
+
+def build_playoff_series(games: Any) -> list[dict[str, Any]]:
+    """Reconstruit les séries à partir des événements normalisés.
+
+    Une série est groupée par saison, phase, libellé de tour et paire d'équipes.
+    Seuls les vainqueurs explicitement déclarés sur un match explicitement terminé
+    sont comptabilisés. Les données ambiguës restent visibles mais non tranchées.
+    """
+    if not isinstance(games, (list, tuple)):
+        return []
+
+    grouped: dict[tuple[Any, ...], list[dict[str, Any]]] = {}
+    for game in games:
+        if not isinstance(game, dict) or game.get("phase") != "playoffs":
+            continue
+        year = game.get("season_year")
+        round_label = game.get("round_label")
+        teams = game.get("teams")
+        if year is None or not isinstance(round_label, str) or not round_label.strip():
+            continue
+        if not isinstance(teams, list) or len(teams) != 2:
+            continue
+        if any(not isinstance(team, dict) or team.get("id") is None for team in teams):
+            continue
+        team_ids = tuple(sorted(str(team["id"]) for team in teams))
+        if team_ids[0] == team_ids[1]:
+            continue
+        key = (year, game.get("phase"), round_label.strip(), team_ids)
+        grouped.setdefault(key, []).append(game)
+
+    series_list = []
+    for (year, phase, round_label, team_ids), series_games in grouped.items():
+        # Keep the first useful metadata for each team, independent of home/away.
+        team_info: dict[str, dict[str, Any]] = {}
+        for game in series_games:
+            for team in game["teams"]:
+                team_info.setdefault(str(team["id"]), {
+                    "id": str(team["id"]),
+                    "name": team.get("name"),
+                    "abbreviation": team.get("abbreviation"),
+                    "wins": 0,
+                })
+
+        unique_games: dict[str, dict[str, Any]] = {}
+        for index, game in enumerate(series_games):
+            game_id = game.get("id")
+            identity = str(game_id) if game_id is not None else f"__index_{index}"
+            unique_games[identity] = game
+        ordered_games = list(unique_games.values())
+        ordered_games.sort(key=lambda game: (
+            game.get("game_number") if isinstance(game.get("game_number"), int) else 999,
+            game.get("date") or "",
+            game.get("id") or "",
+        ))
+
+        completed_games = 0
+        unknown_results = 0
+        for game in ordered_games:
+            if game.get("completed") is not True:
+                unknown_results += 1
+                continue
+            completed_games += 1
+            winners = [
+                team for team in game["teams"]
+                if team.get("winner") is True
+            ]
+            if len(winners) != 1:
+                unknown_results += 1
+                continue
+            team_info[str(winners[0]["id"])]["wins"] += 1
+
+        duplicate_game_numbers = []
+        numbers = [
+            game["game_number"] for game in ordered_games
+            if isinstance(game.get("game_number"), int)
+        ]
+        seen_numbers = set()
+        for number in numbers:
+            if number in seen_numbers and number not in duplicate_game_numbers:
+                duplicate_game_numbers.append(number)
+            seen_numbers.add(number)
+
+        ordered_teams = [team_info[team_id] for team_id in team_ids]
+        ordered_teams.sort(key=lambda team: (-team["wins"], team["id"]))
+        max_wins = max((team["wins"] for team in ordered_teams), default=0)
+        winners = [team for team in ordered_teams if team["wins"] >= 4]
+        issues = []
+        if len(ordered_games) > 7:
+            issues.append("more_than_7_games")
+        if len(winners) > 1:
+            issues.append("both_teams_reached_4_wins")
+        if duplicate_game_numbers:
+            issues.append("duplicate_game_numbers")
+
+        champion = winners[0] if len(winners) == 1 and not issues else None
+        status = "completed" if champion else "inconsistent" if issues else "in_progress"
+        series_list.append({
+            "id": f"{year}:{phase}:{round_label}:{team_ids[0]}:{team_ids[1]}",
+            "season_year": year,
+            "phase": phase,
+            "round_label": round_label,
+            "status": status,
+            "winner": dict(champion) if champion else None,
+            "games_played": len(ordered_games),
+            "completed_games": completed_games,
+            "unknown_results": unknown_results,
+            "teams": ordered_teams,
+            "issues": issues,
+            "games": ordered_games,
+        })
+
+    series_list.sort(key=lambda series: (
+        series["season_year"],
+        series["round_label"].casefold(),
+        series["teams"][0]["id"],
+        series["teams"][1]["id"],
+    ))
+    return series_list
