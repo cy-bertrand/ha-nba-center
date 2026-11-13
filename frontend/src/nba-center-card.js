@@ -421,7 +421,7 @@ class NBACenterCard extends LitElement {
               </div>
               ${player.injuries?.length ? html`<p class="roster-injury">ÉTAT MÉDICAL ESPN : ${player.injuries.map((injury) => value(injury.status)).filter(Boolean).join(" · ")}</p>` : ""}
               ${overview.career_statistics?.length ? html`
-                <div class="panel-head" style="margin-top:16px"><h3>STATISTIQUES CUMULÉES EN CARRIÈRE</h3></div>
+                <div class="panel-head" style="margin-top:16px"><h3>MOYENNES EN CARRIÈRE</h3></div>
                 <div class="player-stat-grid">${["gamesPlayed","avgMinutes","avgPoints","avgRebounds","avgAssists","avgBlocks","avgSteals"].map((name) => {
                   const item = overview.career_statistics.find((row) => row.name === name);
                   return item ? html`<div><small>${value(item.label,item.name)}</small><strong>${value(item.display_value,item.value)}</strong></div>` : "";
@@ -440,7 +440,7 @@ class NBACenterCard extends LitElement {
                   })}</tbody></table></div>` : html`<p class="muted">Les box scores individuels ne sont pas encore disponibles pour ces rencontres.</p>`}
               </section>` : ""}
             <section class="panel player-season-panel"><div class="panel-head"><h3>STATISTIQUES DE SAISON</h3><span class="pill">${value(seasonLabel, "SAISON")}</span></div>
-            <div class="player-stat-grid">${quick.map(([label,item]) => html`<div><small>${label} / MATCH</small><strong>${statLabel(item)}</strong></div>`)}</div>
+            <div class="player-stat-grid player-season-highlights">${quick.map(([label,item]) => html`<div><small>${label} / MATCH</small><strong>${statLabel(item)}</strong></div>`)}</div>
               ${seasonHistory.length > 1 ? html`<div class="filters"><label class="muted" for="player-season-select">SAISON</label><select id="player-season-select" aria-label="Choisir une saison" .value=${String(selectedSeason?.year ?? "")} @change=${(event) => { this._playerSelectedSeason = event.target.value; this.requestUpdate(); }}>${seasonHistory.map((item) => html`<option value=${String(item.year)}>${item.display_name}</option>`)}</select></div>` : ""}
               ${stats.length ? html`<div class="table-wrap"><table><thead><tr><th>STATISTIQUE</th><th>VALEUR</th></tr></thead><tbody>${detailedStats.map((item) => html`<tr><td>${value(item.label,item.name)}</td><td>${value(item.display_value ?? item.value)}</td></tr>`)}</tbody></table></div>` : html`<p class="muted">Aucune autre statistique disponible pour cette saison.</p>`}
             </section>
