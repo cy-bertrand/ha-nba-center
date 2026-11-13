@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 
 from custom_components.nba.playoff_data import (
-    build_playoff_series,
+    build_playoff_bracket,\n    build_playoff_series,
     parse_playoff_event,
     parse_playoff_payload,
 )
@@ -89,6 +89,61 @@ class PlayoffPayloadTests(unittest.TestCase):
         self.assertEqual(by_round["West Finals"]["winner"]["abbreviation"], "OKC")
         self.assertEqual(by_round["NBA Finals"]["games_played"], 7)
         self.assertEqual(by_round["NBA Finals"]["winner"]["abbreviation"], "OKC")
+
+
+    def test_bracket_links_okc_winners_across_all_four_rounds(self):
+        games = parse_playoff_payload(load_fixture("espn_playoff_team_schedule_okc_2024_25.json"))
+        series = build_playoff_series(games)
+        brackets = build_playoff_bracket(series)
+        self.assertEqual(len(brackets), 1)
+        bracket = brackets[0]
+        self.assertEqual(bracket["season_year"], 2025)
+        self.assertEqual([round_data["round_label"] for round_data in bracket["conferences"]["West"]], [
+            "West 1st Round", "West Semifinals", "West Finals"
+        ])
+        first_round = next(item for item in series if item["round_label"] == "West 1st Round")
+        semifinals = next(item for item in series if item["round_label"] == "West Semifinals")
+        conference_finals = next(item for item in series if item["round_label"] == "West Finals")
+        nba_finals = bracket["finals"][0]
+        self.assertEqual(first_round["advances_to"], [semifinals["id"]])
+        self.assertEqual(semifinals["advanced_from"], [first_round["id"]])
+        self.assertEqual(semifinals["advances_to"], [conference_finals["id"]])
+        self.assertEqual(conference_finals["advances_to"], [nba_finals["id"]])
+        self.assertEqual(nba_finals["advanced_from"], [conference_finals["id"]])
+        self.assertEqual(bracket["unplaced"], [])
+
+    def test_bracket_does_not_invent_seed_positions_or_unverified_links(self):
+        series = [{
+            "id": "2025:playoffs:East 1st Round:1:2",
+            "season_year": 2025,
+            "phase": "playoffs",
+            "round_label": "East 1st Round",
+            "winner": {"id": "1", "name": "Team A"},
+            "teams": [{"id": "1"}, {"id": "2"}],
+        }, {
+            "id": "2025:playoffs:East Semifinals:3:4",
+            "season_year": 2025,
+            "phase": "playoffs",
+            "round_label": "East Semifinals",
+            "winner": None,
+            "teams": [{"id": "3"}, {"id": "4"}],
+        }]
+        bracket = build_playoff_bracket(series)[0]
+        self.assertEqual(series[0]["advances_to"], [])
+        self.assertEqual(series[1]["advanced_from"], [])
+        self.assertEqual(bracket["unplaced"], [])
+
+    def test_bracket_keeps_unknown_rounds_out_of_conference_slots(self):
+        series = [{
+            "id": "unknown",
+            "season_year": 2025,
+            "phase": "playoffs",
+            "round_label": "Special Playoff Round",
+            "winner": None,
+            "teams": [{"id": "1"}, {"id": "2"}],
+        }]
+        bracket = build_playoff_bracket(series)[0]
+        self.assertEqual(bracket["unplaced"], series)
 
     def test_play_in_is_not_grouped_into_best_of_seven_series(self):
         games = parse_playoff_payload(load_fixture("espn_playin_scoreboard_2025_04_16.json"))
