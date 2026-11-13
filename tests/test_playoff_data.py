@@ -89,6 +89,20 @@ class DefensiveParsingTests(unittest.TestCase):
         self.assertIsNone(parsed["teams"][1]["score"])
         self.assertIsNone(parsed["completed"])
 
+    def test_score_display_value_is_used_when_numeric_value_is_absent(self):
+        event = {
+            "id": "display-score",
+            "season": {"type": 3, "year": 2025},
+            "competitions": [{
+                "competitors": [
+                    {"id": "1", "homeAway": "home", "score": {"displayValue": "87"}, "team": {}},
+                    {"id": "2", "homeAway": "away", "score": {"displayValue": "82"}, "team": {}},
+                ],
+            }],
+        }
+        parsed = parse_playoff_event(event)
+        self.assertEqual([team["score"] for team in parsed["teams"]], [87, 82])
+
     def test_schedule_score_object_and_scoreboard_string_are_both_supported(self):
         event = {
             "id": "schedule",
