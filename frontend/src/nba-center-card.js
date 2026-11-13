@@ -372,7 +372,17 @@ class NBACenterCard extends LitElement {
     const stats = selectedSeason?.statistics ?? this._playerData?.stats?.statistics ?? [];
     const seasonLabel = selectedSeason?.display_name ?? this._playerData?.stats?.season ?? "SAISON";
     const stat = (...names) => stats.find((item) => names.includes(String(item.name).toLowerCase()) || names.includes(String(item.label).toLowerCase()));
-    const quick = [["PTS",stat("pts","points","points per game","avgpoints")],["REB",stat("reb","rebounds","rebounds per game","avgrebounds")],["AST",stat("ast","assists","assists per game","avgassists")],["STL",stat("stl","steals","steals per game","avgsteals")],["BLK",stat("blk","blocks","blocks per game","avgblocks")]];
+    const quickDefinitions = [
+      ["MIN", ["avgminutes", "minutespergame", "minutes", "minutes per game"]],
+      ["PTS", ["avgpoints", "pointspergame", "points", "points per game"]],
+      ["REB", ["avgrebounds", "reboundspergame", "rebounds", "rebounds per game"]],
+      ["AST", ["avgassists", "assistspergame", "assists", "assists per game"]],
+      ["STL", ["avgsteals", "stealspergame", "steals", "steals per game"]],
+      ["BLK", ["avgblocks", "blockspergame", "blocks", "blocks per game"]],
+    ];
+    const quick = quickDefinitions.map(([label, aliases]) => [label, stat(...aliases)]);
+    const highlightedNames = new Set(quickDefinitions.flatMap(([, aliases]) => aliases));
+    const detailedStats = stats.filter((item) => !highlightedNames.has(String(item.name ?? "").toLowerCase()) && !highlightedNames.has(String(item.label ?? "").toLowerCase()));
     const statLabel = (item) => item?.display_value ?? (item?.value == null ? "—" : item.value);
     return html`<div class="overlay" @click=${(event) => { if (event.target === event.currentTarget) this._closePlayer(); }}>
       <section class="overlay-panel player-profile-overlay" role="dialog" aria-modal="true" aria-label="Profil joueur">
@@ -385,7 +395,7 @@ class NBACenterCard extends LitElement {
             <div class="player-stat-grid">${quick.map(([label,item]) => html`<div><small>${label} / MATCH</small><strong>${statLabel(item)}</strong></div>`)}</div>
             <section class="panel"><div class="panel-head"><h3>STATISTIQUES DE SAISON</h3><span class="pill">${value(seasonLabel, "SAISON")}</span></div>
               ${seasonHistory.length > 1 ? html`<div class="filters"><label class="muted" for="player-season-select">SAISON</label><select id="player-season-select" aria-label="Choisir une saison" .value=${String(selectedSeason?.year ?? "")} @change=${(event) => { this._playerSelectedSeason = event.target.value; this.requestUpdate(); }}>${seasonHistory.map((item) => html`<option value=${String(item.year)}>${item.display_name}</option>`)}</select></div>` : ""}
-              ${stats.length ? html`<div class="table-wrap"><table><thead><tr><th>STATISTIQUE</th><th>VALEUR</th></tr></thead><tbody>${stats.map((item) => html`<tr><td>${value(item.label,item.name)}</td><td>${value(item.display_value ?? item.value)}</td></tr>`)}</tbody></table></div>` : html`<p class="muted">Statistiques de saison non retournées par ESPN.</p>`}
+              ${stats.length ? html`<div class="table-wrap"><table><thead><tr><th>STATISTIQUE</th><th>VALEUR</th></tr></thead><tbody>${detailedStats.map((item) => html`<tr><td>${value(item.label,item.name)}</td><td>${value(item.display_value ?? item.value)}</td></tr>`)}</tbody></table></div>` : html`<p class="muted">Aucune autre statistique disponible pour cette saison.</p>`}
             </section>
             ${(this._playerData.overview?.career_statistics?.length ? html`
               <section class="panel"><div class="panel-head"><h3>MOYENNES EN CARRIÈRE</h3><span class="pill">CAREER</span></div>
