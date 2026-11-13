@@ -463,6 +463,29 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     sorted(resources.get("gamelog", {}).keys()) if isinstance(resources.get("gamelog"), dict) else type(resources.get("gamelog")).__name__,
                     errors,
                 )
+                _LOGGER.warning(
+                    "Structure ESPN joueur %s: overview.statistics=%s; stats.categories[0]=%s; "
+                    "gamelog.events[0]=%s; gamelog.names=%s; gamelog.labels=%s",
+                    player_id,
+                    (
+                        {"type": type(resources.get("overview", {}).get("statistics")).__name__,
+                         "keys": sorted(resources.get("overview", {}).get("statistics", {}).keys())}
+                        if isinstance(resources.get("overview", {}).get("statistics"), dict)
+                        else type(resources.get("overview", {}).get("statistics")).__name__
+                    ),
+                    (
+                        sorted(resources.get("stats", {}).get("categories", [{}])[0].keys())
+                        if resources.get("stats", {}).get("categories") and isinstance(resources.get("stats", {}).get("categories")[0], dict)
+                        else type(resources.get("stats", {}).get("categories")).__name__
+                    ),
+                    (
+                        sorted(resources.get("gamelog", {}).get("events", [{}])[0].keys())
+                        if resources.get("gamelog", {}).get("events") and isinstance(resources.get("gamelog", {}).get("events")[0], dict)
+                        else type(resources.get("gamelog", {}).get("events")).__name__
+                    ),
+                    resources.get("gamelog", {}).get("names", [])[:8],
+                    resources.get("gamelog", {}).get("labels", [])[:8],
+                )
                 raise RuntimeError("ESPN n'a renvoyé aucune donnée exploitable pour ce joueur")
             self._player_data_cache[player_id] = (now, result)
             return result
