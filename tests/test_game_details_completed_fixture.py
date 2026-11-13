@@ -14,7 +14,8 @@ SPEC.loader.exec_module(module)
 FIXTURE = ROOT / "tests" / "fixtures" / "espn_summary_completed_401909971.json"
 
 
-class CompletedSummaryFixtureTests(unittest.TestCase):\n    """Full real-game regression: final state, box score, events and metadata."""
+class CompletedSummaryFixtureTests(unittest.TestCase):
+    """Full real-game regression: final state, box score, events and metadata."""
     @classmethod
     def setUpClass(cls):
         cls.raw = json.loads(FIXTURE.read_text(encoding="utf-8"))
