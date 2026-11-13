@@ -317,3 +317,25 @@ Requête : `scoreboard?dates=20250416&seasontype=3`.
 - `tests/fixtures/espn_playin_scoreboard_2025_04_16.json` : deux matchs de Play-In sans objet `series`.
 
 Ces fichiers sont des fixtures réduites aux champs utiles, recopiés depuis les réponses réelles ; ce ne sont pas des dumps complets des réponses ESPN.
+
+
+## Parseur indépendant — première version (13 novembre 2026)
+
+Le module `custom_components/nba/playoff_data.py` est maintenant créé. Il reste volontairement pur : aucune requête HTTP, aucune dépendance Home Assistant, aucune modification du coordinateur.
+
+Fonctions publiques :
+- `parse_playoff_event(event)` : normalise un événement ESPN, ou renvoie `None` si le type n'est pas postseason/Play-In ou si les équipes indispensables sont absentes.
+- `parse_playoff_payload(payload)` : applique le parseur à `payload.events` et ignore les événements non exploitables.
+
+Contrat normalisé :
+- `phase` vaut `playoffs` pour le type 3 et `play_in` pour le type 5 ;
+- `season_year` vient de l'événement, jamais de la saison racine de la réponse ;
+- `label` conserve le headline ESPN original ; `round_label` et `game_number` ne sont renseignés que si le label suit le motif `<tour> - Game N` ;
+- les équipes sont ordonnées domicile puis extérieur, avec leurs identifiants, abréviations, scores et vainqueur explicite ;
+- les scores manquants/invalides restent `None`, jamais zéro ;
+- `completed` reste inconnu si ESPN ne fournit pas un booléen explicite ;
+- `series` est un enrichissement facultatif, et ses nombres de victoires ne sont pas calculés par le parseur.
+
+Tests ajoutés dans `tests/test_playoff_data.py` : calendrier historique, scoreboard Finals, journée multi-matchs, Play-In, saison régulière ignorée, compétiteurs incomplets, scores absents et variantes de structure des scores.
+
+**Limite actuelle :** le parseur normalise les événements ; il ne regroupe pas encore les rencontres en séries, ne déduit pas les gagnants d'une série et ne construit pas de bracket. Ces règles nécessiteront des tests dédiés avant toute intégration au coordinateur.
