@@ -229,7 +229,7 @@
                 ]
               },
               {
-                "active": true,
+                "active": false,
                 "starter": true,
                 "athlete": {
                   "id": "3908845",
