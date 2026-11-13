@@ -11,6 +11,7 @@ module = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(module)
 
 FIXTURE = ROOT / "tests" / "fixtures" / "espn_summary_overtime_401909977.json"
+LIVE_FIXTURE = ROOT / "tests" / "fixtures" / "espn_summary_live_401909977.json"
 
 
 class OvertimeSummaryFixtureTests(unittest.TestCase):
@@ -28,6 +29,26 @@ class OvertimeSummaryFixtureTests(unittest.TestCase):
             [(team["abbr"], team["home_away"], team["score"], team["winner"])
              for team in state["competitors"]],
             [("WSH", "home", 140, False), ("DET", "away", 144, True)],
+        )
+
+    def test_live_capture_and_final_capture_are_the_same_event(self):
+        live_raw = json.loads(LIVE_FIXTURE.read_text(encoding="utf-8"))
+        live = module.parse_game_state(live_raw)
+        final = module.parse_game_state(self.raw)
+        self.assertEqual(live["event_id"], final["event_id"])
+        self.assertEqual(live["state"], "in")
+        self.assertEqual(final["state"], "post")
+        self.assertEqual(
+            [(team["abbr"], team["score"]) for team in live["competitors"]],
+            [("WSH", 32), ("DET", 26)],
+        )
+        self.assertEqual(
+            [item["displayValue"] for item in self.raw["header"]["competitions"][0]["competitors"][0]["linescores"]],
+            ["32", "29", "29", "31", "11", "8"],
+        )
+        self.assertEqual(
+            [item["displayValue"] for item in self.raw["header"]["competitions"][0]["competitors"][1]["linescores"]],
+            ["33", "31", "30", "27", "11", "12"],
         )
 
     def test_real_period_end_events_include_both_overtimes(self):
