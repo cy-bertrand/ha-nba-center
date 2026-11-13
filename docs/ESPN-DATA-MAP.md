@@ -458,31 +458,37 @@ C'est le schéma le plus complet repéré pour un vrai bracket, mais il nécessi
 
 Le classement des tours du prototype a été rendu strict : `NBA Finals` est maintenant reconnu exactement comme le quatrième tour, et non comme une finale de conférence. Cela évite de confondre les deux étapes lors de la création des liens de progression.
 
-## Vérification des standings ESPN historiques — 13 novembre 2026
+## Vérification des standings ESPN historiques — correction après comparaison Play-In (13 novembre 2026)
 
-Deux captures JSON fournies depuis l'endpoint ESPN standings ont été inspectées :
+Deux captures JSON fournies depuis l'endpoint ESPN standings ont été analysées :
 
-- `standings?season=2025` : réponse dont les blocs de conférence portent `seasonDisplayName=2024-25` et `seasonType=2`.
-- `standings?season=2026` : réponse dont les blocs portent `seasonDisplayName=2025-26` et `seasonType=2`.
+- `standings?season=2025` : `seasonDisplayName=2024-25`, `seasonType=2`.
+- `standings?season=2026` : `seasonDisplayName=2025-26`, `seasonType=2`.
 
-Chaque équipe possède un identifiant ESPN stable (`team.id`), une conférence via l'arborescence parentale et une statistique `playoffSeed`. La description de cette statistique dans les deux captures est explicitement : **« Projected seed in the NBA Playoffs, according to BPI »**. Les fichiers comprennent aussi `clincher`, avec des valeurs telles que `x`, `y`, `z`, `xp`, `pb` et `e`.
+Chaque équipe possède un identifiant ESPN (`team.id`), une conférence via l'arborescence parentale et une statistique `playoffSeed`. Sa description textuelle est « Projected seed in the NBA Playoffs, according to BPI ». Les entrées contiennent aussi `clincher`.
 
-### Comparaison à la référence officielle NBA
+### Comparaison complète avec les seeds finaux officiels
 
-**Saison 2024-25 :** les seeds fournis par ESPN concordent avec le bracket officiel NBA après le Play-In. Exemples : Miami 8 et Orlando 7 à l'Est ; Memphis 8 et Golden State 7 à l'Ouest. Les affiches officielles du premier tour correspondent également aux seeds 1 à 6 des deux conférences.
+Après vérification des résultats du Play-In et des brackets officiels, **les seeds 1 à 8 des deux conférences concordent dans les deux saisons capturées** :
 
-**Saison 2025-26 :** une divergence est observée à l'Ouest. La capture ESPN attribue Portland au seed 7 et Phoenix au seed 8, tandis que la page officielle NBA de mise à jour du bracket 2026 indique Phoenix 7 et Portland 8. À l'Est, les positions 7 à 10 visibles dans la capture concordent avec les positions confirmées dans cette page officielle.
+- **2024-25** : Est — CLE, BOS, NY, IND, MIL, DET, ORL, MIA ; Ouest — OKC, HOU, LAL, DEN, LAC, MIN, GS, MEM. Les résultats officiels du Play-In confirment Orlando et Golden State comme 7e seeds, Miami et Memphis comme 8e seeds.
+- **2025-26** : Est — DET, BOS, NY, CLE, TOR, ATL, PHI, ORL ; Ouest — OKC, SA, DEN, LAL, HOU, MIN, POR, PHX. Les résultats officiels du Play-In confirment Portland 7e et Phoenix 8e à l'Ouest, ainsi que Philadelphia 7e et Orlando 8e à l'Est.
 
-Références de contrôle :
-- NBA.com, bracket officiel 2025 : https://www.nba.com/news/2025-nba-playoffs-standings-and-bracket-updates
-- NBA.com, standings et bracket 2026 : https://www.nba.com/news/2026-nba-playoffs-standings-and-bracket-updates
+Références officielles de contrôle :
+- NBA.com, résultats et bracket 2025 : https://www.nba.com/news/2025-nba-playoffs-schedule
+- NBA.com, bilan de saison 2025-26 et résultats du Play-In : https://www.nba.com/news/season-review-2025-26
+- NBA.com, bracket et positions verrouillées avant le Play-In 2026 (utile pour distinguer les seeds pré-Play-In des seeds finaux) : https://www.nba.com/news/2026-nba-playoffs-standings-and-bracket-updates
 
-### Conclusion et décision d'architecture
+### Interprétation et décision technique
 
-- Le schéma ESPN standings est confirmé sur deux saisons historiques : conférences, équipes, identifiants et champ `playoffSeed` sont disponibles.
-- Le champ `playoffSeed` **n'est pas une source de vérité suffisamment fiable pour positionner automatiquement les équipes dans un bracket** : sa description le qualifie de projection BPI et la saison 2025-26 présente une divergence vérifiée.
-- Le champ `clincher` est un indicateur complémentaire de statut, mais ses codes ne doivent pas être interprétés en production sans documentation et validation dédiées.
-- Les standings restent utiles pour enrichir les données de conférence, les bilans et les équipes. Les seeds doivent provenir d'une source confirmée après Play-In ou d'une règle de classement explicitement vérifiée.
-- Ne pas ajouter de positions de bracket à `build_playoff_bracket()` à partir de `playoffSeed` seul. Conserver les emplacements inconnus plutôt que d'afficher un tableau potentiellement faux.
+- Les captures historiques démontrent que `playoffSeed` correspond aux seeds finaux du bracket pour les saisons 2024-25 et 2025-26, y compris les seeds 7 et 8 après le Play-In.
+- La description « Projected seed … according to BPI » reste une réserve sémantique : deux saisons validées ne prouvent pas que le champ sera toujours final, correctement actualisé ou disponible de la même façon pour une saison en cours.
+- Le champ `clincher` est conservé comme information complémentaire. Ses codes (`x`, `y`, `z`, `xp`, `pb`, `e`, etc.) ne doivent pas être interprétés sans contrat documenté ; il ne remplace pas le seed.
+- **Décision :** `playoffSeed` peut alimenter les positions historiques du bracket lorsque la saison est terminée et que les données sont cohérentes (8 seeds uniques par conférence, valeurs 1 à 8, identifiants d'équipe uniques). Pour la saison en cours, le marquer provisoire tant que le Play-In n'est pas terminé et que les seeds 7/8 ne sont pas confirmés.
+- En cas de valeur absente, doublon, trou dans la séquence ou incohérence avec les équipes qualifiées, ne pas inventer de seed : laisser les positions concernées inconnues et conserver les données brutes pour diagnostic.
 
-**Statut :** standings ESPN historiques validés au niveau du schéma ; `playoffSeed` rejeté comme source de vérité du bracket ; intégration de ces données dans le coordinateur non commencée.
+### Correctif de l'analyse précédente
+
+La conclusion précédente de cette section indiquant que Portland et Phoenix étaient inversés en 2025-26 était erronée : j'avais lu à tort une page NBA.com publiée avant la fin du Play-In comme si elle présentait le bracket final. Les résultats officiels ultérieurs confirment bien Portland 7 et Phoenix 8, exactement comme dans la capture ESPN. La conclusion précédente rejetant `playoffSeed` comme source de seeds historiques est donc remplacée par la décision ci-dessus.
+
+**Statut :** schéma ESPN standings confirmé ; seeds 1 à 8 vérifiés sur deux saisons complètes ; extraction pure disponible dans `parse_playoff_standings()` ; intégration au coordinateur et construction des positions du bracket restent à faire et devront appliquer les contrôles ci-dessus.
