@@ -507,7 +507,7 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
                         returned_start = returned_season.split("-")[0]
                         # ESPN peut ignorer le paramètre season et renvoyer le dernier split playoffs.
                         # Ne jamais présenter ce split sous l'année demandée.
-                        if postseason_year is None or not returned_start.isdigit() or int(returned_start) == season_year:
+                        if postseason_year is None or (returned_start.isdigit() and int(returned_start) == season_year):
                             postseason_stats = parsed_postseason
                         else:
                             _LOGGER.debug(
