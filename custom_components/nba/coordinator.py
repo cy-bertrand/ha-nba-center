@@ -16,6 +16,7 @@ from .scoreboard_utils import async_load_scoreboard, parse_score
 from .game_details import parse_boxscore, parse_game_state, parse_plays
 from .teams_catalog import parse_teams_catalog
 from .team_roster import parse_team_roster
+from .player_data import parse_player_gamelog, parse_player_stats
 
 from .const import (
     CONF_NOTIFY_END,
@@ -28,6 +29,7 @@ from .const import (
     LEADER_CATEGORIES,
     LEADERS_COUNT,
     LEADERS_URL,
+    PLAYER_DATA_URL,
     SCAN_INTERVAL_IDLE,
     SCAN_INTERVAL_LIVE,
     SCOREBOARD_URL,
@@ -86,6 +88,8 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._teams_catalog_fetched: datetime | None = None
         self._team_roster_cache: dict[str, tuple[datetime, dict[str, Any]]] = {}
         self._team_roster_locks: dict[str, asyncio.Lock] = {}
+        self._player_data_cache: dict[str, tuple[datetime, dict[str, Any]]] = {}
+        self._player_data_locks: dict[str, asyncio.Lock] = {}
 
     async def _get(self, url: str, params: dict | None = None) -> dict:
         async with self.session.get(url, params=params, timeout=20) as resp:
@@ -407,6 +411,51 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 "fetched_at": now.isoformat(),
             }
             self._team_roster_cache[team_id] = (now, result)
+            return result
+
+
+    async def async_get_player_data(self, player_id: str) -> dict[str, Any]:
+        """Charge les statistiques et le gamelog d'un joueur ESPN, avec cache d'une heure."""
+        player_id = str(player_id).strip()
+        if not player_id.isdigit() or len(player_id) > 12:
+            raise ValueError("Identifiant de joueur ESPN invalide")
+        now = dt_util.utcnow()
+        cached = self._player_data_cache.get(player_id)
+        if cached and (now - cached[0]).total_seconds() < 3600:
+            return cached[1]
+
+        lock = self._player_data_locks.setdefault(player_id, asyncio.Lock())
+        async with lock:
+            now = dt_util.utcnow()
+            cached = self._player_data_cache.get(player_id)
+            if cached and (now - cached[0]).total_seconds() < 3600:
+                return cached[1]
+
+            resources: dict[str, Any] = {}
+            errors: dict[str, str] = {}
+            for resource in ("overview", "stats", "gamelog"):
+                url = PLAYER_DATA_URL.format(player_id=player_id, resource=resource)
+                try:
+                    resources[resource] = await self._get(url)
+                except Exception as err:  # noqa: BLE001 - chaque ressource est indépendante
+                    errors[resource] = str(err)
+                    _LOGGER.debug("Données joueur %s (%s) indisponibles: %s", player_id, resource, err)
+
+            overview = parse_player_stats(resources.get("overview", {}))
+            stats = parse_player_stats(resources.get("stats", {}))
+            gamelog = parse_player_gamelog(resources.get("gamelog", {}))
+            result = {
+                "player_id": player_id,
+                "overview": overview,
+                "stats": stats,
+                "gamelog": gamelog,
+                "errors": errors,
+                "available": bool(overview["statistics"] or stats["statistics"] or gamelog["games"]),
+                "fetched_at": now.isoformat(),
+            }
+            if not result["available"]:
+                raise RuntimeError("ESPN n'a renvoyé aucune donnée exploitable pour ce joueur")
+            self._player_data_cache[player_id] = (now, result)
             return result
 
     async def async_get_scoreboard_for_local_date(self, local_date: str) -> dict[str, Any]:
