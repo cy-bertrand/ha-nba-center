@@ -161,3 +161,51 @@ En revanche, **le scoreboard seul ne prouve pas le numéro de série ni le tour*
 - https://js.sportsdataverse.org/docs/nba/reference/cdn
 - https://rdrr.io/cran/hoopR/src/R/espn_basketball_team_helpers.R
 - https://github.com/machina-sports/sports-skills/blob/main/skills/nba-data/references/api-reference.md
+
+
+
+## Validation de la piste ESPN : labels de playoffs dans les événements (13 novembre 2026)
+
+Une implémentation communautaire NBA/ESPN (Scorva) documente un champ utile observé sur les événements :
+- le type de saison est disponible via `event.season.type` ;
+- lorsque `event.season.type === 3`, le libellé de playoffs est lu dans `event.competitions[0].notes[0].headline` ;
+- exemples publiés : `NBA Finals - Game 1` et `NBA Finals - Game 3`.
+
+Cela ouvre une piste plus robuste que le décodage des derniers chiffres du game ID : utiliser les labels ESPN lorsqu'ils sont présents, tout en gardant le match et ses résultats comme source de vérité.
+
+### Point de vigilance sur la récupération d'une saison entière
+
+Les références consultées ne sont pas parfaitement cohérentes sur le filtre `dates` :
+- SportsDataverse décrit `dates` comme acceptant une date, une plage ou une année ;
+- une documentation d'API récente signale que les plages de dates peuvent renvoyer HTTP 400 ;
+- le paramètre `limit` est documenté avec une valeur par défaut de 500, mais la limite maximale effective n'est pas établie.
+
+Par conséquent, **ne pas implémenter un unique appel avec une plage de dates et `limit=1000` comme s'il était validé**. Deux solutions de test restent à comparer :
+1. charger les calendriers d'équipe avec `season=YYYY`, puis filtrer les événements postseason ; cela implique jusqu'à 30 requêtes pour reconstruire une saison complète ;
+2. appeler le scoreboard par dates quotidiennes sur la période postseason, avec un cache et une limite contrôlée.
+
+Le calendrier d'équipe est déjà utilisé par l'intégration pour les équipes favorites. Sa réponse actuelle n'est cependant pas capturée dans les fixtures avec une saison historique complète.
+
+### Règles de reconstruction proposées pour le prototype
+
+- Filtrer explicitement les événements dont le type de saison ESPN est postseason (id `3`), sans se baser uniquement sur le préfixe du game ID.
+- Lire le label depuis `competitions[0].notes` en tolérant l'absence, une liste vide ou plusieurs notes.
+- Conserver le label original et le game ID ; ne pas normaliser agressivement le texte.
+- Regrouper les matchs par saison + paire d'équipes non ordonnée, puis vérifier que le label et la chronologie ne révèlent pas plusieurs confrontations distinctes.
+- Pour le play-in, ne pas le confondre avec une série best-of-seven ; utiliser le label explicite lorsqu'il existe et laisser les cas non classables comme inconnus.
+- Calculer le score de série uniquement à partir des matchs terminés avec un vainqueur explicite.
+- Ne pas déduire le tour depuis la date de début ou l'ordre des confrontations tant que cela n'a pas été vérifié sur plusieurs saisons.
+
+Cette stratégie suffit potentiellement pour un historique des confrontations et de leurs résultats. Un bracket complet (positions 1–8, progression des vainqueurs et branches) nécessite des règles supplémentaires et une validation distincte.
+
+### Statut après cette vérification
+
+- Paramètres scoreboard `seasontype=3`, `dates` et `limit` : documentés, limites d'usage saisonnier à confirmer.
+- Label postseason `competitions[0].notes[].headline` : observé dans une implémentation communautaire, pas encore confirmé par une fixture brute de ce dépôt.
+- Récupération complète d'une saison depuis l'endpoint : non validée.
+- Reconstruction et bracket : non implémentés.
+- Prochaine action : capturer une réponse réelle de calendrier d'équipe historique et une réponse scoreboard de match de playoffs, puis écrire les tests sur leur forme exacte.
+
+### Référence complémentaire
+
+- https://github.com/yassinbenelhajlahsen/Scorva
