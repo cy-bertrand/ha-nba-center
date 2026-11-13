@@ -294,25 +294,18 @@ def build_playoff_series(games: Any) -> list[dict[str, Any]]:
 
 
 
-_ROUND_RANKS = {
-    "1st round": 1,
-    "first round": 1,
-    "semifinals": 2,
-    "finals": 3,
-    "nba finals": 4,
-}
-
-
 def _round_metadata(label: str) -> tuple[str | None, int | None]:
-    normalized = label.casefold()
+    """Retourne conférence et rang depuis les libellés ESPN connus."""
+    normalized = " ".join(label.casefold().split())
     if normalized == "nba finals":
         return "NBA", 4
-    conference = "East" if normalized.startswith("east ") else "West" if normalized.startswith("west ") else None
-    rank = next(
-        (value for marker, value in _ROUND_RANKS.items() if marker in normalized),
-        None,
-    )
-    return conference, rank
+    if normalized in ("east 1st round", "west 1st round", "east first round", "west first round"):
+        return ("East" if normalized.startswith("east ") else "West"), 1
+    if normalized in ("east semifinals", "west semifinals"):
+        return ("East" if normalized.startswith("east ") else "West"), 2
+    if normalized in ("east finals", "west finals"):
+        return ("East" if normalized.startswith("east ") else "West"), 3
+    return None, None
 
 
 def build_playoff_bracket(series: Any) -> list[dict[str, Any]]:
