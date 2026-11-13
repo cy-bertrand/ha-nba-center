@@ -128,6 +128,32 @@ class BoxscoreParsingTests(unittest.TestCase):
         self.assertEqual(plays[-1]["type"], "End Game")
 
 
+    def test_structured_event_labels_avoid_commentary_false_positives(self):
+        plays = parse_plays({"plays": [
+            {"type": {"text": "Jump Shot"}, "shortDescription": "+2 Points",
+             "text": "Player makes a shot after a timeout review"},
+            {"type": {"text": "End Period"}, "shortDescription": "Halftime",
+             "text": "End of the 2nd Quarter"},
+            {"type": {"text": "Full Timeout"}, "shortDescription": "Timeout",
+             "text": "Timeout after a foul review"},
+        ]})
+        self.assertEqual(plays[0]["action_category"], "score")
+        self.assertFalse(plays[0]["is_timeout"])
+        self.assertTrue(plays[1]["is_period_end"])
+        self.assertEqual(plays[2]["action_category"], "timeout")
+        self.assertFalse(plays[2]["is_foul"])
+
+    def test_score_change_uses_consecutive_valid_score_snapshots(self):
+        plays = parse_plays({"plays": [
+            {"homeScore": 0, "awayScore": 0},
+            {"homeScore": 2, "awayScore": 0},
+            {"homeScore": None, "awayScore": None},
+            {"homeScore": 2, "awayScore": 3},
+            {"homeScore": 2, "awayScore": 3},
+        ]})
+        self.assertEqual([p["score_changed"] for p in plays],
+                         [False, True, False, True, False])
+
     def test_event_flags_can_describe_compound_events(self):
         plays = parse_plays({"plays": [
             {"type": {"text": "Offensive Foul Turnover"}, "text": "Player offensive foul turnover"},
