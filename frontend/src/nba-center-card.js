@@ -386,9 +386,17 @@ class NBACenterCard extends LitElement {
     const stats = selectedSeason?.statistics ?? this._playerData?.stats?.statistics ?? [];
     const seasonLabel = selectedSeason?.display_name ?? this._playerData?.stats?.season ?? "SAISON";
     const games = this._playerData?.gamelog?.games ?? [];
-    const currentTeam = this._teamsCatalog().teams.find((team) =>
+    const teamCatalog = this._teamsCatalog().teams;
+    const currentTeam = teamCatalog.find((team) =>
       String(team.abbreviation ?? "").toUpperCase() === String(player.team ?? "").toUpperCase()
     );
+    const seasonTeamLabel = (item) => {
+      const team = teamCatalog.find((candidate) =>
+        (item.team_id && String(candidate.id) === String(item.team_id))
+        || (item.team_abbreviation && String(candidate.abbreviation).toUpperCase() === String(item.team_abbreviation).toUpperCase())
+      );
+      return item.team_abbreviation ?? team?.abbreviation ?? item.team_name ?? team?.display_name ?? "";
+    };
     const formatGameDate = (raw) => {
       const date = String(raw ?? "").split("T")[0];
       const match = date.match(/^(\d{4})-(\d{2})-(\d{2})$/);
@@ -466,7 +474,7 @@ class NBACenterCard extends LitElement {
               </section>` : ""}
             <section class="panel player-season-panel"><div class="panel-head"><h3>STATISTIQUES DE SAISON</h3><span class="pill">${value(seasonLabel, "SAISON")}</span></div>
             <div class="player-stat-grid player-season-highlights">${quick.map(([label,item]) => html`<div><small>${label} / MATCH</small><strong>${statLabel(item)}</strong></div>`)}</div>
-              ${seasonHistory.length > 1 ? html`<div class="filters"><label class="muted" for="player-season-select">SAISON</label><select id="player-season-select" aria-label="Choisir une saison" .value=${String(selectedSeason?.year ?? "")} @change=${(event) => { this._playerSelectedSeason = event.target.value; this.requestUpdate(); }}>${seasonHistory.map((item) => html`<option value=${String(item.year)}>${item.display_name}${item.team_abbreviation ? ` · ${item.team_abbreviation}` : item.team_name ? ` · ${item.team_name}` : ""}</option>`)}</select></div>` : ""}
+              ${seasonHistory.length > 1 ? html`<div class="filters"><label class="muted" for="player-season-select">SAISON</label><select id="player-season-select" aria-label="Choisir une saison" .value=${String(selectedSeason?.year ?? "")} @change=${(event) => { this._playerSelectedSeason = event.target.value; this.requestUpdate(); }}>${seasonHistory.map((item) => html`<option value=${String(item.year)}>${item.display_name}${seasonTeamLabel(item) ? ` · ${seasonTeamLabel(item)}` : ""}</option>`)}</select></div>` : ""}
               ${stats.length ? html`<div class="table-wrap"><table><thead><tr><th>STATISTIQUE</th><th>VALEUR</th></tr></thead><tbody>${detailedStats.map((item) => html`<tr><td>${value(translateStat(item),item.name)}</td><td>${value(item.display_value ?? item.value)}</td></tr>`)}</tbody></table></div>` : html`<p class="muted">Aucune autre statistique disponible pour cette saison.</p>`}
             </section>
             ${Object.keys(this._playerData.errors ?? {}).length ? html`<p class="muted">Certaines sources ESPN sont indisponibles : ${Object.keys(this._playerData.errors).join(" · ")}</p>` : ""}
