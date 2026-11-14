@@ -656,7 +656,7 @@ class NBACenterCard extends LitElement {
     return html`<section class="panel playoff-series">
       <div class="panel-head"><h3>${value(series.round_label, "SÉRIE")}</h3><span class="pill">${series.status === "completed" ? "TERMINÉE" : series.status === "inconsistent" ? "À VÉRIFIER" : "EN COURS"}</span></div>
       ${teams.map((team) => html`<div class="playoff-team ${winnerId === String(team.id) ? "playoff-winner" : ""}">
-        <span class="playoff-seed">${team.seed == null ? "—" : `#${team.seed}`}</span><strong>${value(team.abbreviation, team.name ?? team.id)}</strong><span class="playoff-wins">${Number.isInteger(team.wins) ? team.wins : 0}</span>
+        <span class="playoff-seed">${team.seed == null ? "—" : `#${team.seed}`}</span><strong>${value(team.abbreviation, team.name ?? team.id)}</strong><span class="playoff-wins">${Number.isInteger(team.wins) ? `${series.unknown_results ? "≥" : ""}${team.wins}` : "—"}</span>
       </div>`)}
       <div class="playoff-meta">${series.completed_games ?? 0} MATCHS TERMINÉS · ${series.games_played ?? 0} MATCHS RECENSÉS</div>
       ${series.unknown_results ? html`<div class="playoff-warning">${series.unknown_results} résultat(s) non confirmé(s)</div>` : ""}
