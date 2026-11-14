@@ -178,6 +178,32 @@ class PlayoffPayloadTests(unittest.TestCase):
         self.assertEqual(series, original)
         self.assertEqual(bracket[0]["conferences"]["East"][0]["series"][0]["advances_to"], ["next"])
 
+    def test_historical_espn_full_conference_round_labels_are_placed(self):
+        series = [
+            {"id": "e1", "season_year": 2008, "phase": "playoffs",
+             "round_label": "Eastern Conference 1st Round",
+             "winner": {"id": "1"}, "teams": [{"id": "1"}, {"id": "8"}]},
+            {"id": "e2", "season_year": 2008, "phase": "playoffs",
+             "round_label": "Eastern Conference Semifinals",
+             "winner": {"id": "1"}, "teams": [{"id": "1"}, {"id": "4"}]},
+            {"id": "e3", "season_year": 2008, "phase": "playoffs",
+             "round_label": "Eastern Conference Finals",
+             "winner": {"id": "1"}, "teams": [{"id": "1"}, {"id": "2"}]},
+            {"id": "w1", "season_year": 2008, "phase": "playoffs",
+             "round_label": "Western Conference 1st Round",
+             "winner": None, "teams": [{"id": "3"}, {"id": "6"}]},
+        ]
+        bracket = build_playoff_bracket(series)[0]
+        self.assertEqual([item["round_label"] for item in bracket["conferences"]["East"]], [
+            "Eastern Conference 1st Round",
+            "Eastern Conference Semifinals",
+            "Eastern Conference Finals",
+        ])
+        self.assertEqual([item["round_label"] for item in bracket["conferences"]["West"]], [
+            "Western Conference 1st Round",
+        ])
+        self.assertEqual(bracket["unplaced"], [])
+
     def test_bracket_keeps_unknown_rounds_out_of_conference_slots(self):
         series = [{
             "id": "unknown",
