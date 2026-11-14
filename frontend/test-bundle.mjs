@@ -82,6 +82,10 @@ assert.match(bundle, /period_display/, "ESPN period display labels must be used 
 assert.match(source, /_quarterScorePanel\(\)/, "quarter score panel renderer must be present");
 assert.match(source, /player\.ejected/, "player ejection metadata must be rendered");
 assert.match(source, /const preferred = \["MIN", "PTS", "FG"/, "player points must appear immediately after minutes in the box score");
+assert.match(source, /boxscore-player-link/, "player names in Match Center box scores must be interactive");
+assert.match(source, /_openPlayer\(player\.id, \{ \.\.\.player, player: player\.name, team_id: block\.team_id/, "clicking a box-score player must open the profile with the player's franchise context");
+assert.match(source, /2026\.11\.14\.10/, "build version must be bumped for clickable box-score player profiles");
+
 assert.match(bundle, /player-table/, "responsive player statistics table must be included");
 assert.match(bundle, /type="date"/, "calendar date picker must be included");
 assert.match(bundle, /sensor\.nba_matchs_du_jour/, "existing NBA sensor default must be mapped");
