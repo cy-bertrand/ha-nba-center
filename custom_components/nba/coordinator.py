@@ -406,18 +406,37 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 "home": {},
                 "away": {},
             }
-            for c in comp["competitors"]:
-                team = c.get("team", {})
-                logo = team.get("logo") or (team.get("logos") or [{}])[0].get("href")
-                game[c["homeAway"]] = {
-                    "id": str(team.get("id", c.get("id", ""))),
+            competitors = comp.get("competitors")
+            if not isinstance(competitors, list):
+                return None
+            for competitor in competitors:
+                if not isinstance(competitor, dict):
+                    continue
+                side = competitor.get("homeAway")
+                if side not in ("home", "away") or game[side]:
+                    continue
+                team = competitor.get("team")
+                if not isinstance(team, dict):
+                    team = {}
+                logos = team.get("logos")
+                fallback_logo = logos[0].get("href") if isinstance(logos, list) and logos and isinstance(logos[0], dict) else None
+                records = competitor.get("records")
+                record = records[0].get("summary") if isinstance(records, list) and records and isinstance(records[0], dict) else None
+                game[side] = {
+                    "id": str(team.get("id", competitor.get("id", ""))),
                     "name": team.get("displayName") or team.get("name"),
                     "abbr": team.get("abbreviation"),
-                    "logo": logo,
-                    "score": parse_score(c.get("score")),
-                    "winner": c.get("winner", False),
-                    "record": (c.get("records") or [{}])[0].get("summary"),
+                    "logo": team.get("logo") or fallback_logo,
+                    "score": parse_score(competitor.get("score")),
+                    "winner": competitor.get("winner", False) is True,
+                    "record": record,
                 }
+            # Les consommateurs (capteurs, forme récente et carte) attendent
+            # impérativement deux équipes : ne jamais publier un match incomplet.
+            if not game["home"] or not game["away"]:
+                return None
+            if state not in ("pre", "in", "post"):
+                return None
             return game
         except (KeyError, IndexError, TypeError) as err:
             _LOGGER.debug("Match ignoré (format inattendu: %s): %s", err, event.get("id"))
