@@ -1,7 +1,7 @@
 // NBA Center Lovelace card — reads only Home Assistant entity state. Lit is bundled locally.
 import { LitElement, css, html } from "lit";
 
-const BUILD_VERSION = "2026.11.14.15";
+const BUILD_VERSION = "2026.11.14.16";
 
 const VIEWS = [
   { id: "home", label: "HOME" },
@@ -906,6 +906,35 @@ class NBACenterCard extends LitElement {
       const details = await this.hass.callWS({ type: "nba/game_details", game_id: String(game.id) });
       if (request !== this._overlayRequest || String(this._overlayGame?.id) !== String(game.id)) return;
       this._overlayDetails = details;
+      const competitors = details?.live_state?.competitors ?? [];
+      if (competitors.length >= 2) {
+        const catalog = this._teamsCatalog().teams;
+        const toTeam = (competitor) => {
+          const catalogTeam = catalog.find((team) =>
+            (competitor.team_id && String(team.id) === String(competitor.team_id))
+            || String(team.abbreviation ?? team.abbr ?? "").toUpperCase() === String(competitor.abbr ?? "").toUpperCase()
+          );
+          return {
+            id: competitor.team_id,
+            name: competitor.name ?? catalogTeam?.display_name ?? catalogTeam?.name ?? competitor.abbr,
+            abbr: competitor.abbr ?? catalogTeam?.abbreviation,
+            logo: catalogTeam?.logo,
+            score: competitor.score,
+          };
+        };
+        const away = competitors.find((team) => team.home_away === "away");
+        const home = competitors.find((team) => team.home_away === "home");
+        if (away && home) {
+          const liveState = details.live_state.state;
+          this._overlayGame = {
+            ...this._overlayGame,
+            state: liveState === "pre" ? "pre" : liveState === "in" ? "in" : "post",
+            detail: details.live_state.status_detail ?? this._overlayGame.detail,
+            away: toTeam(away),
+            home: toTeam(home),
+          };
+        }
+      }
     } catch (err) {
       if (request !== this._overlayRequest) return;
       this._overlayError = err?.message ?? "Résumé du match indisponible.";
@@ -1304,7 +1333,7 @@ class NBACenterCard extends LitElement {
             ${this._playByPlayPanel()}
             ${!this._overlayLoading && !this._overlayError && !this._overlayDetails?.error && !this._overlayDetails?.teams?.length && !this._overlayDetails?.has_boxscore ? html`<section class="empty"><p>Le résumé détaillé n’est pas encore disponible pour cette rencontre.</p></section>` : ""}            </div></section></div>` : ""}
         ${this._teamOverlay && !this._overlayGame ? this._teamRosterPanel() : ""}
-        ${this._playerOverlay ? this._playerProfilePanel() : ""}
+        ${this._playerOverlay && !this._overlayGame ? this._playerProfilePanel() : ""}
         <footer class="footer"><span>NBA CENTER · ${active.label}</span><span>JS ${BUILD_VERSION}</span></footer>
       </ha-card>`;
   }
