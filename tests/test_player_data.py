@@ -340,6 +340,27 @@ class PlayerDataParserTests(unittest.TestCase):
         self.assertEqual(result["games"][0]["home_away"], "@")
         self.assertEqual(result["games"][0]["stats"], {})
 
+    def test_gamelog_uses_nested_stats_when_event_stats_are_empty(self):
+        result = parse_player_gamelog({
+            "events": [{
+                "id": "game-1",
+                "gameDate": "2026-11-13T00:00:00Z",
+                "stats": {},
+            }],
+            "seasonTypes": [{
+                "categories": [{
+                    "names": ["points", "rebounds"],
+                    "labels": ["PTS", "REB"],
+                    "events": [{
+                        "eventId": "game-1",
+                        "stats": ["32", "9"],
+                    }],
+                }],
+            }],
+        })
+        self.assertEqual(result["count"], 1)
+        self.assertEqual(result["games"][0]["stats"], {"points": 32, "rebounds": 9})
+
     def test_gamelog_skips_events_without_ids_and_duplicate_ids(self):
         result = parse_player_gamelog({"events": [
             {"gameDate": "2026-11-14T00:00:00Z", "gameResult": "W"},
