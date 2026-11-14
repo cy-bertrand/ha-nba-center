@@ -17,6 +17,7 @@ assert.match(source, /PLAYOFFS CENTER/, "dedicated playoffs center must be rende
 assert.match(source, /_playoffSeriesCard\(series\)/, "playoff series must have a dedicated card renderer");
 assert.match(source, /series\.unknown_results \? "≥" : ""/, "playoff wins must be marked as minimum counts when results are unconfirmed");
 assert.match(source, /_dataStatus\(\)/, "card must read the diagnostic sensor");
+assert.match(source, /dataStatus\?\.state !== "À jour"/, "unknown diagnostic states must be treated as degraded");
 assert.match(source, /DONNÉES PARTIELLES/, "card must warn when core NBA feeds are degraded");
 assert.match(source, /series\.unknown_results \? "≥" : ""/, "playoff wins must be marked as minimum counts when results are unconfirmed");
 assert.match(source, /TÊTES DE SÉRIE NON VALIDÉES|Têtes de série non validées/, "unvalidated playoff seeds must be disclosed");
