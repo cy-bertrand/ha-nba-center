@@ -16,6 +16,19 @@ def _text(value: Any) -> str | None:
     return result or None
 
 
+def _display_text(value: Any) -> str | None:
+    """Évite d'afficher NaN ou l'infini comme une statistique valide."""
+    result = _text(value)
+    if result is None or isinstance(value, bool):
+        return result
+    try:
+        if not math.isfinite(float(result.replace(",", ""))):
+            return None
+    except ValueError:
+        pass
+    return result
+
+
 def _number(value: Any) -> int | float | None:
     if isinstance(value, bool):
         return None
@@ -69,7 +82,7 @@ def _stat_rows(raw: dict[str, Any], season_year: int | None = None) -> list[dict
                             "label": _text(displays[index] if index < len(displays) else None)
                                 or _text(labels[index] if index < len(labels) else None) or str(name),
                             "value": _number(value),
-                            "display_value": _text(value),
+                            "display_value": _display_text(value),
                             "category": _text(block.get("displayName") or block.get("name")),
                             "season": season_name,
                         })
@@ -364,7 +377,7 @@ def parse_core_postseason_stats(raw: dict[str, Any], season_year: int) -> dict[s
                 "label": _text(item.get("displayName") or item.get("shortDisplayName")
                                or item.get("abbreviation")) or name,
                 "value": _number(value),
-                "display_value": display_value or _text(value),
+                "display_value": display_value or _display_text(value),
                 "category": _text(block.get("displayName") or block.get("name")),
             })
     start_year = season_year - 1
