@@ -232,9 +232,9 @@ class NBATeamsCatalogSensor(NBABaseSensor):
 
 
 class NBADataStatusSensor(NBABaseSensor):
-    """État global de fraîcheur des données récupérées depuis ESPN."""
+    """État du scoreboard, des classements et calendriers favoris."""
 
-    _attr_name = "État des données"
+    _attr_name = "État du flux principal"
     _attr_icon = "mdi:database-check"
 
     def __init__(self, coordinator: NBACoordinator) -> None:
@@ -252,6 +252,7 @@ class NBADataStatusSensor(NBABaseSensor):
         errors = data.get("data_errors") or []
         return {
             "stale": bool(data.get("data_stale")),
+            "scope": "scoreboard, standings et calendriers des équipes favorites",
             "errors": errors,
             "error_count": len(errors),
             "last_check": data.get("data_updated_at"),
