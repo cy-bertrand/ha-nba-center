@@ -459,13 +459,15 @@ class NBACenterCard extends LitElement {
       return labels[key] ?? item.label ?? item.name;
     };
     const stat = (...names) => stats.find((item) => names.includes(String(item.name).toLowerCase()) || names.includes(String(item.label).toLowerCase()));
+    // Les six indicateurs mis en évidence doivent être des moyennes par match.
+    // Ne jamais retomber sur les totaux (points, rebounds, minutes, etc.).
     const quickDefinitions = [
-      ["MIN", ["avgminutes", "minutespergame", "minutes", "minutes per game"]],
-      ["PTS", ["avgpoints", "pointspergame", "points", "points per game"]],
-      ["REB", ["avgrebounds", "reboundspergame", "rebounds", "rebounds per game"]],
-      ["AST", ["avgassists", "assistspergame", "assists", "assists per game"]],
-      ["STL", ["avgsteals", "stealspergame", "steals", "steals per game"]],
-      ["BLK", ["avgblocks", "blockspergame", "blocks", "blocks per game"]],
+      ["MIN", ["avgminutes", "minutespergame", "minutes per game"]],
+      ["PTS", ["avgpoints", "pointspergame", "points per game"]],
+      ["REB", ["avgrebounds", "reboundspergame", "rebounds per game"]],
+      ["AST", ["avgassists", "assistspergame", "assists per game"]],
+      ["STL", ["avgsteals", "stealspergame", "steals per game"]],
+      ["BLK", ["avgblocks", "blockspergame", "blocks per game"]],
     ];
     const quick = quickDefinitions.map(([label, aliases]) => [label, stat(...aliases)]);
     const normalizeStatKey = (raw) => String(raw ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -518,8 +520,31 @@ class NBACenterCard extends LitElement {
         };
         return rank(a) - rank(b) || String(a.label ?? a.name).localeCompare(String(b.label ?? b.name), "fr");
       });
-    const highlightedNames = new Set(quickDefinitions.flatMap(([, aliases]) => aliases));
-    const detailedStats = stats.filter((item) => !highlightedNames.has(String(item.name ?? "").toLowerCase()) && !highlightedNames.has(String(item.label ?? "").toLowerCase()));
+    const highlightedNames = new Set(quickDefinitions.flatMap(([, aliases]) => aliases).map(normalizeStatKey));
+    const regularDetailOrder = [
+      "gamesstarted", "fieldgoalsmadeattemptedpergame", "fieldgoalsmade",
+      "fieldgoalsattempted", "fieldgoalpercentage", "threepointfieldgoalsmadeattemptedpergame",
+      "threepointersmade", "threepointersattempted", "threepointfieldgoalsmade",
+      "threepointfieldgoalsattempted", "threepointfieldgoalpercentage",
+      "freethrowsmadeattemptedpergame", "freethrowsmade", "freethrowsattempted",
+      "freethrowpercentage", "offensivereboundspergame", "defensivereboundspergame",
+      "offensiverebounds", "defensiverebounds", "rebounds", "assists",
+      "steals", "blocks", "turnoverspergame", "turnoverpergame", "turnovers",
+      "assisttoturnoverratio", "personalfouls", "foulspergame", "fouls",
+      "technicalfouls", "flagrantfouls", "doubledouble", "tripledouble",
+      "disqualifications", "ejections",
+    ];
+    const detailedStats = stats
+      .filter((item) => !statKeys(item).some((key) => highlightedNames.has(key)))
+      .sort((a, b) => {
+        const rank = (item) => {
+          const keys = statKeys(item);
+          const index = regularDetailOrder.findIndex((key) => keys.includes(key));
+          return index < 0 ? 1000 : index;
+        };
+        return rank(a) - rank(b)
+          || String(a.label ?? a.name).localeCompare(String(b.label ?? b.name), "fr");
+      });
     const statLabel = (item) => item?.display_value ?? (item?.value == null ? "—" : item.value);
     return html`<div class="overlay" @click=${(event) => { if (event.target === event.currentTarget) this._closePlayer(); }}>
       <section class="overlay-panel player-profile-overlay" role="dialog" aria-modal="true" aria-label="Profil joueur">
