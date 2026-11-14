@@ -599,3 +599,22 @@ def parse_player_gamelog(raw: dict[str, Any]) -> dict[str, Any]:
 
     games.sort(key=game_date_key, reverse=True)
     return {"games": games, "count": len(games)}
+
+
+def apply_boxscore_player(game: dict[str, Any], player: dict[str, Any]) -> bool:
+    """Fusionne un joueur de box score sans effacer les stats déjà valides du gamelog.
+
+    Retourne True uniquement si des statistiques de box score non vides ont été
+    appliquées ; ce résultat alimente le compteur d'enrichissement affiché.
+    """
+    boxscore_stats = player.get("stats_by_key") or player.get("stats")
+    if isinstance(boxscore_stats, dict) and boxscore_stats:
+        game["stats"] = boxscore_stats
+        enriched = True
+    else:
+        enriched = False
+    if player.get("name"):
+        game["player_name"] = player["name"]
+    if "did_not_play" in player:
+        game["did_not_play"] = bool(player.get("did_not_play"))
+    return enriched
