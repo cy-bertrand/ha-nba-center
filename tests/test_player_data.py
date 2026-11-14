@@ -184,6 +184,53 @@ class PlayerDataParserTests(unittest.TestCase):
              "avgRebounds": 9.5, "avgAssists": 8.1, "avgSteals": 1.9, "avgBlocks": 0.4},
         )
 
+    def test_traded_player_uses_espn_season_totals_not_first_team_split(self):
+        raw = {"categories": [
+            {
+                "name": "averages", "displayName": "Regular Season Averages",
+                "names": ["gamesPlayed", "avgPoints"],
+                "labels": ["GP", "PTS"],
+                "displayNames": ["Games Played", "Points Per Game"],
+                "statistics": [
+                    {"season": {"year": 2025, "displayName": "2024-25"},
+                     "teamId": "6", "teamSlug": "dallas-mavericks",
+                     "stats": ["22", "28.1"]},
+                    {"season": {"year": 2025, "displayName": "2024-25"},
+                     "teamId": "13", "teamSlug": "los-angeles-lakers",
+                     "stats": ["28", "28.2"]},
+                    {"season": {"year": 2025, "displayName": "2024-25"},
+                     "displayName": "2024-25  Totals", "teamSlug": "2024-25 Totals",
+                     "stats": ["50", "28.2"]},
+                ],
+            },
+            {
+                "name": "totals", "displayName": "Regular Season Totals",
+                "names": ["points"],
+                "labels": ["PTS"],
+                "displayNames": ["Points"],
+                "statistics": [
+                    {"season": {"year": 2025, "displayName": "2024-25"},
+                     "teamId": "6", "teamSlug": "dallas-mavericks", "stats": ["619"]},
+                    {"season": {"year": 2025, "displayName": "2024-25"},
+                     "teamId": "13", "teamSlug": "los-angeles-lakers", "stats": ["789"]},
+                    {"season": {"year": 2025, "displayName": "2024-25"},
+                     "displayName": "2024-25  Totals", "teamSlug": "2024-25 Totals",
+                     "stats": ["1408"]},
+                ],
+            },
+        ]}
+        result = parse_player_stats(raw, season_year=2025)
+        quick_stats = {row["name"]: row["value"] for row in result["statistics"]}
+        self.assertEqual(quick_stats, {"gamesPlayed": 50, "avgPoints": 28.2, "points": 1408})
+
+        season = result["season_history"][0]
+        self.assertEqual(
+            [team["team_id"] for team in season["teams"]],
+            ["6", "13"],
+        )
+        history_stats = {row["name"]: row["value"] for row in season["statistics"]}
+        self.assertEqual(history_stats, {"gamesPlayed": 50, "avgPoints": 28.2, "points": 1408})
+
     def test_builds_season_history_across_categories(self):
         result = parse_player_stats({"categories": [
             {"name": "averages", "displayName": "Averages", "names": ["avgPoints", "avgRebounds"],
