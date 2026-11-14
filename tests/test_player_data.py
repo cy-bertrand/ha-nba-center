@@ -637,6 +637,51 @@ class PlayerDataParserTests(unittest.TestCase):
         self.assertEqual(game["stats"], {"PTS": "0"})
 
 
+    def test_2024_25_luka_postseason_uses_espn_average_category(self):
+        raw = {
+            "filters": [{"name": "seasontype", "value": "3",
+                         "displayValue": "Postseason"}],
+            "categories": [
+                {
+                    "name": "averages", "displayName": "Postseason Averages",
+                    "names": ["gamesPlayed", "gamesStarted", "avgMinutes",
+                              "avgRebounds", "avgAssists", "avgBlocks",
+                              "avgSteals", "avgPoints"],
+                    "labels": ["GP", "GS", "MIN", "REB", "AST", "BLK", "STL", "PTS"],
+                    "displayNames": ["Games Played", "Games Started", "Minutes Per Game",
+                                     "Rebounds Per Game", "Assists Per Game",
+                                     "Blocks Per Game", "Steals Per Game", "Points Per Game"],
+                    "statistics": [{
+                        "teamId": "13", "teamSlug": "los-angeles-lakers",
+                        "season": {"year": 2025, "displayName": "2024-25"},
+                        "stats": ["5", "5", "41.6", "7.0", "5.8", "0.6", "1.0", "30.2"],
+                    }],
+                },
+                {
+                    "name": "totals", "displayName": "Postseason Totals",
+                    "names": ["offensiveRebounds", "defensiveRebounds", "totalRebounds",
+                              "assists", "blocks", "steals", "points"],
+                    "statistics": [{
+                        "teamId": "13", "teamSlug": "los-angeles-lakers",
+                        "season": {"year": 2025, "displayName": "2024-25"},
+                        "stats": ["2", "33", "35", "29", "3", "5", "151"],
+                    }],
+                },
+            ],
+        }
+        result = parse_player_stats(raw, season_year=2025)
+        self.assertEqual(result["season_type_id"], "3")
+        values = {row["name"]: row["display_value"] for row in result["statistics"]}
+        self.assertEqual(
+            {key: values[key] for key in
+             ("avgMinutes", "avgRebounds", "avgAssists", "avgBlocks", "avgSteals", "avgPoints")},
+            {"avgMinutes": "41.6", "avgRebounds": "7.0", "avgAssists": "5.8",
+             "avgBlocks": "0.6", "avgSteals": "1.0", "avgPoints": "30.2"},
+        )
+        # Les totaux restent séparés : aucune moyenne n'est calculée depuis eux.
+        self.assertEqual(values["points"], "151")
+
+
 
 if __name__ == "__main__":
     unittest.main()
