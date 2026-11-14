@@ -107,6 +107,8 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._player_data_locks: dict[str, asyncio.Lock] = {}
         self._playoff_cache: dict[int, tuple[datetime, dict[str, Any]]] = {}
         self._playoff_locks: dict[int, asyncio.Lock] = {}
+        self._standings_cache: dict[int, tuple[datetime, dict[str, Any]]] = {}
+        self._standings_locks: dict[int, asyncio.Lock] = {}
 
     async def _get(self, url: str, params: dict | None = None) -> dict:
         """Appel ESPN avec deux tentatives courtes pour les incidents réseau transitoires."""
@@ -832,6 +834,33 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self._player_data_cache[cache_key] = (now, result)
             return result
 
+
+    async def async_get_historical_standings(self, season_year: int) -> dict[str, Any]:
+        """Charge les classements de saison régulière pour une année ESPN donnée."""
+        if isinstance(season_year, bool) or not isinstance(season_year, int) or not 2000 <= season_year <= 2100:
+            raise ValueError("Saison NBA invalide")
+        now = dt_util.utcnow()
+        cached = self._standings_cache.get(season_year)
+        if cached and (now - cached[0]).total_seconds() < 3600:
+            return cached[1]
+
+        lock = self._standings_locks.setdefault(season_year, asyncio.Lock())
+        async with lock:
+            now = dt_util.utcnow()
+            cached = self._standings_cache.get(season_year)
+            if cached and (now - cached[0]).total_seconds() < 3600:
+                return cached[1]
+            raw = await self._get(STANDINGS_URL, params={"season": season_year})
+            standings = self._parse_standings(raw)
+            if not standings or not any(standings.values()):
+                raise RuntimeError(f"ESPN n'a renvoyé aucun classement pour la saison {season_year}")
+            result = {
+                "season_year": season_year,
+                "standings": standings,
+                "fetched_at": now.isoformat(),
+            }
+            self._standings_cache[season_year] = (now, result)
+            return result
 
     async def async_get_playoff_bracket(self, season_year: int) -> dict[str, Any]:
         """Charge à la demande le bracket d'une saison, sans requêtes au démarrage.
