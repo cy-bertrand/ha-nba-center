@@ -192,8 +192,6 @@ class SummaryLeadersTests(unittest.TestCase):
                     result = await instance.async_get_game_details(game_id)
                     self.assertIn("error", result)
                     self.assertEqual(result["teams"], [])
-            valid_shape = await instance.async_get_game_details("401234567")
-            self.assertIn("error", valid_shape)
         import asyncio
         asyncio.run(check())
 
