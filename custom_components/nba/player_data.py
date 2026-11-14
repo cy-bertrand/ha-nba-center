@@ -201,7 +201,13 @@ def _filter_items(raw: dict[str, Any]) -> list[dict[str, Any]]:
 
 def _season_type(raw: dict[str, Any]) -> tuple[str | None, str | None]:
     for item in _filter_items(raw):
-        name = str(item.get("name") or item.get("displayName") or "").lower().replace(" ", "")
+        name = (
+            str(item.get("name") or item.get("displayName") or "")
+            .lower()
+            .replace(" ", "")
+            .replace("_", "")
+            .replace("-", "")
+        )
         if name not in {"seasontype", "seasonphase"} and "seasontype" not in name:
             continue
         selected = _text(item.get("value"))
