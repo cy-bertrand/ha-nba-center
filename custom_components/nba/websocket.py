@@ -43,6 +43,7 @@ async def websocket_get_scoreboard(
     {
         vol.Required("type"): "nba/game_details",
         vol.Required("game_id"): str,
+        vol.Optional("force", default=False): bool,
     }
 )
 @websocket_api.async_response
@@ -56,7 +57,7 @@ async def websocket_get_game_details(
     if not coordinators:
         connection.send_error(msg["id"], "not_ready", "L'intégration NBA n'est pas chargée.")
         return
-    result = await coordinators[0].async_get_game_details(msg["game_id"])
+    result = await coordinators[0].async_get_game_details(msg["game_id"], force=msg.get("force", False))
     if result.get("error"):
         connection.send_error(msg["id"], "api_error", result["error"])
         return
