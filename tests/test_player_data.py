@@ -263,6 +263,23 @@ class PlayerDataParserTests(unittest.TestCase):
         self.assertEqual(season["team_name"], "Oklahoma City Thunder")
         self.assertEqual(season["team_id"], "25")
 
+    def test_traded_player_without_aggregate_does_not_use_one_team_as_season_total(self):
+        result = parse_player_stats({"categories": [{
+            "name": "averages", "names": ["gamesPlayed", "avgPoints"],
+            "statistics": [
+                {"season": {"year": 2026, "displayName": "2025-26"},
+                 "team": {"id": "25", "abbreviation": "OKC"}, "stats": ["30", "24.0"]},
+                {"season": {"year": 2026, "displayName": "2025-26"},
+                 "team": {"id": "12", "abbreviation": "IND"}, "stats": ["20", "21.0"]},
+            ],
+        }]})
+        season = result["season_history"][0]
+        self.assertEqual(
+            [team["team_abbreviation"] for team in season["teams"]],
+            ["OKC", "IND"],
+        )
+        self.assertEqual(season["statistics"], [])
+
     def test_season_history_lists_all_teams_for_traded_player(self):
         result = parse_player_stats({"categories": [{
             "name": "averages", "names": ["avgPoints"], "labels": ["PTS"],
