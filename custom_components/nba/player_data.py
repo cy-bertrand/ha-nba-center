@@ -297,6 +297,57 @@ def parse_player_stats(raw: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def parse_core_postseason_stats(raw: dict[str, Any], season_year: int) -> dict[str, Any]:
+    """Normalise les statistiques playoffs ESPN Core v2 pour une saison précise.
+
+    Core v2 expose les statistiques dans splits.categories[].stats[]. Contrairement
+    au Web v3, la saison et le type de compétition sont portés par l'URL demandée.
+    """
+    splits = _mapping(raw.get("splits"))
+    categories = splits.get("categories")
+    if not isinstance(categories, list):
+        categories = raw.get("categories")
+    rows: list[dict[str, Any]] = []
+    for category in categories if isinstance(categories, list) else []:
+        block = _mapping(category)
+        stats = block.get("stats")
+        if not isinstance(stats, list):
+            continue
+        for stat in stats:
+            item = _mapping(stat)
+            name = _text(item.get("name") or item.get("abbreviation"))
+            if not name:
+                continue
+            value = item.get("value")
+            display_value = _text(item.get("displayValue"))
+            if value is None and display_value is not None:
+                value = display_value
+            rows.append({
+                "name": name,
+                "label": _text(item.get("displayName") or item.get("shortDisplayName")
+                               or item.get("abbreviation")) or name,
+                "value": _number(value),
+                "display_value": display_value or _text(value),
+                "category": _text(block.get("displayName") or block.get("name")),
+            })
+    start_year = season_year - 1
+    season_label = f"{start_year}-{str(season_year)[-2:]}"
+    athlete = _mapping(raw.get("athlete"))
+    return {
+        "season": season_label if rows else None,
+        "season_type_id": "3" if rows else None,
+        "season_type": "Playoffs" if rows else None,
+        "athlete": {
+            "id": _text(athlete.get("id")),
+            "name": _text(athlete.get("displayName") or athlete.get("fullName")),
+        },
+        "statistics": rows,
+        "season_history": [],
+        "splits": {},
+        "career_statistics": [],
+    }
+
+
 def parse_player_gamelog(raw: dict[str, Any]) -> dict[str, Any]:
     """Normalise le gamelog ESPN, y compris les stats imbriquées dans seasonTypes."""
     events = raw.get("events")
