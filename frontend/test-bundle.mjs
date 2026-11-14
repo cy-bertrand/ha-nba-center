@@ -135,6 +135,13 @@ assert.doesNotMatch(source, /5 DERNIERS MATCHS · PLAYOFFS/, "player profile mus
 assert.match(source, /playoff_\$\{key\}/, "Players Center must resolve dedicated playoff leaderboard entities");
 assert.match(source, /SAISON & PLAYOFFS/, "Players Center must distinguish regular season and playoff leaderboards");
 assert.match(source, /_leaderPanel\(key,10,true\)/, "Players Center must render top-ten playoff leaderboards");
+assert.match(source, /standing-team-button img\\{display:block;width:28px;height:28px/, "standings team logos must be constrained to compact icons");
+assert.match(source, /<th>SÉRIE<\\/th>/, "standings table must include the streak column");
+assert.match(source, /value\\(r\\.streak\\)/, "standings streak column must use the ESPN streak value");
+assert.match(source, /_standingsResultsCache = new Map\\(\\)/, "standings seasons must be cached in the card");
+assert.match(source, /_playoffResultsCache = new Map\\(\\)/, "playoff seasons must be cached in the card");
+assert.match(bundle, /standing-team-button img\\{display:block;width:28px;height:28px/, "bundled standings logos must remain compact");
+assert.match(bundle, /standing-streak/, "bundled standings table must include streak styling");
 assert.match(source, /standing-team-button/, "Stats Center standings teams must be interactive");
 assert.match(source, /_openStandingTeam\(r\)/, "clicking a standings team must open its team profile");
 assert.match(bundle, /standing-team-button/, "bundled Stats Center standings teams must be interactive");
