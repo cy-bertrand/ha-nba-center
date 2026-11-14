@@ -241,6 +241,7 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
         for key, (_label, sort) in LEADER_CATEGORIES.items():
             params = {
                 "region": "us", "lang": "en", "contentorigin": "espn",
+                "season": season_year, "seasontype": 2,
                 "isqualified": "true", "page": 1, "limit": LEADERS_COUNT, "sort": sort,
             }
             try:
