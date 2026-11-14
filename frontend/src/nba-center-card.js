@@ -1,7 +1,7 @@
 // NBA Center Lovelace card — reads only Home Assistant entity state. Lit is bundled locally.
 import { LitElement, css, html } from "lit";
 
-const BUILD_VERSION = "2026.11.14.11";
+const BUILD_VERSION = "2026.11.14.12";
 
 const VIEWS = [
   { id: "home", label: "HOME" },
@@ -942,7 +942,21 @@ class NBACenterCard extends LitElement {
   _teamStatsPanel() {
     const teams = this._awayFirst(this._overlayDetails?.team_stats);
     if (!teams.length) return "";
-    const keys = [...new Set(teams.flatMap((team) => (team.statistics ?? []).map((stat) => stat.name)))];
+    const sourceKeys = [...new Set(teams.flatMap((team) => (team.statistics ?? []).map((stat) => stat.name)))];
+    const statPriority = [
+      "fieldGoalsMade-fieldGoalsAttempted", "fieldGoalPct",
+      "threePointFieldGoalsMade-threePointFieldGoalsAttempted", "threePointFieldGoalPct",
+      "freeThrowsMade-freeThrowsAttempted", "freeThrowPct",
+      "totalRebounds", "offensiveRebounds", "defensiveRebounds",
+      "assists", "steals", "blocks",
+      "turnovers", "teamTurnovers", "totalTurnovers",
+      "fouls", "technicalFouls", "totalTechnicalFouls", "flagrantFouls",
+      "pointsInPaint", "fastBreakPoints", "turnoverPoints",
+      "largestLead", "leadChanges", "leadPercentage",
+    ];
+    const priorityIndex = new Map(statPriority.map((key, index) => [key, index]));
+    const keys = sourceKeys.sort((a, b) =>
+      (priorityIndex.get(a) ?? statPriority.length) - (priorityIndex.get(b) ?? statPriority.length));
     return html`
       <section class="panel team-stats-panel">
         <div class="panel-head"><h3>COMPARAISON DES ÉQUIPES</h3><span class="pill">TEAM STATS</span></div>
