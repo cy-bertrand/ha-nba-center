@@ -902,7 +902,9 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
         Ne lève jamais d'exception : en cas de problème, renvoie un dictionnaire
         avec une clé 'error'.
         """
-        game_id = str(game_id)
+        game_id = str(game_id).strip()
+        if not game_id.isdigit() or len(game_id) > 20:
+            return {"game_id": game_id, "error": "Identifiant de match ESPN invalide", "teams": []}
         if game_id in self._details_cache:
             return self._details_cache[game_id]
         try:
