@@ -497,9 +497,9 @@ def parse_player_gamelog(raw: dict[str, Any]) -> dict[str, Any]:
             continue
         seen_event_ids.add(event_id)
         stats = event.get("stats")
-        if isinstance(stats, dict):
+        if isinstance(stats, dict) and stats:
             stat_values = {str(key): _number(value) for key, value in stats.items()}
-        elif isinstance(stats, list):
+        elif isinstance(stats, list) and stats:
             names = event.get("labels") or event.get("names") or raw.get("labels") or raw.get("names")
             stat_values = {
                 str(names[index]): _number(value)
@@ -507,7 +507,9 @@ def parse_player_gamelog(raw: dict[str, Any]) -> dict[str, Any]:
                 if isinstance(names, list) and index < len(names) and isinstance(names[index], str)
             }
         else:
-            stat_values = nested_stats.get(event_id or "", {})
+            # Une map stats vide est fréquente sur la ligne de métadonnées ;
+            # les vraies valeurs peuvent être dans seasonTypes[].categories[].
+            stat_values = nested_stats.get(event_id, {})
         opponent = _mapping(event.get("opponent"))
         team = _mapping(event.get("team"))
         games.append({
