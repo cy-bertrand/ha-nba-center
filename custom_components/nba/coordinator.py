@@ -448,7 +448,7 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
             if state not in ("pre", "in", "post"):
                 return None
             return game
-        except (KeyError, IndexError, TypeError) as err:
+        except (KeyError, IndexError, TypeError, AttributeError) as err:
             _LOGGER.debug("Match ignoré (format inattendu: %s): %s", err, event.get("id"))
             return None
 
