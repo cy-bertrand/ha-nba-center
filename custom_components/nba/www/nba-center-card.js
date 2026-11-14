@@ -74,7 +74,7 @@ var F=globalThis,V=F.ShadowRoot&&(F.ShadyCSS===void 0||F.ShadyCSS.nativeShadow)&
     .player{min-width:0;font-size:11px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .player small{display:block;color:#8f9db2;font-size:9px;margin-top:3px;font-weight:500}
     .stat{color:#f2c45f;font-size:13px;font-weight:900;font-variant-numeric:tabular-nums}
-    .table-wrap{overflow-x:auto}
+    .standing-team-button{display:inline-flex;align-items:center;gap:7px;padding:2px 4px;margin:-2px 0;border:0;border-radius:6px;background:transparent;color:inherit;font:inherit;font-weight:800;cursor:pointer;text-align:left}.standing-team-button:hover{background:#1b2a40;color:#f2c45f}.standing-team-button:focus-visible{outline:2px solid #f2c45f;outline-offset:2px}.table-wrap{overflow-x:auto}
     table{width:100%;border-collapse:collapse;font-size:10px;white-space:nowrap}
     th{text-align:left;color:#8190a7;font-size:9px;letter-spacing:.08em;padding:8px 7px;border-bottom:1px solid #314158}
     td{padding:9px 7px;border-bottom:1px solid #ffffff0e;color:#d7deea}
@@ -290,13 +290,13 @@ var F=globalThis,V=F.ShadowRoot&&(F.ShadyCSS===void 0||F.ShadyCSS.nativeShadow)&
             <span class="player">${o(i.player)}<small>${o(i.team)}</small></span>
             <span class="stat">${o(i.value)}</span>
           </button>`)}</div>`:r`<p class="muted">Données de classement indisponibles.</p>`}
-      </section>`}_standingsTable(e,t){let s=this._standings(e).rows;return r`
+      </section>`}_openStandingTeam(e){if(!e?.team_id)return;let t=this._teamsCatalog().teams.find(s=>String(s.id)===String(e.team_id))??{id:e.team_id,name:e.team,display_name:e.team,abbreviation:e.abbr,logo:e.logo};this._openTeam(t)}_standingsTable(e,t){let s=this._standings(e).rows;return r`
       <section class="panel">
         <div class="panel-head"><h3>${t}</h3><span class="pill">${s.length} ÉQUIPES</span></div>
         ${s.length?r`<div class="table-wrap"><table>
           <thead><tr><th>#</th><th>ÉQUIPE</th><th>V</th><th>D</th><th>%</th><th>GB</th></tr></thead>
           <tbody>${s.slice(0,15).map((a,i)=>r`
-            <tr><td>${o(a.rank,i+1)}</td><td>${o(a.abbr,a.team)}</td><td>${o(a.wins)}</td>
+            <tr><td>${o(a.rank,i+1)}</td><td><button class="standing-team-button" type="button" ?disabled=${!a.team_id} @click=${()=>this._openStandingTeam(a)}>${a.logo?r`<img src=${a.logo} alt="" loading="lazy">`:""}<span>${o(a.abbr,a.team)}</span></button></td><td>${o(a.wins)}</td>
             <td>${o(a.losses)}</td><td>${o(a.pct)}</td><td>${o(a.gb)}</td></tr>`)}</tbody>
         </table></div>`:r`<p class="muted">Classement indisponible.</p>`}
       </section>`}_teamPanel(e){let t=e.last,s=e.next;return r`
@@ -408,5 +408,5 @@ var F=globalThis,V=F.ShadowRoot&&(F.ShadyCSS===void 0||F.ShadyCSS.nativeShadow)&
             ${!this._overlayLoading&&!this._overlayError&&!this._overlayDetails?.error&&!this._overlayDetails?.teams?.length&&!this._overlayDetails?.has_boxscore?r`<section class="empty"><p>Le résumé détaillé n’est pas encore disponible pour cette rencontre.</p></section>`:""}            </div></section></div>`:""}
         ${this._teamOverlay&&!this._overlayGame?this._teamRosterPanel():""}
         ${this._playerOverlay?this._playerProfilePanel():""}
-        <footer class="footer"><span>NBA CENTER · ${e.label}</span><span>JS 2026.11.14.3</span></footer>
-      </ha-card>`}static getStubConfig(){return{title:"NBA CENTER",subtitle:"Your league. Your teams. One center."}}};customElements.get("nba-center-card")||customElements.define("nba-center-card",ce);console.info("[NBA Center] JS build 2026.11.14.3");window.customCards=window.customCards??[];window.customCards.some(n=>n.type==="nba-center-card")||window.customCards.push({type:"nba-center-card",name:"NBA Center",description:"NBA Dark dashboard \u2014 scores, teams, players and stats",preview:!0});
+        <footer class="footer"><span>NBA CENTER · ${e.label}</span><span>JS 2026.11.14.4</span></footer>
+      </ha-card>`}static getStubConfig(){return{title:"NBA CENTER",subtitle:"Your league. Your teams. One center."}}};customElements.get("nba-center-card")||customElements.define("nba-center-card",ce);console.info("[NBA Center] JS build 2026.11.14.4");window.customCards=window.customCards??[];window.customCards.some(n=>n.type==="nba-center-card")||window.customCards.push({type:"nba-center-card",name:"NBA Center",description:"NBA Dark dashboard \u2014 scores, teams, players and stats",preview:!0});
