@@ -130,3 +130,8 @@ assert.doesNotMatch(source, /5 DERNIERS MATCHS · PLAYOFFS/, "player profile mus
 assert.match(source, /playoff_\$\{key\}/, "Players Center must resolve dedicated playoff leaderboard entities");
 assert.match(source, /SAISON & PLAYOFFS/, "Players Center must distinguish regular season and playoff leaderboards");
 assert.match(source, /_leaderPanel\(key,10,true\)/, "Players Center must render top-ten playoff leaderboards");
+
+assert.match(source, /<button class="form-chip[\s\S]*this\._openGame\(game\)/, "recent team form games must open the Match Center");
+assert.match(source, /this\._teamOverlay && !this\._overlayGame/, "team roster must remain available behind the Match Center and return when it closes");
+assert.match(bundle, /<button class="form-chip[\s\S]*this\._openGame\(t\)/, "bundled recent team form games must open the Match Center");
+assert.match(bundle, /this\._teamOverlay&&!this\._overlayGame/, "bundled team roster must reappear after closing Match Center");
