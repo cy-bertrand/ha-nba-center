@@ -161,6 +161,32 @@ class SummaryLeadersTests(unittest.TestCase):
         self.assertEqual(result[0]["player"], "Valid")
         self.assertEqual(result[0]["rank"], 1)
 
+    def test_standings_parser_skips_malformed_rows_and_keeps_valid_teams(self):
+        raw = {
+            "children": [
+                None,
+                {"name": "Eastern Conference", "standings": {"entries": [
+                    None,
+                    {"team": None, "stats": []},
+                    {"team": {"id": "bad"}, "stats": [None, {"displayValue": "broken"}]},
+                    {"team": {"id": "2", "displayName": "Team B", "abbreviation": "BBB",
+                              "logos": "invalid"},
+                     "stats": [{"name": "wins", "displayValue": "42"},
+                               {"displayValue": "ignored"}]},
+                ]}},
+                {"name": "Malformed", "standings": "invalid"},
+            ],
+        }
+        result = coordinator.NBACoordinator._parse_standings(raw)
+        self.assertEqual(list(result), ["Eastern Conference"])
+        self.assertEqual(len(result["Eastern Conference"]), 2)
+        valid = result["Eastern Conference"][1]
+        self.assertEqual(valid["team_id"], "2")
+        self.assertEqual(valid["team"], "Team B")
+        self.assertEqual(valid["wins"], "42")
+        self.assertIsNone(valid["logo"])
+        self.assertEqual(valid["rank"], 0)
+
     def test_leaders_parser_uses_requested_statistic_not_first_available(self):
         raw = {
             "categories": [{"names": ["avgRebounds", "avgPoints"]}],
