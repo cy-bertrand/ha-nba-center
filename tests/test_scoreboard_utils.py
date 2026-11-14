@@ -43,6 +43,11 @@ class ScoreParsingTests(unittest.TestCase):
         self.assertEqual(parse_score({"value": "99"}), 99)
         self.assertEqual(parse_score({"displayValue": "87"}), 87)
 
+    def test_rejects_boolean_fractional_and_non_finite_scores(self):
+        for value in (True, False, "108.5", float("nan"), float("inf"), "-inf"):
+            with self.subTest(value=value):
+                self.assertIsNone(parse_score(value))
+
     def test_real_zero_is_preserved(self):
         self.assertEqual(parse_score("0"), 0)
 
