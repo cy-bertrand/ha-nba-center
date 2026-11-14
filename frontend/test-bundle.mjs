@@ -115,6 +115,9 @@ assert.match(bundle, /\.player-game-stats\{display:flex;flex-wrap:nowrap/, "bund
 
 console.log("NBA Center frontend bundle and feature checks passed.");
 
+assert.match(source, /filtered\.slice\(-12\)/, "Match Center must show the latest 12 plays in chronological order");
+assert.doesNotMatch(source, /const ordered = \[\.\.\.filtered\]\.reverse\(\)/, "Match Center must not reverse chronological plays");
+assert.match(source, /2026\.11\.14\.11/, "frontend build version must be bumped for play-by-play ordering");
 if (!source.includes("_playByPlayPanel") || !source.includes("POINTS SEULEMENT") || !bundle.includes("FIL DU MATCH")) {
   throw new Error("Play-by-play UI is missing from source or bundle");
 }
