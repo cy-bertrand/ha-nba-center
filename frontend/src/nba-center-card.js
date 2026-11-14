@@ -1,7 +1,7 @@
 // NBA Center Lovelace card — reads only Home Assistant entity state. Lit is bundled locally.
 import { LitElement, css, html } from "lit";
 
-const BUILD_VERSION = "2026.11.14.10";
+const BUILD_VERSION = "2026.11.14.11";
 
 const VIEWS = [
   { id: "home", label: "HOME" },
@@ -960,8 +960,9 @@ class NBACenterCard extends LitElement {
     const plays = this._overlayDetails?.plays ?? [];
     if (!plays.length) return "";
     const filtered = this._scoringOnly ? plays.filter((play) => play.scoring) : plays;
-    const ordered = [...filtered].reverse();
-    const rows = this._showAllPlays ? ordered : ordered.slice(0, 12);
+    // The backend already normalizes ESPN sequence numbers chronologically.
+    // Keep that order in the timeline and show the latest 12 events by default.
+    const rows = this._showAllPlays ? filtered : filtered.slice(-12);
     return html`
       <section class="panel playbyplay-panel">
         <div class="panel-head"><h3>FIL DU MATCH</h3><span class="pill">${plays.length} ACTIONS</span></div>
@@ -975,7 +976,7 @@ class NBACenterCard extends LitElement {
             <span class="play-copy">${value(play.text, play.type || "Action")}${play.scoring ? html`<small>MARQUE · +${value(play.score_value, "?")} PT</small>` : ""}</span>
             <span class="play-score">${play.away_score != null || play.home_score != null ? `${value(play.away_score)}–${value(play.home_score)}` : ""}</span>
           </li>`)}</ol>
-        ${ordered.length > 12 ? html`<button class="chip play-more" @click=${() => { this._showAllPlays = !this._showAllPlays; }}>${this._showAllPlays ? "RÉDUIRE" : `VOIR LES ${ordered.length} ACTIONS`}</button>` : ""}
+        ${filtered.length > 12 ? html`<button class="chip play-more" @click=${() => { this._showAllPlays = !this._showAllPlays; }}>${this._showAllPlays ? "RÉDUIRE" : `VOIR LES ${filtered.length} ACTIONS`}</button>` : ""}
       </section>`;
   }
 
