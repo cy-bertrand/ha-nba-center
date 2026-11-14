@@ -29,7 +29,7 @@ assert.match(source, /winnerSide === "away" \? html/, "playoff game winner must 
 assert.match(source, /this\._standingPhase === "playoffs" \? 2008 : 2002/, "regular standings must retain history back to 2002-03");
 assert.match(source, /this\._standingPhase === "playoffs" \? 2008 : 2002/, "playoff season selector must start at 2007-08 while regular standings start at 2002-03");
 assert.match(source, /this\._standingSeason < 2008/, "switching to playoffs from an earlier regular season must select the first supported playoff season");
-assert.match(source, /2026\.11\.14\.9/, "build version must be bumped for historical playoff selector range");
+assert.match(source, /2026\.11\.14\.10/, "build version must be bumped for historical playoff selector range");
 
 
 assert.match(source, /playoff-series-button/, "playoff series cards must be visibly interactive");
