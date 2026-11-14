@@ -15,6 +15,10 @@ class PlayerDataParserTests(unittest.TestCase):
             [row["value"] for row in result["statistics"]],
             [None, None, None, 12.5],
         )
+        self.assertEqual(
+            [row["display_value"] for row in result["statistics"]],
+            [None, None, None, "12.5"],
+        )
 
     def test_parses_core_v2_historical_postseason_statistics(self):
         result = parse_core_postseason_stats({
