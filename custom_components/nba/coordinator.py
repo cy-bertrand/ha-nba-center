@@ -439,8 +439,20 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 history.append(g)
             elif g["state"] in ("pre", "in") and nxt is None:
                 nxt = g
-        # L'ordre des événements ESPN n'est pas garanti : trier avant de retenir les cinq derniers.
+        # L'ordre des événements ESPN n'est pas garanti : trier avant de retenir
+        # le dernier match terminé et les cinq rencontres récentes.
         history.sort(key=lambda game: game.get("date") or "")
+        last = history[-1] if history else None
+        upcoming = [
+            self._parse_game(event)
+            for event in schedule.get("events", [])
+        ]
+        upcoming = [
+            game for game in upcoming
+            if game and game["state"] in ("pre", "in")
+        ]
+        upcoming.sort(key=lambda game: game.get("date") or "")
+        nxt = upcoming[0] if upcoming else None
         recent: list[dict] = []
         for g in reversed(history[-LAST_GAMES_COUNT:]):
             is_home = g["home"].get("id") == team_id
