@@ -340,6 +340,16 @@ class PlayerDataParserTests(unittest.TestCase):
         self.assertEqual(result["games"][0]["home_away"], "@")
         self.assertEqual(result["games"][0]["stats"], {})
 
+    def test_gamelog_skips_events_without_ids_and_duplicate_ids(self):
+        result = parse_player_gamelog({"events": [
+            {"gameDate": "2026-11-14T00:00:00Z", "gameResult": "W"},
+            {"id": "game-1", "gameDate": "2026-11-13T00:00:00Z", "gameResult": "L"},
+            {"eventId": "game-1", "gameDate": "2026-11-12T00:00:00Z", "gameResult": "W"},
+            {"id": "game-2", "gameDate": "2026-11-11T00:00:00Z", "gameResult": "W"},
+        ]})
+        self.assertEqual(result["count"], 2)
+        self.assertEqual({game["id"] for game in result["games"]}, {"game-1", "game-2"})
+
     def test_gamelog_is_sorted_newest_first(self):
         result = parse_player_gamelog({"events": [
             {"id": "older", "gameDate": "2026-11-10T00:00:00Z", "gameResult": "W"},
