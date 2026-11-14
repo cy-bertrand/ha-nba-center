@@ -850,7 +850,13 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER.warning("Détails du match %s indisponibles: %s", game_id, err)
             return {"game_id": game_id, "error": str(err), "teams": []}
 
-        details = self._parse_summary(game_id, raw)
+        try:
+            details = self._parse_summary(game_id, raw)
+        except Exception as err:  # noqa: BLE001 - une réponse ESPN mal formée ne doit pas casser le websocket
+            _LOGGER.warning("Résumé ESPN mal formé pour le match %s: %s", game_id, err)
+            return {"game_id": game_id, "error": f"Réponse ESPN invalide: {err}", "teams": []}
+        if not isinstance(details, dict):
+            return {"game_id": game_id, "error": "Réponse ESPN invalide: résumé inattendu", "teams": []}
         if details.get("final"):
             self._details_cache[game_id] = details
         return details
