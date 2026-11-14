@@ -331,8 +331,26 @@ def _season_history(raw: dict[str, Any]) -> list[dict[str, Any]]:
                     record["team_id"] = team_id
 
         for year, year_entries in entries_by_year.items():
-            selected = next((item for item in year_entries if _is_aggregate_season_entry(item)),
-                            year_entries[0])
+            selected = next((item for item in year_entries if _is_aggregate_season_entry(item)), None)
+            if selected is None:
+                # Pour un joueur transféré, les lignes par équipe ne sont pas
+                # des totaux de saison. Sans ligne "Totals", ne jamais choisir
+                # arbitrairement la première franchise comme saison complète.
+                team_identities = set()
+                for item in year_entries:
+                    team = _mapping(item.get("team"))
+                    identity = _text(
+                        item.get("teamId") or item.get("team_id")
+                        or team.get("id") or item.get("teamAbbreviation")
+                        or team.get("abbreviation") or item.get("teamSlug")
+                    )
+                    if identity:
+                        team_identities.add(identity)
+                if len(team_identities) > 1:
+                    continue
+                selected = year_entries[0] if year_entries else None
+            if selected is None:
+                continue
             values = selected.get("stats") or []
             for index, value in enumerate(values):
                 name = str(names[index]) if index < len(names) else f"stat_{index}"
