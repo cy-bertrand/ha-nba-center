@@ -467,34 +467,36 @@ class NBACenterCard extends LitElement {
       ["BLK", ["avgblocks", "blockspergame", "blocks", "blocks per game"]],
     ];
     const quick = quickDefinitions.map(([label, aliases]) => [label, stat(...aliases)]);
-    const postseasonStat = (...names) => postseasonStats.find((item) =>
-      names.includes(String(item.name ?? "").toLowerCase()) || names.includes(String(item.label ?? "").toLowerCase())
+    const normalizeStatKey = (raw) => String(raw ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    const statKeys = (item) => [
+      item.name, item.label, item.display_name, item.abbreviation, item.shortDisplayName,
+    ].map(normalizeStatKey).filter(Boolean);
+    const findPostseasonStat = (aliases) => postseasonStats.find((item) => {
+      const keys = statKeys(item);
+      const isAverage = keys.some((key) => key.startsWith("avg") || key.includes("pergame"))
+        || String(item.category ?? "").toLowerCase().includes("average")
+        || String(item.label ?? "").toLowerCase().includes("per game");
+      return isAverage && aliases.some((alias) => keys.includes(normalizeStatKey(alias)));
+    });
+    const quickDefinitions = [
+      ["MIN", ["avgminutes", "minutespergame", "min"]],
+      ["PTS", ["avgpoints", "pointspergame", "pts"]],
+      ["REB", ["avgrebounds", "reboundspergame", "reb"]],
+      ["AST", ["avgassists", "assistspergame", "ast"]],
+      ["STL", ["avgsteals", "stealspergame", "stl"]],
+      ["BLK", ["avgblocks", "blockspergame", "blk"]],
+    ];
+    // Les moyennes par match sont fournies par ESPN Web API v3. On les affiche
+    // directement : aucune division des totaux n'est effectuée côté interface.
+    const postseasonQuick = quickDefinitions.map(([label, aliases]) => {
+      const item = findPostseasonStat(aliases);
+      return [label, item ? (item.display_value ?? item.value ?? "—") : "—"];
+    });
+    const postseasonHighlighted = new Set(quickDefinitions.flatMap(([, aliases]) => aliases).map(normalizeStatKey));
+    const postseasonGamesPlayed = postseasonStats.find((item) =>
+      statKeys(item).some((key) => ["gamesplayed", "games", "gp"].includes(key))
     );
-    const postseasonGamesPlayed = postseasonStat("gamesplayed", "games", "gp");
-    const postseasonGameCount = Number(postseasonGamesPlayed?.value ?? postseasonGamesPlayed?.display_value);
-    const postseasonPerGameValue = (item) => {
-      if (!item) return "—";
-      const key = String(item.name ?? "").toLowerCase();
-      // Les noms avg*/pergame sont déjà des moyennes. Les autres champs
-      // (minutes, points, rebounds...) sont des totaux Core v2.
-      if (key.startsWith("avg") || key.includes("pergame") || key.includes("per game")) {
-        return item.display_value ?? item.value ?? "—";
-      }
-      const total = Number(item.value ?? item.display_value);
-      if (!Number.isFinite(total) || !Number.isFinite(postseasonGameCount) || postseasonGameCount <= 0) {
-        return item.display_value ?? item.value ?? "—";
-      }
-      const average = total / postseasonGameCount;
-      return key === "minutes" || key === "avgminutes" ? average.toFixed(1) : average.toFixed(1);
-    };
-    const postseasonQuick = quickDefinitions.map(([label, aliases]) => [
-      label,
-      postseasonPerGameValue(postseasonStat(...aliases)),
-    ]);
-    const postseasonHighlighted = new Set([
-      ...quickDefinitions.flatMap(([, aliases]) => aliases),
-      "gamesplayed", "games", "gp",
-    ]);
+    if (postseasonGamesPlayed) statKeys(postseasonGamesPlayed).forEach((key) => postseasonHighlighted.add(key));
     const postseasonDetailOrder = [
       "gamesstarted", "fieldgoalsmade", "fieldgoalsattempted", "fieldgoalsmadeattempted",
       "fieldgoalpercentage", "threepointersmade", "threepointersattempted",
@@ -506,8 +508,7 @@ class NBACenterCard extends LitElement {
       "doubledouble", "tripledouble", "disqualifications", "ejections",
     ];
     const postseasonDetailed = postseasonStats
-      .filter((item) => !postseasonHighlighted.has(String(item.name ?? "").toLowerCase())
-        && !postseasonHighlighted.has(String(item.label ?? "").toLowerCase()))
+      .filter((item) => !statKeys(item).some((key) => postseasonHighlighted.has(key)))
       .sort((a, b) => {
         const rank = (item) => {
           const key = String(item.name ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
