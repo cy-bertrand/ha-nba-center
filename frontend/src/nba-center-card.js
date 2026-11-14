@@ -18,6 +18,7 @@ const LEADERS = {
 };
 const DEFAULT_ENTITIES = {
   games: "sensor.nba_matchs_du_jour",
+  status: "sensor.nba_etat_du_flux_principal",
   east: "sensor.nba_classement_est",
   west: "sensor.nba_classement_ouest",
   points: "sensor.nba_meilleurs_marqueurs",
@@ -72,6 +73,8 @@ class NBACenterCard extends LitElement {
     h1{margin:8px 0 4px;font-size:clamp(25px,4vw,36px);line-height:1;letter-spacing:-.045em;font-weight:950}
     .subtitle{color:#aab6ca;font-size:12px}
     .meta{display:flex;gap:8px;align-items:center;margin-top:14px;color:#aab6ca;font-size:10px;text-transform:uppercase;letter-spacing:.1em}
+    .data-health{padding:4px 7px;border-radius:999px;font-size:9px;font-weight:900;letter-spacing:.06em}.data-health.healthy{color:#83d8a9;background:#83d8a91a}.data-health.degraded{color:#ffca70;background:#ffca701a}
+    .data-warning{margin-top:12px;padding:9px 11px;border:1px solid #8b6838;border-radius:9px;background:#8b68381c;color:#f2d19a;font-size:10px;line-height:1.5}
     .dot{width:7px;height:7px;border-radius:50%;background:#e8b74e;box-shadow:0 0 0 4px #e8b74e22}
     nav{display:flex;gap:5px;overflow-x:auto;padding:10px 12px;background:#0c1421;border-bottom:1px solid #ffffff12;scrollbar-width:thin}
     button{border:0;border-radius:9px;background:transparent;color:#8997ad;padding:10px 14px;min-width:76px;cursor:pointer;font:inherit;font-size:10px;font-weight:800;letter-spacing:.09em;white-space:nowrap}
@@ -209,6 +212,10 @@ class NBACenterCard extends LitElement {
 
   _entity(key, predicate) {
     return this._state(this._config.entities?.[key]) ?? this._find(predicate);
+  }
+
+  _dataStatus() {
+    return this._entity("status", (state) => state.attributes?.scope === "scoreboard, standings, calendriers favoris, classements et catalogue des équipes");
   }
 
   _games() {
@@ -994,6 +1001,8 @@ class NBACenterCard extends LitElement {
 
   render() {
     const active = VIEWS.find((v) => v.id === this._active) ?? VIEWS[0];
+    const dataStatus = this._dataStatus();
+    const degraded = dataStatus?.state === "Dégradé" || dataStatus?.attributes?.stale;
     const view = { home: () => this._homeView(), scores: () => this._scoresView(),
       teams: () => this._teamsView(), players: () => this._playersView(), stats: () => this._statsView(), playoffs: () => this._playoffsView() };
     return html`
@@ -1001,7 +1010,9 @@ class NBACenterCard extends LitElement {
         <header class="hero"><div class="eyebrow">THE ASSOCIATION · HOME ASSISTANT</div>
           <h1>${this._config.title}</h1><div class="subtitle">${this._config.subtitle}</div>
           <div class="meta"><span class="dot"></span><span>NBA DATA</span><span>·</span>
-            <span>${this.hass ? "CONNECTED TO HOME ASSISTANT" : "WAITING FOR HOME ASSISTANT"}</span></div>
+            <span>${this.hass ? "CONNECTED TO HOME ASSISTANT" : "WAITING FOR HOME ASSISTANT"}</span>
+            ${dataStatus ? html`<span class="data-health ${degraded ? "degraded" : "healthy"}">${degraded ? "DONNÉES PARTIELLES" : "FLUX À JOUR"}</span>` : ""}</div>
+          ${degraded ? html`<div class="data-warning">Certaines sources ESPN sont indisponibles. Les dernières données valides sont conservées. Consultez l'attribut <strong>errors</strong> du capteur d'état pour le détail.</div>` : ""}
         </header>
         <nav aria-label="NBA Center navigation">${VIEWS.map((v) => html`
           <button type="button" data-view=${v.id} aria-selected=${v.id===this._active}
