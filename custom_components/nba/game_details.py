@@ -190,7 +190,19 @@ def parse_plays(raw: dict[str, Any]) -> list[dict[str, Any]]:
             "points_attempted": _text(item.get("pointsAttempted")),
             "coordinate": _coordinate(item.get("coordinate")),
         })
-    return plays
+    # ESPN normally returns plays chronologically, but some responses (notably
+    # refreshed/live summaries) can contain out-of-order sequence numbers.
+    # Normalize once here so every consumer receives deterministic chronology.
+    indexed = list(enumerate(plays))
+    indexed.sort(key=lambda pair: (
+        0 if pair[1].get("sequence_number") is not None
+        and str(pair[1]["sequence_number"]).isdigit() else 1,
+        int(pair[1]["sequence_number"])
+        if pair[1].get("sequence_number") is not None
+        and str(pair[1]["sequence_number"]).isdigit() else pair[0],
+        pair[0],
+    ))
+    return [play for _, play in indexed]
 
 
 def parse_boxscore(raw: dict[str, Any]) -> dict[str, Any]:
