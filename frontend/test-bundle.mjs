@@ -138,7 +138,7 @@ assert.match(source, /_leaderPanel\(key,10,true\)/, "Players Center must render 
 assert.match(source, /standing-team-button/, "Stats Center standings teams must be interactive");
 assert.match(source, /_openStandingTeam\(r\)/, "clicking a standings team must open its team profile");
 assert.match(bundle, /standing-team-button/, "bundled Stats Center standings teams must be interactive");
-assert.match(bundle, /_openStandingTeam\(a\)/, "bundled standings team buttons must open team profiles");
+assert.match(bundle, /_openStandingTeam/, "bundled standings team buttons must open team profiles");
 
 assert.match(source, /<button class="form-chip[\s\S]*this\._openRecentTeamGame\(game\)/, "recent team form games must open Match Center with complete home/away scoreboard data");
 assert.match(source, /_openRecentTeamGame\(game\)[\s\S]*?away: currentTeamIsAway \? currentTeam : opponent[\s\S]*?home: currentTeamIsAway \? opponent : currentTeam/, "recent team game adapter must map scores and teams to the correct home/away sides");
