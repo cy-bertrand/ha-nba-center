@@ -1,7 +1,7 @@
 // NBA Center Lovelace card — reads only Home Assistant entity state. Lit is bundled locally.
 import { LitElement, css, html } from "lit";
 
-const BUILD_VERSION = "2026.11.14.8";
+const BUILD_VERSION = "2026.11.14.9";
 
 const VIEWS = [
   { id: "home", label: "HOME" },
@@ -671,6 +671,12 @@ class NBACenterCard extends LitElement {
   _setStandingsPhase(phase) {
     if (!["regular", "playoffs"].includes(phase) || phase === this._standingPhase) return;
     this._standingPhase = phase;
+    // Les classements réguliers sont disponibles depuis 2002-03,
+    // mais les playoffs ne sont exploitables qu'à partir de 2007-08.
+    if (phase === "playoffs" && this._standingSeason < 2008) {
+      this._standingSeason = 2008;
+      this._playoffSeason = 2008;
+    }
     if (phase === "playoffs") this._loadPlayoffBracket(this._standingSeason);
     else this._loadHistoricalStandings(this._standingSeason);
   }
@@ -1159,7 +1165,8 @@ class NBACenterCard extends LitElement {
 
   _statsView() {
     const currentSeasonYear = new Date().getFullYear() + (new Date().getMonth() >= 9 ? 1 : 0);
-    const years = Array.from({ length: currentSeasonYear - 2002 + 1 }, (_, index) => currentSeasonYear - index);
+    const firstAvailableYear = this._standingPhase === "playoffs" ? 2008 : 2002;
+    const years = Array.from({ length: currentSeasonYear - firstAvailableYear + 1 }, (_, index) => currentSeasonYear - index);
     const standings = this._seasonStandings?.standings ?? {};
     const eastKey = Object.keys(standings).find((name) => name.toLowerCase().includes("eastern")) ?? "Eastern Conference";
     const westKey = Object.keys(standings).find((name) => name.toLowerCase().includes("western")) ?? "Western Conference";
