@@ -758,7 +758,13 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 "gamelog": gamelog,
                 "postseason_gamelog": postseason_gamelog,
                 "errors": errors,
-                "available": bool(overview["statistics"] or stats["statistics"] or gamelog["games"]),
+                # Les données playoffs sont une ressource indépendante :
+                # un profil avec uniquement des statistiques postseason valides
+                # reste exploitable même si les endpoints réguliers sont vides.
+                "available": bool(
+                    overview["statistics"] or stats["statistics"] or gamelog["games"]
+                    or postseason_stats.get("statistics") or postseason_gamelog.get("games")
+                ),
                 "fetched_at": now.isoformat(),
             }
             if not result["available"]:
