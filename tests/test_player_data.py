@@ -121,6 +121,14 @@ class PlayerDataParserTests(unittest.TestCase):
                                      "Rebounds Per Game", "Assists Per Game", "Steals Per Game",
                                      "Blocks Per Game"],
                     "statistics": [
+                        # Plusieurs saisons antérieures précèdent la saison demandée
+                        # dans la vraie réponse ESPN de Luka Dončić.
+                        {"season": {"year": 2020, "displayName": "2019-20"},
+                         "stats": ["6", "35.8", "10.7", "5.4", "4.4", "1.1", "0.4"]},
+                        {"season": {"year": 2021, "displayName": "2020-21"},
+                         "stats": ["7", "40.1", "13.7", "7.9", "5.9", "1.3", "0.5"]},
+                        {"season": {"year": 2022, "displayName": "2021-22"},
+                         "stats": ["15", "36.8", "31.7", "9.8", "6.4", "1.8", "1.1"]},
                         {"season": {"year": 2024, "displayName": "2023-24"},
                          "stats": ["22", "40.9", "28.9", "9.5", "8.1", "1.9", "0.4"]},
                         {"season": {"year": 2025, "displayName": "2024-25"},
