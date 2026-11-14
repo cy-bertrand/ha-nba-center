@@ -478,7 +478,7 @@ class NBACenterCard extends LitElement {
         || String(item.label ?? "").toLowerCase().includes("per game");
       return isAverage && aliases.some((alias) => keys.includes(normalizeStatKey(alias)));
     });
-    const quickDefinitions = [
+    const postseasonQuickDefinitions = [
       ["MIN", ["avgminutes", "minutespergame", "min"]],
       ["PTS", ["avgpoints", "pointspergame", "pts"]],
       ["REB", ["avgrebounds", "reboundspergame", "reb"]],
@@ -488,7 +488,7 @@ class NBACenterCard extends LitElement {
     ];
     // Les moyennes par match sont fournies par ESPN Web API v3. On les affiche
     // directement : aucune division des totaux n'est effectuée côté interface.
-    const postseasonQuick = quickDefinitions.map(([label, aliases]) => {
+    const postseasonQuick = postseasonQuickDefinitions.map(([label, aliases]) => {
       const item = findPostseasonStat(aliases);
       return [label, item ? (item.display_value ?? item.value ?? "—") : "—"];
     });
