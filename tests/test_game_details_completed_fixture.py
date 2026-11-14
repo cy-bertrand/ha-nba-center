@@ -74,12 +74,17 @@ class CompletedSummaryFixtureTests(unittest.TestCase):
             players = player_blocks[abbr]["players"]
             # Core box-score totals reconcile with the individual player rows.
             for stat_key, team_key in (
-                ("points", "points"), ("rebounds", "totalRebounds"),
+                ("rebounds", "totalRebounds"),
                 ("assists", "assists"), ("turnovers", "turnovers"),
                 ("steals", "steals"), ("blocks", "blocks"),
             ):
                 total = sum(int(player["stats_by_key"].get(stat_key) or 0) for player in players)
                 self.assertEqual(total, int(team_stats[abbr][team_key]))
+        scores = {team["abbr"]: team["score"] for team in self.state["competitors"]}
+        for abbr in ("LAL", "MIL"):
+            player_points = sum(int(player["stats_by_key"].get("points") or 0)
+                                for player in player_blocks[abbr]["players"])
+            self.assertEqual(player_points, scores[abbr])
         # ESPN reports team turnovers separately from player turnovers.
         self.assertEqual(team_stats["LAL"]["totalTurnovers"], "18")
         self.assertEqual(team_stats["LAL"]["turnovers"], "17")
