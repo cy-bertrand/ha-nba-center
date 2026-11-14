@@ -27,6 +27,10 @@ assert.match(source, /playoff-game-row/, "playoff series overlay must list indiv
 assert.match(source, /declaredWinners = \(game\.teams \?\? \[\]\)\.filter\(\(team\) => team\.winner === true\)/, "playoff game winner must use ESPN's explicit winner flag");
 assert.match(source, /winnerSide === "away" \? html/, "playoff game winner must be explicitly highlighted");
 assert.match(source, /currentSeasonYear - 2002 \+ 1/, "standings season selector must include historical seasons back to ESPN year 2002");
+assert.match(source, /this\._standingPhase === "playoffs" \? 2008 : 2002/, "playoff season selector must start at 2007-08 while regular standings start at 2002-03");
+assert.match(source, /this\._standingSeason < 2008/, "switching to playoffs from an earlier regular season must select the first supported playoff season");
+assert.match(source, /2026\.11\.14\.9/, "build version must be bumped for historical playoff selector range");
+
 
 assert.match(source, /playoff-series-button/, "playoff series cards must be visibly interactive");
 assert.match(source, /@media\(max-width:760px\)\{\.playoff-round \.grid\{grid-template-columns:1fr\}\}/, "playoff series must use a single column on mobile");
