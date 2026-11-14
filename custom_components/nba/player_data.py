@@ -485,11 +485,17 @@ def parse_player_gamelog(raw: dict[str, Any]) -> dict[str, Any]:
                     })
 
     games: list[dict[str, Any]] = []
+    seen_event_ids: set[str] = set()
     for row in source:
         event = _mapping(row)
         if not event:
             continue
         event_id = _text(event.get("id") or event.get("eventId"))
+        # Un événement sans identifiant ne peut pas être relié à un match
+        # ni enrichi depuis le box score. Écarter aussi les doublons ESPN.
+        if not event_id or event_id in seen_event_ids:
+            continue
+        seen_event_ids.add(event_id)
         stats = event.get("stats")
         if isinstance(stats, dict):
             stat_values = {str(key): _number(value) for key, value in stats.items()}
