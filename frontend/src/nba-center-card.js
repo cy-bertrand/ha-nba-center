@@ -1,7 +1,7 @@
 // NBA Center Lovelace card — reads only Home Assistant entity state. Lit is bundled locally.
 import { LitElement, css, html } from "lit";
 
-const BUILD_VERSION = "2026.11.14.6";
+const BUILD_VERSION = "2026.11.14.7";
 
 const VIEWS = [
   { id: "home", label: "HOME" },
@@ -94,7 +94,7 @@ class NBACenterCard extends LitElement {
     .panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
     .accent{color:#f0c05b}
     .empty{border:1px dashed #33445e;border-radius:13px;padding:20px;background:#101a29}
-    .playoff-season{max-width:132px;border:1px solid #2b3b52;border-radius:9px;background:#101a29;color:#f2c45f;padding:9px;font:inherit;font-size:11px;font-weight:800}.playoff-summary{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}.playoff-summary span{border:1px solid #2c3b52;border-radius:999px;padding:6px 10px;color:#aab6ca;font-size:9px;font-weight:800;letter-spacing:.08em}.playoff-conference{margin-top:22px}.playoff-conference-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}.playoff-conference-title h2{font-size:16px;color:#f2c45f}.playoff-round{margin:14px 0}.playoff-round .grid{grid-template-columns:repeat(2,minmax(0,1fr))}.playoff-series{padding:12px}.playoff-team{display:grid;grid-template-columns:28px minmax(0,1fr) 28px;align-items:center;gap:8px;padding:8px 2px;border-bottom:1px solid #ffffff12;font-size:12px}.playoff-team:last-of-type{border-bottom:0}.playoff-seed{color:#8291a7;font-size:10px;font-weight:800}.playoff-wins{text-align:center;color:#f2c45f;font-size:16px;font-weight:950}.playoff-winner strong{color:#75d6a1}.playoff-meta{margin-top:8px;color:#8190a7;font-size:9px}.playoff-warning{margin-top:8px;color:#e8b75a;font-size:10px;line-height:1.5}.playoff-conference .empty{margin-top:8px}
+    .playoff-season{max-width:132px;border:1px solid #2b3b52;border-radius:9px;background:#101a29;color:#f2c45f;padding:9px;font:inherit;font-size:11px;font-weight:800}.playoff-summary{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}.playoff-summary span{border:1px solid #2c3b52;border-radius:999px;padding:6px 10px;color:#aab6ca;font-size:9px;font-weight:800;letter-spacing:.08em}.playoff-conference{margin-top:22px}.playoff-conference-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}.playoff-conference-title h2{font-size:16px;color:#f2c45f}.playoff-round{margin:14px 0}.playoff-round .grid{grid-template-columns:repeat(2,minmax(0,1fr))}.playoff-series{padding:12px}.playoff-series-button{display:block;width:100%;min-width:0;text-align:left;color:inherit;cursor:pointer;transition:border-color .15s,transform .15s}.playoff-series-button:hover{border-color:#bd9448;transform:translateY(-1px);background:linear-gradient(145deg,#17263a,#101a29)}.playoff-series-button:focus-visible{outline:2px solid #f2c45f;outline-offset:2px}.playoff-series-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}.playoff-series-round{color:#9eabc0;font-size:9px;font-weight:900;letter-spacing:.12em;text-transform:uppercase}.playoff-team{display:grid;grid-template-columns:25px 28px minmax(0,1fr) 28px;align-items:center;gap:8px;padding:9px 2px;border-bottom:1px solid #ffffff12;font-size:12px}.playoff-team:last-of-type{border-bottom:0}.playoff-team-logo{width:25px;height:25px;max-width:25px;max-height:25px;object-fit:contain}.playoff-seed{color:#8291a7;font-size:10px;font-weight:800}.playoff-wins{text-align:center;color:#f2c45f;font-size:17px;font-weight:950}.playoff-winner strong{color:#75d6a0}.playoff-series-bottom{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:9px;padding-top:9px;border-top:1px solid #ffffff12;color:#8190a7;font-size:8px;letter-spacing:.06em}.playoff-series-bottom strong{color:#f2c45f;font-size:8px;white-space:nowrap}.playoff-warning{margin-top:8px;color:#e8b75a;font-size:10px;line-height:1.5}.playoff-series-detail-summary{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}.playoff-series-detail-summary>strong{color:#f2c45f;font-size:20px}.playoff-game-list{display:grid;gap:8px}.playoff-game-row{display:grid;grid-template-columns:75px minmax(0,1fr) minmax(0,1fr) 12px;align-items:center;gap:8px;width:100%;min-width:0;padding:11px;border:1px solid #27364b;border-radius:10px;background:#101a29;color:#e9eef7;text-align:left;cursor:pointer}.playoff-game-row:hover{border-color:#bd9448;background:#17263a}.playoff-game-row:disabled{opacity:.65;cursor:default}.playoff-game-number{color:#f2c45f;font-size:9px;font-weight:900}.playoff-game-number small{display:block;margin-top:4px;color:#8796ac;font-size:8px;font-weight:500}.playoff-game-team{display:grid;grid-template-columns:23px minmax(0,1fr) auto;align-items:center;gap:5px;min-width:0}.playoff-game-team img{width:22px;height:22px;object-fit:contain}.playoff-game-team strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px}.playoff-game-team b{font-size:14px;color:#f2c45f}.playoff-game-open{color:#f2c45f;font-size:20px}.playoff-series-overlay .overlay-panel{width:min(620px,100%)}.playoff-series-overlay .overlay-head h2{font-size:14px}.playoff-warning{margin-top:8px;color:#e8b75a;font-size:10px;line-height:1.5}.playoff-conference .empty{margin-top:8px}
     .empty strong{display:block;margin-bottom:7px;color:#e9edf5;font-size:13px}
     .empty p{margin:0;color:#9eabc0;font-size:11px;line-height:1.65}
     .game-list,.team-list,.leader-list{display:grid;gap:9px}
@@ -161,7 +161,8 @@ class NBACenterCard extends LitElement {
     .overlay-body{padding:18px}.overlay-teams{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;text-align:center}
     .overlay-team img{width:54px;height:54px;object-fit:contain}.overlay-team strong{display:block;margin-top:7px;font-size:12px}
     .overlay-score{font-size:24px;font-weight:950;color:#f2c45f}.overlay-actions{display:flex;align-items:center;gap:7px}.overlay-refresh{min-width:0;padding:8px 10px;border:1px solid #34465f;color:#e8bb58;font-size:9px}.overlay-refresh:disabled{opacity:.55;cursor:wait}.overlay-close{min-width:38px;padding:8px;border:1px solid #34465f}
-    .game-leaders-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}.game-leader-card{padding:12px;min-width:0}.game-leader-card .panel-head{margin-bottom:7px}.game-leader-card .panel-head h3{font-size:12px;letter-spacing:.08em}.game-leader{display:grid;grid-template-columns:42px minmax(0,1fr) auto;align-items:center;gap:8px;padding:8px 0;border-top:1px solid #ffffff12}.game-leader-category{color:#e8bb58;font-size:9px;font-weight:900;letter-spacing:.08em}.game-leader-name{font-size:11px;font-weight:750;overflow-wrap:anywhere}.game-leader-value{color:#f2c45f;font-size:13px;font-weight:950;font-variant-numeric:tabular-nums}.game-leaders-empty{color:#91a0b5;font-size:10px;padding:7px 0}@media(max-width:620px){.game-leaders-grid{grid-template-columns:1fr;gap:8px}.game-leader-card{padding:10px}.game-leader{padding:6px 0}}
+    .game-leaders-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}.game-leader-card{padding:12px;min-width:0}.game-leader-card .panel-head{margin-bottom:7px}.game-leader-card .panel-head h3{font-size:12px;letter-spacing:.08em}.game-leader{display:grid;grid-template-columns:42px minmax(0,1fr) auto;align-items:center;gap:8px;padding:8px 0;border-top:1px solid #ffffff12}.game-leader-category{color:#e8bb58;font-size:9px;font-weight:900;letter-spacing:.08em}.game-leader-name{font-size:11px;font-weight:750;overflow-wrap:anywhere}.game-leader-value{color:#f2c45f;font-size:13px;font-weight:950;font-variant-numeric:tabular-nums}.game-leaders-empty{color:#91a0b5;font-size:10px;padding:7px 0}@media(max-width:760px){.playoff-round .grid{grid-template-columns:1fr}}
+    @media(max-width:620px){.playoff-game-row{grid-template-columns:62px minmax(0,1fr) minmax(0,1fr) 10px;gap:5px;padding:9px}.playoff-game-team{grid-template-columns:20px minmax(0,1fr) auto;gap:4px}.playoff-game-team img{width:19px;height:19px}.playoff-game-team strong{font-size:9px}.game-leaders-grid{grid-template-columns:1fr;gap:8px}.game-leader-card{padding:10px}.game-leader{padding:6px 0}}
     .quarter-score-panel{margin-top:12px}.quarter-score-panel table{width:100%;border-collapse:collapse;font-size:10px}.quarter-score-panel th,.quarter-score-panel td{padding:9px 8px;text-align:center;border-bottom:1px solid #ffffff10;font-variant-numeric:tabular-nums}.quarter-score-panel th:first-child,.quarter-score-panel td:first-child{text-align:left}.quarter-score-panel td:last-child{color:#f2c45f;font-weight:900}
     .boxscore-section{margin-top:22px}.section-kicker{color:#e8b74e;font-size:9px;font-weight:900;letter-spacing:.2em;margin-bottom:5px}.boxscore-section>h3{margin:0 0 12px}
     .boxscore-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.boxscore-panel{padding:10px;min-width:0}.player-table-wrap{overflow-x:auto;max-width:100%}.player-table{width:100%;border-collapse:collapse;font-size:10px;white-space:nowrap}.player-table th,.player-table td{padding:8px 6px;text-align:right;border-bottom:1px solid #ffffff10;font-variant-numeric:tabular-nums}.player-table th:first-child,.player-table td:first-child{text-align:left;position:sticky;left:0;background:#111d2c}.player-table th{color:#94a5bc;font-size:8px;letter-spacing:.08em}.player-table tr.starter td{background-color:#17263a}.player-table tr.dnp td{color:#75849a}
@@ -200,6 +201,7 @@ class NBACenterCard extends LitElement {
     this._playoffData = null; this._playoffLoading = false; this._playoffError = ""; this._playoffSeason = 2027; this._playoffRequest = 0;
     this._standingSeason = 2027; this._standingPhase = "regular"; this._seasonStandings = null; this._seasonStandingsLoading = false; this._seasonStandingsError = ""; this._seasonStandingsRequest = 0;
     this._standingsResultsCache = new Map(); this._playoffResultsCache = new Map();
+    this._seriesOverlay = null;
     this._config = {};
   }
 
@@ -727,18 +729,71 @@ class NBACenterCard extends LitElement {
       if (request === this._playoffRequest) this._playoffLoading = false;
     }
   }
+  _openPlayoffSeries(series) { this._seriesOverlay = series; }
+  _closePlayoffSeries() { this._seriesOverlay = null; }
   _playoffSeriesCard(series) {
     const teams = series.teams ?? [];
     const winnerId = series.winner?.id == null ? null : String(series.winner.id);
-    return html`<section class="panel playoff-series">
-      <div class="panel-head"><h3>${value(series.round_label, "SÉRIE")}</h3><span class="pill">${series.status === "completed" ? "TERMINÉE" : series.status === "inconsistent" ? "À VÉRIFIER" : "EN COURS"}</span></div>
-      ${teams.map((team) => html`<div class="playoff-team ${winnerId === String(team.id) ? "playoff-winner" : ""}">
-        <span class="playoff-seed">${team.seed == null ? "—" : `#${team.seed}`}</span><strong>${value(team.abbreviation, team.name ?? team.id)}</strong><span class="playoff-wins">${Number.isInteger(team.wins) ? `${series.unknown_results ? "≥" : ""}${team.wins}` : "—"}</span>
-      </div>`)}
-      <div class="playoff-meta">${series.completed_games ?? 0} MATCHS TERMINÉS · ${series.games_played ?? 0} MATCHS RECENSÉS</div>
+    const catalog = this._teamsCatalog().teams;
+    const status = series.status === "completed" ? "TERMINÉE" : series.status === "inconsistent" ? "À VÉRIFIER" : "EN COURS";
+    return html`<button type="button" class="playoff-series playoff-series-button" @click=${() => this._openPlayoffSeries(series)} aria-label=${`Voir les matchs de la série ${teams.map((team) => team.abbreviation ?? team.name).join(" contre ")}`}>
+      <div class="playoff-series-top"><span class="playoff-series-round">${value(series.round_label, "SÉRIE")}</span><span class="pill">${status}</span></div>
+      ${teams.map((team) => {
+        const club = catalog.find((candidate) => String(candidate.id) === String(team.id));
+        return html`<div class="playoff-team ${winnerId === String(team.id) ? "playoff-winner" : ""}">
+          <span class="playoff-seed">${team.seed == null ? "—" : `#${team.seed}`}</span>
+          ${club?.logo ? html`<img class="playoff-team-logo" src=${club.logo} alt="" loading="lazy">` : ""}
+          <strong>${value(team.abbreviation, team.name ?? team.id)}</strong>
+          <span class="playoff-wins">${Number.isInteger(team.wins) ? `${series.unknown_results ? "≥" : ""}${team.wins}` : "—"}</span>
+        </div>`;
+      })}
+      <div class="playoff-series-bottom"><span>${series.completed_games ?? 0} / ${series.games_played ?? 0} MATCHS TERMINÉS</span><strong>VOIR LES MATCHS <span aria-hidden="true">›</span></strong></div>
       ${series.unknown_results ? html`<div class="playoff-warning">${series.unknown_results} résultat(s) non confirmé(s)</div>` : ""}
       ${series.issues?.length ? html`<div class="playoff-warning">Données incohérentes : ${series.issues.join(", ")}</div>` : ""}
-    </section>`;
+    </button>`;
+  }
+  _playoffSeriesOverlay() {
+    const series = this._seriesOverlay;
+    if (!series) return "";
+    const catalog = this._teamsCatalog().teams;
+    const teams = series.teams ?? [];
+    const games = [...(series.games ?? [])].sort((a, b) => (a.game_number ?? 99) - (b.game_number ?? 99) || String(a.date ?? "").localeCompare(String(b.date ?? "")));
+    const teamFor = (game, side) => (game.teams ?? []).find((team) => team.home_away === side) ?? {};
+    const clubFor = (team) => catalog.find((club) => String(club.id) === String(team.id));
+    return html`<div class="overlay playoff-series-overlay" @click=${(event) => { if (event.target === event.currentTarget) this._closePlayoffSeries(); }}>
+      <section class="overlay-panel" role="dialog" aria-modal="true" aria-label="Matchs de la série">
+        <header class="overlay-head"><div><div class="section-kicker">${value(series.round_label, "PLAYOFFS")}</div><h2>${teams.map((team) => value(team.abbreviation, team.name)).join(" · ")}</h2></div><button class="overlay-close" aria-label="Fermer la série" @click=${this._closePlayoffSeries}>✕</button></header>
+        <div class="overlay-body">
+          <div class="playoff-series-detail-summary"><span class="pill">${series.status === "completed" ? "SÉRIE TERMINÉE" : series.status === "inconsistent" ? "DONNÉES À VÉRIFIER" : "SÉRIE EN COURS"}</span><strong>${teams.map((team) => Number.isInteger(team.wins) ? team.wins : "—").join(" – ")}</strong><span class="muted">${series.completed_games ?? 0} matchs terminés · ${series.games_played ?? 0} recensés</span></div>
+          <div class="playoff-game-list">
+            ${games.length ? games.map((game) => {
+              const away = teamFor(game, "away");
+              const home = teamFor(game, "home");
+              const awayClub = clubFor(away);
+              const homeClub = clubFor(home);
+              const completed = game.completed === true;
+              const gameLabel = game.game_number ? `GAME ${game.game_number}` : "MATCH";
+              const date = game.date ? new Date(game.date).toLocaleDateString("fr-BE", { day: "2-digit", month: "short", year: "numeric" }) : "Date indisponible";
+              return html`<button type="button" class="playoff-game-row" ?disabled=${!game.id} @click=${() => {
+                if (!game.id) return;
+                this._closePlayoffSeries();
+                this._openGame({
+                  id: game.id, date_text: date, state: completed ? "post" : "pre",
+                  detail: completed ? "TERMINÉ" : "À VENIR",
+                  away: { id: away.id, name: away.name ?? awayClub?.display_name ?? awayClub?.name, abbr: away.abbreviation, logo: awayClub?.logo, score: away.score },
+                  home: { id: home.id, name: home.name ?? homeClub?.display_name ?? homeClub?.name, abbr: home.abbreviation, logo: homeClub?.logo, score: home.score },
+                });
+              }}>
+                <span class="playoff-game-number">${gameLabel}<small>${date}</small></span>
+                <span class="playoff-game-team">${awayClub?.logo ? html`<img src=${awayClub.logo} alt="" loading="lazy">` : ""}<strong>${value(away.abbreviation, away.name)}</strong><b>${completed ? value(away.score) : "—"}</b></span>
+                <span class="playoff-game-team">${homeClub?.logo ? html`<img src=${homeClub.logo} alt="" loading="lazy">` : ""}<strong>${value(home.abbreviation, home.name)}</strong><b>${completed ? value(home.score) : "—"}</b></span>
+                <span class="playoff-game-open" aria-hidden="true">›</span>
+              </button>`;
+            }) : html`<section class="empty"><p>Les rencontres détaillées de cette série ne sont pas disponibles dans les données ESPN reçues.</p></section>`}
+          </div>
+        </div>
+      </section>
+    </div>`;
   }
   _playoffRound(round) {
     return html`<section class="playoff-round"><div class="section-kicker">${value(round.round_label)}</div><div class="grid">${(round.series ?? []).map((series) => this._playoffSeriesCard(series))}</div></section>`;
@@ -1145,6 +1200,7 @@ class NBACenterCard extends LitElement {
             @click=${() => this._selectView(v.id)}>${v.label}</button>`)}</nav>
         <main>${this.hass ? view[active.id]() : html`
           <section class="empty"><strong>Connexion à Home Assistant…</strong><p>La carte attend les états de l'intégration NBA.</p></section>`}</main>
+        ${this._seriesOverlay && !this._overlayGame ? this._playoffSeriesOverlay() : ""}
         ${this._overlayGame ? html`<div class="overlay" @click=${(event) => { if (event.target === event.currentTarget) this._closeOverlay(); }} @keydown=${this._onOverlayKeydown}>
           <section class="overlay-panel" role="dialog" aria-modal="true" aria-label="Détails du match">
             <header class="overlay-head"><h2>MATCH CENTER</h2><div class="overlay-actions">
