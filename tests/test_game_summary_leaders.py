@@ -138,5 +138,42 @@ class SummaryLeadersTests(unittest.TestCase):
         self.assertEqual(result["teams"][1]["top_players"], [])
 
 
+
+    def test_leaders_parser_uses_requested_statistic_not_first_available(self):
+        raw = {
+            "categories": [{"names": ["avgRebounds", "avgPoints"]}],
+            "athletes": [{
+                "athlete": {"id": "23", "displayName": "Player A", "team": {"abbreviation": "AAA"}},
+                "categories": [{"values": [12.4, 31.2]}],
+            }],
+        }
+        self.assertEqual(coordinator.NBACoordinator._parse_leaders(raw, "points")[0]["value"], 31.2)
+        self.assertEqual(coordinator.NBACoordinator._parse_leaders(raw, "rebounds")[0]["value"], 12.4)
+
+    def test_leaders_parser_returns_empty_when_requested_statistic_is_missing(self):
+        raw = {
+            "categories": [{"names": ["avgRebounds"]}],
+            "athletes": [{
+                "athlete": {"id": "23", "displayName": "Player A"},
+                "categories": [{"values": [12.4]}],
+            }],
+        }
+        self.assertEqual(coordinator.NBACoordinator._parse_leaders(raw, "points"), [])
+
+    def test_leaders_parser_skips_malformed_rows_and_preserves_valid_players(self):
+        raw = {
+            "categories": [{"names": ["avgPoints"]}],
+            "athletes": [
+                None,
+                {"athlete": None, "categories": [{"values": [20]}]},
+                {"athlete": {"id": "23", "displayName": "Player A"},
+                 "categories": [{"values": [25.6]}]},
+            ],
+        }
+        result = coordinator.NBACoordinator._parse_leaders(raw, "points")
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]["rank"], 1)
+        self.assertEqual(result[0]["value"], 25.6)
+
 if __name__ == "__main__":
     unittest.main()
