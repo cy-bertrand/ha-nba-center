@@ -29,7 +29,7 @@ assert.match(source, /winnerSide === "away" \? html/, "playoff game winner must 
 assert.match(source, /this\._standingPhase === "playoffs" \? 2008 : 2002/, "regular standings must retain history back to 2002-03");
 assert.match(source, /this\._standingPhase === "playoffs" \? 2008 : 2002/, "playoff season selector must start at 2007-08 while regular standings start at 2002-03");
 assert.match(source, /this\._standingSeason < 2008/, "switching to playoffs from an earlier regular season must select the first supported playoff season");
-assert.match(source, /2026\.11\.14\.13/, "build version must be bumped for historical playoff selector range");
+assert.match(source, /2026\.11\.14\.14/, "build version must be bumped for historical playoff selector range");
 
 
 assert.match(source, /playoff-series-button/, "playoff series cards must be visibly interactive");
@@ -84,7 +84,7 @@ assert.match(source, /player\.ejected/, "player ejection metadata must be render
 assert.match(source, /const preferred = \["MIN", "PTS", "FG"/, "player points must appear immediately after minutes in the box score");
 assert.match(source, /boxscore-player-link/, "player names in Match Center box scores must be interactive");
 assert.match(source, /_openPlayer\(player\.id, \{ \.\.\.player, player: player\.name, team_id: block\.team_id/, "clicking a box-score player must open the profile with the player's franchise context");
-assert.match(source, /2026\.11\.14\.13/, "build version must be bumped for clickable box-score player profiles");
+assert.match(source, /2026\.11\.14\.14/, "build version must be bumped for clickable box-score player profiles");
 
 assert.match(bundle, /player-table/, "responsive player statistics table must be included");
 assert.match(bundle, /type="date"/, "calendar date picker must be included");
@@ -117,7 +117,11 @@ console.log("NBA Center frontend bundle and feature checks passed.");
 
 assert.match(source, /filtered\.slice\(-12\)/, "Match Center must show the latest 12 plays in chronological order");
 assert.doesNotMatch(source, /const ordered = \[\.\.\.filtered\]\.reverse\(\)/, "Match Center must not reverse chronological plays");
-assert.match(source, /2026\.11\.14\.13/, "frontend build version must be bumped for play-by-play ordering");
+assert.match(source, /2026\.11\.14\.14/, "frontend build version must be bumped for play-by-play ordering");
+assert.match(source, /\["avgMinutes","avgPoints","avgRebounds","avgAssists","avgBlocks","avgSteals"\]/, "career averages must not include career games played as an average tile");
+assert.match(source, /career_statistics\?\.find\(\(row\) => row\.name === "gamesPlayed"\)/, "career games played must be displayed beside NBA experience");
+assert.match(source, /player-game-header/, "recent games must use a compact column header");
+assert.match(source, /grid-template-columns:66px 48px repeat\(6,minmax\(0,1fr\)\)/, "recent game stats must use compact aligned columns");
 assert.match(source, /const hasBio = \["age", "height_cm", "weight_kg", "experience_years", "college"\]\.every/, "box-score player profiles must fetch missing personal biography even when position is known");
 assert.match(source, /\["GP", \["gamesplayed", "games", "gp"\]\]/, "regular-season profile must expose games played");
 assert.match(source, /\["GS", \["gamesstarted", "gs"\]\]/, "regular-season profile must expose games started");
