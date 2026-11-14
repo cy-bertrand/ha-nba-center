@@ -122,6 +122,7 @@ class NBACenterCard extends LitElement {
     .form-chip strong{font-size:9px}
     .form-chip.win strong{color:#72d5a0}
     .form-chip.loss strong{color:#ff8b91}
+    .form-chip.unknown strong{color:#aab6ca}
     .leader{display:grid;grid-template-columns:24px 34px minmax(0,1fr) auto;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #ffffff10}
     .leader:last-child{border-bottom:0}
     .leader-button{width:100%;min-width:0;margin:0;padding:8px 0;border:0;border-radius:7px;background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer}
@@ -329,7 +330,7 @@ class NBACenterCard extends LitElement {
                   <div><small>% VICTOIRES</small><strong>${value(this._teamRoster.standing.pct)}</strong></div>
                   <div><small>RETARD</small><strong>${value(this._teamRoster.standing.gb)}</strong></div><div><small>SÉRIE</small><strong>${value(this._teamRoster.standing.streak)}</strong></div>
                 </div>
-                ${this._teamRoster.schedule?.recent?.length ? html`<div class="muted" style="margin-top:12px">FORME RÉCENTE</div><div class="recent">${this._teamRoster.schedule.recent.slice(0,5).map((game) => html`<span class="form-chip ${game.result === "V" ? "win" : "loss"}"><strong>${value(game.result)}</strong><span>${game.home_away === "@" ? `@${value(game.opp_abbr)}` : value(game.opp_abbr)}</span><span>${value(game.team_score)}–${value(game.opp_score)}</span></span>`)}</div>` : ""}
+                ${this._teamRoster.schedule?.recent?.length ? html`<div class="muted" style="margin-top:12px">FORME RÉCENTE</div><div class="recent">${this._teamRoster.schedule.recent.slice(0,5).map((game) => html`<span class="form-chip ${game.result === "V" ? "win" : game.result === "D" ? "loss" : "unknown"}"><strong>${value(game.result)}</strong><span>${game.home_away === "@" ? `@${value(game.opp_abbr)}` : value(game.opp_abbr)}</span><span>${value(game.team_score)}–${value(game.opp_score)}</span></span>`)}</div>` : ""}
                 ${this._teamRoster.schedule?.next ? html`<p class="muted">PROCHAIN MATCH · ${value(this._teamRoster.schedule.next.date_text)} · ${value(this._teamRoster.schedule.next.name)}</p>` : ""}
               </section>` : ""}
             <div class="panel-head"><h3>${this._selectedPlayer ? "AUTRES JOUEURS" : "EFFECTIF"}</h3><span class="pill">${this._teamRoster?.count ?? 0} JOUEURS</span></div>
