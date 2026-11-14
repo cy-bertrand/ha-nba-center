@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import math
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -52,13 +53,18 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def _to_int(value: Any) -> int:
-    """Convertit un score ESPN en entier (accepte nombre, texte ou dictionnaire)."""
+    """Convertit un entier ESPN sans tronquer les fractions ni accepter booléens/infini."""
     if isinstance(value, dict):
-        value = value.get("value", value.get("displayValue", 0))
-    try:
-        return int(float(value or 0))
-    except (TypeError, ValueError):
+        value = value.get("value", value.get("displayValue"))
+    if isinstance(value, bool) or value is None or value == "":
         return 0
+    try:
+        number = float(value)
+    except (TypeError, ValueError, OverflowError):
+        return 0
+    if not math.isfinite(number) or not number.is_integer():
+        return 0
+    return int(number)
 
 
 def _local_date(raw: str | None) -> dict[str, str | None]:
@@ -339,9 +345,12 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
             if value is None:
                 continue
             try:
-                numeric_value = round(float(value), 1)
-            except (TypeError, ValueError):
+                numeric_value = float(value)
+            except (TypeError, ValueError, OverflowError):
                 continue
+            if not math.isfinite(numeric_value):
+                continue
+            numeric_value = round(numeric_value, 1)
 
             athlete_team = athlete.get("team") if isinstance(athlete.get("team"), dict) else {}
             team_logos = athlete_team.get("logos") or athlete.get("teamLogos") or []
