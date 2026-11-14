@@ -297,6 +297,17 @@ class PlayerDataParserTests(unittest.TestCase):
         ]})
         self.assertEqual(len(result["season_history"][0]["teams"]), 1)
 
+    def test_does_not_use_career_split_as_current_season_stats(self):
+        result = parse_player_stats({"statistics": {
+            "labels": ["GP", "PTS"],
+            "names": ["gamesPlayed", "avgPoints"],
+            "splits": [
+                {"displayName": "Career", "stats": ["193", "23.8"]},
+            ],
+        }})
+        self.assertEqual(result["statistics"], [])
+        self.assertEqual(result["career_statistics"][0]["value"], 193)
+
     def test_exposes_career_split_separately(self):
         result = parse_player_stats({"statistics": {
             "labels": ["GP", "PTS"],
