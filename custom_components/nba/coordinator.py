@@ -682,6 +682,37 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
                         params={"season": season_year, "seasontype": 3},
                     )
                     parsed_postseason = parse_player_stats(postseason_raw, season_year=season_year)
+                    if player_id == "1966" and season_year == 2025:
+                        raw_categories = postseason_raw.get("categories")
+                        category_trace = [
+                            {
+                                "name": category.get("name") or category.get("displayName"),
+                                "names": (category.get("names") or [])[:20],
+                                "stats_count": len(category.get("stats") or category.get("statistics") or []),
+                            }
+                            for category in raw_categories[:12]
+                            if isinstance(category, dict)
+                        ] if isinstance(raw_categories, list) else type(raw_categories).__name__
+                        parsed_trace = [
+                            {
+                                "name": item.get("name"),
+                                "label": item.get("label"),
+                                "category": item.get("category"),
+                                "value": item.get("value"),
+                                "display_value": item.get("display_value"),
+                            }
+                            for item in (parsed_postseason.get("statistics") or [])[:30]
+                            if isinstance(item, dict)
+                        ]
+                        _LOGGER.warning(
+                            "NBA_CENTER_PLAYOFF_TRACE player=%s requested_season=%s raw_keys=%s "
+                            "raw_season=%s raw_season_type=%s categories=%s parsed_season=%s "
+                            "parsed_season_type=%s parsed_stats=%s",
+                            player_id, season_year, sorted(postseason_raw.keys()),
+                            postseason_raw.get("season"), postseason_raw.get("seasonType"),
+                            category_trace, parsed_postseason.get("season"),
+                            parsed_postseason.get("season_type_id"), parsed_trace,
+                        )
                     if (parsed_postseason.get("season_type_id") == "3"
                             and season_matches_espn_year(str(parsed_postseason.get("season") or ""), season_year)
                             and parsed_postseason.get("statistics")):
