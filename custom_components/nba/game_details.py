@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import re
+import math
 from typing import Any
 
 
@@ -17,7 +18,10 @@ def _coordinate(value: Any) -> dict[str, float] | None:
     coordinate = _mapping(value)
     x, y = coordinate.get("x"), coordinate.get("y")
     # ESPN uses large negative sentinels when no shot location exists.
-    if not isinstance(x, (int, float)) or not isinstance(y, (int, float)):
+    if (isinstance(x, bool) or isinstance(y, bool)
+            or not isinstance(x, (int, float)) or not isinstance(y, (int, float))):
+        return None
+    if not math.isfinite(x) or not math.isfinite(y):
         return None
     if abs(x) > 10000 or abs(y) > 10000:
         return None
@@ -25,10 +29,18 @@ def _coordinate(value: Any) -> dict[str, float] | None:
 
 
 def _score(value: Any) -> int | None:
-    try:
-        return int(value)
-    except (TypeError, ValueError):
+    if isinstance(value, bool):
         return None
+    if isinstance(value, int):
+        return value
+    if isinstance(value, float):
+        return int(value) if math.isfinite(value) and value.is_integer() else None
+    if isinstance(value, str):
+        try:
+            return int(value.strip())
+        except ValueError:
+            return None
+    return None
 
 
 def _classify_play(play_type: str | None, short_description: str | None,
