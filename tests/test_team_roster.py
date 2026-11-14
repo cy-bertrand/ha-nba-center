@@ -61,6 +61,19 @@ class TeamRosterParserTests(unittest.TestCase):
         self.assertIsNone(player["jersey"])
         self.assertEqual(player["injuries"], [])
 
+    def test_rejects_boolean_and_non_finite_age_or_experience(self):
+        result = parse_team_roster({"athletes": [
+            {"id": "1", "displayName": "Invalid Metadata", "age": True,
+             "experience": {"years": float("inf")}},
+            {"id": "2", "displayName": "Valid Metadata", "age": 27,
+             "experience": {"years": 8}},
+        ]})
+        invalid, valid = result["players"]
+        self.assertIsNone(invalid["age"])
+        self.assertIsNone(invalid["experience_years"])
+        self.assertEqual(valid["age"], 27)
+        self.assertEqual(valid["experience_years"], 8)
+
     def test_unexpected_payload_is_empty_not_fabricated(self):
         self.assertEqual(parse_team_roster({"athletes": "invalid"})["players"], [])
 
