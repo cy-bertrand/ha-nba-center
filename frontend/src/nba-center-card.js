@@ -1,15 +1,14 @@
 // NBA Center Lovelace card — reads only Home Assistant entity state. Lit is bundled locally.
 import { LitElement, css, html } from "lit";
 
-const BUILD_VERSION = "2026.11.14.4";
+const BUILD_VERSION = "2026.11.14.5";
 
 const VIEWS = [
   { id: "home", label: "HOME" },
   { id: "scores", label: "SCORES" },
   { id: "teams", label: "TEAMS" },
   { id: "players", label: "PLAYERS" },
-  { id: "stats", label: "STATS" },
-  { id: "playoffs", label: "PLAYOFFS" },
+  { id: "stats", label: "STANDINGS" },
 ];
 const LEADERS = {
   points: ["POINTS", "marque"],
@@ -63,6 +62,7 @@ class NBACenterCard extends LitElement {
     _teamOverlay: { state: true }, _teamRoster: { state: true }, _teamRosterLoading: { state: true }, _teamRosterError: { state: true }, _teamRequest: { state: true },
     _playerSearch: { state: true }, _playerOverlay: { state: true }, _playerData: { state: true }, _playerLoading: { state: true }, _playerError: { state: true }, _playerRequest: { state: true }, _playerSelectedSeason: { state: true }, _playerSelectedPlayoffSeason: { state: true }, _playerPlayoffLoading: { state: true },
     _playoffData: { state: true }, _playoffLoading: { state: true }, _playoffError: { state: true }, _playoffSeason: { state: true }, _playoffRequest: { state: true },
+    _standingSeason: { state: true }, _standingPhase: { state: true }, _seasonStandings: { state: true }, _seasonStandingsLoading: { state: true }, _seasonStandingsError: { state: true }, _seasonStandingsRequest: { state: true },
   };
 
   static styles = css`
@@ -195,7 +195,8 @@ class NBACenterCard extends LitElement {
     this._calendarGames = []; this._calendarLoading = false; this._calendarError = ""; this._calendarStale = false; this._calendarStaleError = ""; this._calendarRequest = 0; this._calendarInitialized = false;
     this._overlayGame = null; this._overlayDetails = null; this._overlayRequest = 0;
     this._overlayLoading = false; this._overlayError = "";
-    this._playoffData = null; this._playoffLoading = false; this._playoffError = ""; this._playoffSeason = 2026; this._playoffRequest = 0;
+    this._playoffData = null; this._playoffLoading = false; this._playoffError = ""; this._playoffSeason = 2027; this._playoffRequest = 0;
+    this._standingSeason = 2027; this._standingPhase = "regular"; this._seasonStandings = null; this._seasonStandingsLoading = false; this._seasonStandingsError = ""; this._seasonStandingsRequest = 0;
     this._config = {};
   }
 
@@ -647,18 +648,46 @@ class NBACenterCard extends LitElement {
 
   _selectView(view) {
     this._active = view;
-    if (view === "playoffs") this._loadPlayoffBracket();
+    if (view === "stats") this._loadStandingsView();
     if (view === "scores") {
       if (!this._calendarInitialized) { this._selectedDate = localDateISO(new Date(), this.hass?.config?.time_zone); this._calendarInitialized = true; }
       this._loadCalendar(this._selectedDate);
     }
   }
   _setFilter(filter) { this._filter = filter; }
-  _setPlayoffSeason(event) {
+  _setStandingsSeason(event) {
     const year = Number(event.target.value);
     if (!Number.isInteger(year) || year < 2000 || year > 2100) return;
+    this._standingSeason = year;
     this._playoffSeason = year;
-    this._loadPlayoffBracket(year);
+    this._loadStandingsView();
+  }
+  _setStandingsPhase(phase) {
+    if (!["regular", "playoffs"].includes(phase) || phase === this._standingPhase) return;
+    this._standingPhase = phase;
+    if (phase === "playoffs") this._loadPlayoffBracket(this._standingSeason);
+    else this._loadHistoricalStandings(this._standingSeason);
+  }
+  _loadStandingsView() {
+    if (this._standingPhase === "playoffs") this._loadPlayoffBracket(this._standingSeason);
+    else this._loadHistoricalStandings(this._standingSeason);
+  }
+  async _loadHistoricalStandings(year = this._standingSeason) {
+    if (!this.hass?.callWS || !Number.isInteger(year)) return;
+    const request = ++this._seasonStandingsRequest;
+    this._seasonStandingsLoading = true;
+    this._seasonStandingsError = "";
+    this._seasonStandings = null;
+    try {
+      const result = await this.hass.callWS({ type: "nba/standings", season_year: year });
+      if (request !== this._seasonStandingsRequest || year !== this._standingSeason) return;
+      this._seasonStandings = result;
+    } catch (err) {
+      if (request !== this._seasonStandingsRequest) return;
+      this._seasonStandingsError = err?.message ?? "Impossible de charger le classement de cette saison.";
+    } finally {
+      if (request === this._seasonStandingsRequest) this._seasonStandingsLoading = false;
+    }
   }
   async _loadPlayoffBracket(year = this._playoffSeason) {
     if (!this.hass?.callWS || !Number.isInteger(year)) return;
@@ -693,9 +722,7 @@ class NBACenterCard extends LitElement {
   }
   _playoffsView() {
     const data = this._playoffData;
-    const years = [2027, 2026, 2025];
-    return html`<div class="head"><div><h2>PLAYOFFS CENTER</h2><p class="muted">Tableaux et séries reconstruits à partir des résultats ESPN vérifiés.</p></div>
-      <select class="playoff-season" aria-label="Saison des playoffs" .value=${String(this._playoffSeason)} @change=${this._setPlayoffSeason}>${years.map((year) => html`<option value=${year}>${year - 1}-${String(year).slice(-2)}</option>`)}</select></div>
+    return html`<div class="section-kicker">TABLEAU DES PLAYOFFS · ${this._standingSeason - 1}-${String(this._standingSeason).slice(-2)}</div>
       ${this._playoffLoading ? html`<section class="empty">Chargement du tableau ${this._playoffSeason - 1}-${String(this._playoffSeason).slice(-2)}…</section>` : ""}
       ${this._playoffError ? html`<section class="empty"><strong>Tableau indisponible</strong><p>${this._playoffError}</p><button @click=${() => this._loadPlayoffBracket()}>RÉESSAYER</button></section>` : ""}
       ${!this._playoffLoading && data ? html`<div class="playoff-summary"><span>${data.games_count ?? 0} MATCHS</span><span>${data.series_count ?? 0} SÉRIES</span><span>${data.available ? "DONNÉES REÇUES" : "AUCUN MATCH PLAYOFF"}</span></div>
@@ -923,8 +950,8 @@ class NBACenterCard extends LitElement {
     this._openTeam(team);
   }
 
-  _standingsTable(slug, label) {
-    const rows = this._standings(slug).rows;
+  _standingsTable(slug, label, rowsOverride = null) {
+    const rows = rowsOverride ?? this._standings(slug).rows;
     return html`
       <section class="panel">
         <div class="panel-head"><h3>${label}</h3><span class="pill">${rows.length} ÉQUIPES</span></div>
@@ -1047,9 +1074,32 @@ class NBACenterCard extends LitElement {
   }
 
   _statsView() {
-    return html`<div class="head"><h2>STATS CENTER</h2><span class="pill">SAISON</span></div>
-      <div class="grid">${this._standingsTable("east","EASTERN CONFERENCE")}${this._standingsTable("west","WESTERN CONFERENCE")}</div>
-      <div class="grid" style="margin-top:12px">${Object.keys(LEADERS).map((key) => this._leaderPanel(key,5))}</div>`;
+    const years = [2027, 2026, 2025, 2024, 2023, 2022, 2021, 2020];
+    const standings = this._seasonStandings?.standings ?? {};
+    const eastKey = Object.keys(standings).find((name) => name.toLowerCase().includes("eastern")) ?? "Eastern Conference";
+    const westKey = Object.keys(standings).find((name) => name.toLowerCase().includes("western")) ?? "Western Conference";
+    const eastRows = standings[eastKey] ?? [];
+    const westRows = standings[westKey] ?? [];
+    return html`
+      <div class="head"><div><h2>STANDINGS CENTER</h2><p class="muted">Classements officiels ESPN · saison régulière et playoffs</p></div>
+        <select class="playoff-season" aria-label="Choisir la saison NBA" .value=${String(this._standingSeason)} @change=${this._setStandingsSeason}>
+          ${years.map((year) => html`<option value=${year}>${year - 1}-${String(year).slice(-2)}</option>`)}
+        </select>
+      </div>
+      <div class="filters">
+        <button class="chip" aria-pressed=${this._standingPhase === "regular"} @click=${() => this._setStandingsPhase("regular")}>SAISON RÉGULIÈRE</button>
+        <button class="chip" aria-pressed=${this._standingPhase === "playoffs"} @click=${() => this._setStandingsPhase("playoffs")}>PLAYOFFS</button>
+      </div>
+      ${this._standingPhase === "regular" ? html`
+        ${this._seasonStandingsLoading ? html`<section class="empty">Chargement du classement ${this._standingSeason - 1}-${String(this._standingSeason).slice(-2)}…</section>` : ""}
+        ${this._seasonStandingsError ? html`<section class="empty"><strong>Classement indisponible</strong><p>${this._seasonStandingsError}</p><button @click=${() => this._loadHistoricalStandings()}>RÉESSAYER</button></section>` : ""}
+        ${!this._seasonStandingsLoading && this._seasonStandings ? html`
+          <div class="grid">
+            ${this._standingsTable("east", "EASTERN CONFERENCE", eastRows)}
+            ${this._standingsTable("west", "WESTERN CONFERENCE", westRows)}
+          </div>` : ""}
+      ` : this._playoffsView()}
+    `;
   }
 
   render() {
@@ -1057,7 +1107,7 @@ class NBACenterCard extends LitElement {
     const dataStatus = this._dataStatus();
     const degraded = dataStatus?.state !== "À jour" || dataStatus?.attributes?.stale;
     const view = { home: () => this._homeView(), scores: () => this._scoresView(),
-      teams: () => this._teamsView(), players: () => this._playersView(), stats: () => this._statsView(), playoffs: () => this._playoffsView() };
+      teams: () => this._teamsView(), players: () => this._playersView(), stats: () => this._statsView() };
     return html`
       <ha-card class="shell">
         <header class="hero"><div class="eyebrow">THE ASSOCIATION · HOME ASSISTANT</div>
