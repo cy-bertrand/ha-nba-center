@@ -65,5 +65,30 @@ class NBAOptionsFlow(config_entries.OptionsFlow):
     async def async_step_init(self, user_input: dict[str, Any] | None = None):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
-        options = await _fetch_teams(self.hass)
-        return self.async_show_form(step_id="init", data_schema=_schema(options, dict(self.config_entry.options)))
+        errors: dict[str, str] = {}
+        try:
+            options = await _fetch_teams(self.hass)
+        except Exception:  # noqa: BLE001 - les options restent accessibles pendant une panne ESPN
+            errors["base"] = "cannot_connect"
+            coordinator = self.hass.data.get(DOMAIN, {}).get(self.config_entry.entry_id)
+            catalog = (
+                coordinator.data.get("teams_catalog", {}).get("teams", [])
+                if coordinator and coordinator.data
+                else []
+            )
+            options = [
+                SelectOptionDict(value=str(team["id"]), label=team.get("display_name") or team.get("name") or str(team["id"]))
+                for team in catalog
+                if isinstance(team, dict) and team.get("id")
+            ]
+            # Si aucun catalogue en cache n'est disponible, conserver au moins
+            # les choix actuels pour permettre de sauvegarder les autres options.
+            known_ids = {option["value"] for option in options}
+            for team_id in self.config_entry.options.get(CONF_TEAMS, self.config_entry.data.get(CONF_TEAMS, [])):
+                if str(team_id) not in known_ids:
+                    options.append(SelectOptionDict(value=str(team_id), label=str(team_id)))
+        return self.async_show_form(
+            step_id="init",
+            data_schema=_schema(options, dict(self.config_entry.options)),
+            errors=errors,
+        )
