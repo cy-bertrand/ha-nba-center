@@ -259,6 +259,14 @@ class PlayerDataParserTests(unittest.TestCase):
         self.assertEqual(result["games"][0]["home_away"], "@")
         self.assertEqual(result["games"][0]["stats"], {})
 
+    def test_gamelog_is_sorted_newest_first(self):
+        result = parse_player_gamelog({"events": [
+            {"id": "older", "gameDate": "2026-11-10T00:00:00Z", "gameResult": "W"},
+            {"id": "newest", "gameDate": "2026-11-13T00:00:00Z", "gameResult": "L"},
+            {"id": "middle", "gameDate": "2026-11-11T00:00:00Z", "gameResult": "W"},
+        ]})
+        self.assertEqual([game["id"] for game in result["games"]], ["newest", "middle", "older"])
+
     def test_missing_stats_are_not_fabricated(self):
         result = parse_player_stats({"statistics": {"labels": ["PTS"], "names": ["avgPoints"], "values": []}})
         self.assertEqual(result["statistics"], [])
