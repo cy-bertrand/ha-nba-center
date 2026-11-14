@@ -5,6 +5,17 @@ from custom_components.nba.player_data import parse_core_postseason_stats, parse
 
 
 class PlayerDataParserTests(unittest.TestCase):
+    def test_non_finite_stat_values_are_rejected(self):
+        result = parse_player_stats({"categories": [{
+            "names": ["avgPoints", "avgRebounds", "avgAssists", "avgSteals"],
+            "labels": ["PTS", "REB", "AST", "STL"],
+            "totals": ["NaN", "Infinity", "-Infinity", "12.5"],
+        }]})
+        self.assertEqual(
+            [row["value"] for row in result["statistics"]],
+            [None, None, None, 12.5],
+        )
+
     def test_parses_core_v2_historical_postseason_statistics(self):
         result = parse_core_postseason_stats({
             "athlete": {"id": "2544", "displayName": "LeBron James"},
