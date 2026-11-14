@@ -184,6 +184,30 @@ class SummaryLeadersTests(unittest.TestCase):
         self.assertEqual(parsed["home"]["id"], "1")
         self.assertEqual(parsed["away"]["id"], "3")
 
+    def test_game_parser_rejects_malformed_event_and_competitors_without_team_ids(self):
+        self.assertIsNone(coordinator.NBACoordinator._parse_game(None))
+        self.assertIsNone(coordinator.NBACoordinator._parse_game({"id": "missing", "competitions": []}))
+
+        event = {
+            "id": "game-3",
+            "date": "2026-11-14T00:00Z",
+            "status": {"type": {"state": "pre"}},
+            "competitions": [{"competitors": [
+                {"homeAway": "home", "team": {}},
+                {"homeAway": "away", "team": {"id": "2"}},
+            ]}],
+        }
+        self.assertIsNone(coordinator.NBACoordinator._parse_game(event))
+
+        duplicate_ids = {
+            **event,
+            "competitions": [{"competitors": [
+                {"homeAway": "home", "team": {"id": "2"}},
+                {"homeAway": "away", "team": {"id": "2"}},
+            ]}],
+        }
+        self.assertIsNone(coordinator.NBACoordinator._parse_game(duplicate_ids))
+
     def test_game_parser_rejects_unknown_status_state(self):
         event = {
             "id": "game-2",
