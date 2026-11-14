@@ -606,8 +606,9 @@ class NBACenterCard extends LitElement {
                       const key = keys.find((candidate) => stats[candidate] !== undefined && stats[candidate] !== null && stats[candidate] !== "");
                       return key ? stats[key] : "—";
                     };
+                    const didNotPlay = game.did_not_play === true;
                     const labels = [["MIN",pick("MIN","minutes")],["PTS",pick("PTS","points")],["REB",pick("REB","rebounds")],["AST",pick("AST","assists")],["STL",pick("STL","steals")],["BLK",pick("BLK","blocks")]];
-                    return html`<div class="player-game-row"><div class="player-game-meta"><strong>${formatGameDate(game.date)}</strong><span>${game.home_away === "@" ? "@" : "vs"} ${value(game.opponent_abbreviation, value(game.opponent))}</span></div><div class="player-game-stats">${labels.map(([label,val]) => html`<span class="player-game-stat"><b>${label}</b>${val}</span>`)}</div></div>`;
+                    return html`<div class="player-game-row"><div class="player-game-meta"><strong>${formatGameDate(game.date)}</strong><span>${game.home_away === "@" ? "@" : "vs"} ${value(game.opponent_abbreviation, value(game.opponent))}${didNotPlay ? " · DNP" : ""}</span></div><div class="player-game-stats">${labels.map(([label,val]) => html`<span class="player-game-stat"><b>${label}</b>${didNotPlay ? "—" : val}</span>`)}</div></div>`;
                   })}</div>` : html`<p class="muted">Les box scores individuels ne sont pas encore disponibles pour ces rencontres.</p>`}
               </section>` : ""}
             <section class="panel player-season-panel"><div class="panel-head"><h3>STATISTIQUES DE SAISON</h3><span class="pill">${value(seasonLabel, "SAISON")}</span></div>
