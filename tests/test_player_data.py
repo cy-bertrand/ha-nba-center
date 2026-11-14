@@ -456,6 +456,22 @@ class PlayerDataParserTests(unittest.TestCase):
         self.assertEqual(result["statistics"][0]["value"], 12)
         self.assertEqual(points["value"], 29.5)
 
+    def test_parses_season_type_filter_with_underscore_name(self):
+        result = parse_player_stats({
+            "filters": [{
+                "name": "season_type",
+                "value": "3",
+                "displayValue": "Playoffs",
+            }],
+            "categories": [{
+                "name": "averages",
+                "names": ["gamesPlayed", "avgPoints"],
+                "totals": ["5", "30.2"],
+            }],
+        })
+        self.assertEqual(result["season_type_id"], "3")
+        self.assertEqual(result["season_type"], "Playoffs")
+
     def test_parses_keyed_espn_season_type_filter(self):
         # ESPN utilise aussi un dictionnaire indexé par "seasonType";
         # dans cette forme, le champ name est absent de l'objet imbriqué.
