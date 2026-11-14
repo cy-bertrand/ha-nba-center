@@ -1,10 +1,34 @@
 """Tests des parseurs de données individuelles ESPN."""
 import unittest
 
-from custom_components.nba.player_data import parse_player_gamelog, parse_player_stats
+from custom_components.nba.player_data import parse_core_postseason_stats, parse_player_gamelog, parse_player_stats
 
 
 class PlayerDataParserTests(unittest.TestCase):
+    def test_parses_core_v2_historical_postseason_statistics(self):
+        result = parse_core_postseason_stats({
+            "athlete": {"id": "2544", "displayName": "LeBron James"},
+            "splits": {"categories": [{
+                "name": "averages", "displayName": "Postseason Averages",
+                "stats": [
+                    {"name": "gamesPlayed", "displayName": "Games Played", "value": 16, "displayValue": "16"},
+                    {"name": "avgPoints", "displayName": "Points Per Game", "value": 28.4, "displayValue": "28.4"},
+                    {"name": "avgRebounds", "displayName": "Rebounds Per Game", "value": 9.1, "displayValue": "9.1"},
+                ],
+            }]},
+        }, 2023)
+        self.assertEqual(result["season"], "2022-23")
+        self.assertEqual(result["season_type_id"], "3")
+        self.assertEqual(result["season_type"], "Playoffs")
+        self.assertEqual(result["athlete"]["id"], "2544")
+        self.assertEqual(result["statistics"][1]["name"], "avgPoints")
+        self.assertEqual(result["statistics"][1]["value"], 28.4)
+
+    def test_core_v2_empty_postseason_payload_stays_empty(self):
+        result = parse_core_postseason_stats({"splits": {"categories": []}}, 2025)
+        self.assertEqual(result["statistics"], [])
+        self.assertIsNone(result["season_type_id"])
+
     def test_parses_flat_overview_statistics(self):
         result = parse_player_stats({
             "season": {"displayName": "2026-27"},
