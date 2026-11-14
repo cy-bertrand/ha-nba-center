@@ -176,6 +176,37 @@ class PlayerDataParserTests(unittest.TestCase):
         self.assertEqual(result["statistics"][0]["value"], 12)
         self.assertEqual(points["value"], 29.5)
 
+    def test_parses_keyed_espn_season_type_filter(self):
+        # ESPN utilise aussi un dictionnaire indexé par "seasonType";
+        # dans cette forme, le champ name est absent de l'objet imbriqué.
+        result = parse_player_stats({
+            "filters": {
+                "season": {
+                    "value": "2023",
+                    "options": [{"value": "2023", "displayValue": "2022-23"}],
+                },
+                "seasonType": {
+                    "value": "3",
+                    "displayValue": "Playoffs",
+                    "options": [
+                        {"value": "2", "displayValue": "Regular Season"},
+                        {"value": "3", "displayValue": "Playoffs"},
+                    ],
+                },
+            },
+            "categories": [{
+                "name": "averages",
+                "displayName": "Postseason Averages",
+                "names": ["gamesPlayed", "avgPoints"],
+                "labels": ["GP", "PTS"],
+                "totals": ["16", "28.4"],
+            }],
+        })
+        self.assertEqual(result["season"], "2022-23")
+        self.assertEqual(result["season_type_id"], "3")
+        self.assertEqual(result["season_type"], "Playoffs")
+        self.assertEqual(result["statistics"][1]["value"], 28.4)
+
     def test_parses_gamelog_stats_nested_under_season_types(self):
         result = parse_player_gamelog({
             "events": {
