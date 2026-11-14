@@ -383,8 +383,13 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
         (scoreboard), parfois dans competitions[0] (calendrier d'équipe).
         Retourne None si le match est dans un format inattendu.
         """
+        if not isinstance(event, dict):
+            return None
         try:
-            comp = event["competitions"][0]
+            competitions = event.get("competitions")
+            if not isinstance(competitions, list) or not competitions or not isinstance(competitions[0], dict):
+                return None
+            comp = competitions[0]
             status = event.get("status") or comp.get("status") or {}
             status_type = status.get("type") or {}
             state = status_type.get("state")
@@ -418,12 +423,15 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 team = competitor.get("team")
                 if not isinstance(team, dict):
                     team = {}
+                team_id = team.get("id") or competitor.get("id")
+                if team_id is None or not str(team_id).strip():
+                    continue
                 logos = team.get("logos")
                 fallback_logo = logos[0].get("href") if isinstance(logos, list) and logos and isinstance(logos[0], dict) else None
                 records = competitor.get("records")
                 record = records[0].get("summary") if isinstance(records, list) and records and isinstance(records[0], dict) else None
                 game[side] = {
-                    "id": str(team.get("id", competitor.get("id", ""))),
+                    "id": str(team_id),
                     "name": team.get("displayName") or team.get("name"),
                     "abbr": team.get("abbreviation"),
                     "logo": team.get("logo") or fallback_logo,
@@ -434,6 +442,8 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # Les consommateurs (capteurs, forme récente et carte) attendent
             # impérativement deux équipes : ne jamais publier un match incomplet.
             if not game["home"] or not game["away"]:
+                return None
+            if game["home"]["id"] == game["away"]["id"]:
                 return None
             if state not in ("pre", "in", "post"):
                 return None
