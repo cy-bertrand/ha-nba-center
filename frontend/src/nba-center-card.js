@@ -492,7 +492,7 @@ class NBACenterCard extends LitElement {
       const item = findPostseasonStat(aliases);
       return [label, item ? (item.display_value ?? item.value ?? "—") : "—"];
     });
-    const postseasonHighlighted = new Set(quickDefinitions.flatMap(([, aliases]) => aliases).map(normalizeStatKey));
+    const postseasonHighlighted = new Set(postseasonQuickDefinitions.flatMap(([, aliases]) => aliases).map(normalizeStatKey));
     const postseasonGamesPlayed = postseasonStats.find((item) =>
       statKeys(item).some((key) => ["gamesplayed", "games", "gp"].includes(key))
     );
