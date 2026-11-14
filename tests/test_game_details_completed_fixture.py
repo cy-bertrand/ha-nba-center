@@ -63,6 +63,33 @@ class CompletedSummaryFixtureTests(unittest.TestCase):
         )
         self.assertTrue(all(value is None for player in dnp for value in player["stats_by_key"].values()))
 
+    def test_team_and_player_totals_remain_distinct_espn_sources(self):
+        """Team aggregates are authoritative ESPN fields, not sums rebuilt from rows."""
+        team_stats = {
+            team["abbr"]: {stat["name"]: stat["value"] for stat in team["statistics"]}
+            for team in self.box["team_stats"]
+        }
+        player_blocks = {team["abbr"]: team for team in self.box["player_stats"]}
+        for abbr in ("LAL", "MIL"):
+            players = player_blocks[abbr]["players"]
+            # Core box-score totals reconcile with the individual player rows.
+            for stat_key, team_key in (
+                ("points", "points"), ("rebounds", "totalRebounds"),
+                ("assists", "assists"), ("turnovers", "turnovers"),
+                ("steals", "steals"), ("blocks", "blocks"),
+            ):
+                total = sum(int(player["stats_by_key"][stat_key] or 0) for player in players)
+                self.assertEqual(total, int(team_stats[abbr][team_key]))
+        # ESPN reports team turnovers separately from player turnovers.
+        self.assertEqual(team_stats["LAL"]["totalTurnovers"], "18")
+        self.assertEqual(team_stats["LAL"]["turnovers"], "17")
+        # The source fixture itself has a one-foul discrepancy for the Lakers;
+        # preserve both values instead of silently recalculating either one.
+        self.assertEqual(team_stats["LAL"]["fouls"], "24")
+        lakers = player_blocks["LAL"]["players"]
+        player_fouls = sum(int(player["stats_by_key"]["fouls"] or 0) for player in lakers)
+        self.assertEqual(player_fouls, 25)
+
     def test_full_play_by_play_volume_and_event_categories(self):
         self.assertEqual(len(self.plays), 515)
         self.assertEqual(len({play["id"] for play in self.plays}), 515)
