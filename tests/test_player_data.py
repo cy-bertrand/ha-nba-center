@@ -340,6 +340,23 @@ class PlayerDataParserTests(unittest.TestCase):
         self.assertEqual(result["games"][0]["home_away"], "@")
         self.assertEqual(result["games"][0]["stats"], {})
 
+    def test_gamelog_uses_dictionary_key_when_event_id_is_missing(self):
+        result = parse_player_gamelog({"events": {
+            "game-123": {
+                "gameDate": "2026-11-13T00:00:00Z",
+                "gameResult": "W",
+            },
+        }})
+        self.assertEqual(result["count"], 1)
+        self.assertEqual(result["games"][0]["id"], "game-123")
+
+    def test_nested_gamelog_uses_dictionary_key_when_event_id_is_missing(self):
+        result = parse_player_gamelog({"gameLog": {"events": {
+            "game-456": {"gameDate": "2026-11-12T00:00:00Z"},
+        }}})
+        self.assertEqual(result["count"], 1)
+        self.assertEqual(result["games"][0]["id"], "game-456")
+
     def test_gamelog_uses_nested_stats_when_event_stats_are_empty(self):
         result = parse_player_gamelog({
             "events": [{
