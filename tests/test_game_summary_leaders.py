@@ -161,6 +161,41 @@ class SummaryLeadersTests(unittest.TestCase):
         self.assertEqual(result[0]["player"], "Valid")
         self.assertEqual(result[0]["rank"], 1)
 
+    def test_game_parser_rejects_missing_or_duplicate_competitors(self):
+        base = {
+            "id": "game-1",
+            "date": "2026-11-14T00:00Z",
+            "status": {"type": {"state": "pre"}},
+            "competitions": [{"competitors": [
+                {"homeAway": "home", "team": {"id": "1", "abbreviation": "AAA"}},
+            ]}],
+        }
+        self.assertIsNone(coordinator.NBACoordinator._parse_game(base))
+
+        duplicate = {
+            **base,
+            "competitions": [{"competitors": [
+                {"homeAway": "home", "team": {"id": "1"}},
+                {"homeAway": "home", "team": {"id": "2"}},
+                {"homeAway": "away", "team": {"id": "3"}},
+            ]}],
+        }
+        parsed = coordinator.NBACoordinator._parse_game(duplicate)
+        self.assertEqual(parsed["home"]["id"], "1")
+        self.assertEqual(parsed["away"]["id"], "3")
+
+    def test_game_parser_rejects_unknown_status_state(self):
+        event = {
+            "id": "game-2",
+            "date": "2026-11-14T00:00Z",
+            "status": {"type": {"state": "delayed"}},
+            "competitions": [{"competitors": [
+                {"homeAway": "home", "team": {"id": "1"}},
+                {"homeAway": "away", "team": {"id": "2"}},
+            ]}],
+        }
+        self.assertIsNone(coordinator.NBACoordinator._parse_game(event))
+
     def test_standings_parser_skips_malformed_rows_and_keeps_valid_teams(self):
         raw = {
             "children": [
