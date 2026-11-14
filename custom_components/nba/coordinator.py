@@ -89,7 +89,7 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._last_state: dict[str, str] = {}
         self._leaders: dict[str, list[dict]] = {}
         self._postseason_leaders: dict[str, list[dict]] = {}
-        self._leaders_fetched: datetime | None = None
+        self._leaders_fetched: dict[str, datetime] = {}
         self._details_cache: dict[str, dict[str, Any]] = {}
         self._scoreboard_cache: dict[str, tuple[datetime, dict[str, Any]]] = {}
         self._scoreboard_lock = asyncio.Lock()
@@ -229,50 +229,48 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER.warning("Catalogue des franchises NBA indisponible : %s", err)
 
     async def _update_leaders(self) -> None:
-        """Récupère les leaders ; une réponse vide ou invalide ne détruit jamais le cache."""
+        """Actualise chaque classement indépendamment sans effacer les données valides."""
         now = dt_util.utcnow()
-        if self._leaders_fetched and (now - self._leaders_fetched).total_seconds() < 3600:
-            return
-
         regular = dict(self._leaders)
         postseason = dict(self._postseason_leaders)
-        successes = 0
         season_year = now.year + (1 if now.month >= 10 else 0)
-        for key, (_label, sort) in LEADER_CATEGORIES.items():
-            params = {
-                "region": "us", "lang": "en", "contentorigin": "espn",
-                "season": season_year, "seasontype": 2,
-                "isqualified": "true", "page": 1, "limit": LEADERS_COUNT, "sort": sort,
-            }
-            try:
-                raw = await self._get(LEADERS_URL, params=params)
-                parsed = self._parse_leaders(raw, key)
-                if parsed:
-                    regular[key] = parsed
-                    successes += 1
-                else:
-                    _LOGGER.warning("ESPN a renvoyé un classement saison vide/inexploitable pour '%s' ; cache conservé", key)
-            except Exception as err:  # noqa: BLE001
-                _LOGGER.warning("Leaders réguliers '%s' indisponibles ; cache conservé : %s", key, err)
 
-            try:
-                playoff_params = {**params, "season": season_year, "seasontype": 3}
-                playoff_raw = await self._get(LEADERS_URL, params=playoff_params)
-                parsed_playoffs = self._parse_leaders(playoff_raw, key)
-                if parsed_playoffs:
-                    postseason[key] = parsed_playoffs
-                    successes += 1
-                elif key in postseason:
-                    _LOGGER.debug("Leaders playoffs '%s' vides ; cache conservé", key)
-            except Exception as err:  # noqa: BLE001
-                _LOGGER.debug("Leaders playoffs '%s' indisponibles ; cache conservé : %s", key, err)
+        for key, (_label, sort) in LEADER_CATEGORIES.items():
+            for season_type, target, cache in (
+                (2, regular, self._leaders),
+                (3, postseason, self._postseason_leaders),
+            ):
+                cache_key = f"{season_type}:{key}"
+                fetched_at = self._leaders_fetched.get(cache_key)
+                if fetched_at and (now - fetched_at).total_seconds() < 3600:
+                    continue
+
+                params = {
+                    "region": "us", "lang": "en", "contentorigin": "espn",
+                    "season": season_year, "seasontype": season_type,
+                    "isqualified": "true", "page": 1, "limit": LEADERS_COUNT, "sort": sort,
+                }
+                try:
+                    raw = await self._get(LEADERS_URL, params=params)
+                    parsed = self._parse_leaders(raw, key)
+                    # Chaque réponse valide possède son propre délai de rafraîchissement.
+                    # Une catégorie vide ne remplace jamais ses dernières données connues.
+                    self._leaders_fetched[cache_key] = now
+                    if parsed:
+                        target[key] = parsed
+                    elif key in cache:
+                        _LOGGER.debug(
+                            "Classement ESPN vide/inexploitable (%s) ; cache conservé",
+                            cache_key,
+                        )
+                except Exception as err:  # noqa: BLE001
+                    _LOGGER.warning(
+                        "Classement ESPN indisponible (%s) ; cache conservé : %s",
+                        cache_key, err,
+                    )
 
         self._leaders = regular
         self._postseason_leaders = postseason
-        # Un incident global DNS ne doit pas déclencher un nouvel appel complet
-        # à chaque cycle, mais un cache vide ne doit pas être marqué comme valide.
-        if successes:
-            self._leaders_fetched = now
 
     @staticmethod
     def _parse_leaders(raw: dict, key: str) -> list[dict]:
@@ -441,7 +439,8 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 history.append(g)
             elif g["state"] in ("pre", "in") and nxt is None:
                 nxt = g
-        # Les plus récents d'abord, avec résultat (V/D) du point de vue de l'équipe
+        # L'ordre des événements ESPN n'est pas garanti : trier avant de retenir les cinq derniers.
+        history.sort(key=lambda game: game.get("date") or "")
         recent: list[dict] = []
         for g in reversed(history[-LAST_GAMES_COUNT:]):
             is_home = g["home"].get("id") == team_id
@@ -453,7 +452,9 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     "day": g["day"],
                     "date_text": g["date_text"],
                     "home_away": "vs" if is_home else "@",
-                    "result": "V" if me.get("winner") else "D",
+                    "result": "V" if me.get("winner") is True else (
+                        "D" if opp.get("winner") is True else "—"
+                    ),
                     "team_abbr": me.get("abbr"),
                     "team_score": me.get("score"),
                     "opp_abbr": opp.get("abbr"),
