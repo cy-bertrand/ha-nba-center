@@ -175,5 +175,45 @@ class SummaryLeadersTests(unittest.TestCase):
         self.assertEqual(result[0]["rank"], 1)
         self.assertEqual(result[0]["value"], 25.6)
 
+
+    def test_recent_games_are_sorted_by_date_before_selecting_latest_five(self):
+        coordinator_instance = object.__new__(coordinator.NBACoordinator)
+        def event(game_id, date, home_winner, away_winner):
+            return {
+                "id": game_id, "date": date,
+                "competitions": [{
+                    "status": {"type": {"state": "post"}},
+                    "competitors": [
+                        {"homeAway": "home", "winner": home_winner, "score": "101",
+                         "team": {"id": "8", "abbreviation": "HOM"}},
+                        {"homeAway": "away", "winner": away_winner, "score": "99",
+                         "team": {"id": "9", "abbreviation": "AWY"}},
+                    ],
+                }],
+            }
+        schedule = {"team": {"displayName": "Home Team"}, "events": [
+            event("newest", "2026-11-14T00:00:00Z", True, False),
+            event("oldest", "2026-11-01T00:00:00Z", False, True),
+            event("middle", "2026-11-10T00:00:00Z", False, True),
+        ]}
+        result = coordinator_instance._parse_team("8", schedule, [])
+        self.assertEqual([game["id"] for game in result["recent"]],
+                         ["newest", "middle", "oldest"])
+
+    def test_unknown_winner_is_not_reported_as_a_loss(self):
+        coordinator_instance = object.__new__(coordinator.NBACoordinator)
+        schedule = {"team": {"displayName": "Home Team"}, "events": [{
+            "id": "unknown", "date": "2026-11-14T00:00:00Z",
+            "competitions": [{
+                "status": {"type": {"state": "post"}},
+                "competitors": [
+                    {"homeAway": "home", "score": "0", "team": {"id": "8", "abbreviation": "HOM"}},
+                    {"homeAway": "away", "score": "0", "team": {"id": "9", "abbreviation": "AWY"}},
+                ],
+            }],
+        }]}
+        result = coordinator_instance._parse_team("8", schedule, [])
+        self.assertEqual(result["recent"][0]["result"], "—")
+
 if __name__ == "__main__":
     unittest.main()
