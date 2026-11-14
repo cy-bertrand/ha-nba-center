@@ -1,7 +1,7 @@
 // NBA Center Lovelace card — reads only Home Assistant entity state. Lit is bundled locally.
 import { LitElement, css, html } from "lit";
 
-const BUILD_VERSION = "2026.11.14.2";
+const BUILD_VERSION = "2026.11.14.3";
 
 const VIEWS = [
   { id: "home", label: "HOME" },
@@ -345,7 +345,7 @@ class NBACenterCard extends LitElement {
                   <div><small>% VICTOIRES</small><strong>${value(this._teamRoster.standing.pct)}</strong></div>
                   <div><small>RETARD</small><strong>${value(this._teamRoster.standing.gb)}</strong></div><div><small>SÉRIE</small><strong>${value(this._teamRoster.standing.streak)}</strong></div>
                 </div>
-                ${this._teamRoster.schedule?.recent?.length ? html`<div class="muted" style="margin-top:12px">FORME RÉCENTE</div><div class="recent">${this._teamRoster.schedule.recent.slice(0,5).map((game) => html`<button class="form-chip ${game.result === "V" ? "win" : game.result === "D" ? "loss" : "unknown"}" type="button" ?disabled=${!game.id} aria-label="Voir le match ${value(game.team_abbr)} contre ${value(game.opp_abbr)} du ${value(game.date_text)}" @click=${() => game.id && this._openGame(game)}><strong>${value(game.result)}</strong><span>${game.home_away === "@" ? `@${value(game.opp_abbr)}` : value(game.opp_abbr)}</span><span>${value(game.team_score)}–${value(game.opp_score)}</span></button>`)}</div>` : ""}
+                ${this._teamRoster.schedule?.recent?.length ? html`<div class="muted" style="margin-top:12px">FORME RÉCENTE</div><div class="recent">${this._teamRoster.schedule.recent.slice(0,5).map((game) => html`<button class="form-chip ${game.result === "V" ? "win" : game.result === "D" ? "loss" : "unknown"}" type="button" ?disabled=${!game.id} aria-label="Voir le match ${value(game.team_abbr)} contre ${value(game.opp_abbr)} du ${value(game.date_text)}" @click=${() => game.id && this._openRecentTeamGame(game)}><strong>${value(game.result)}</strong><span>${game.home_away === "@" ? `@${value(game.opp_abbr)}` : value(game.opp_abbr)}</span><span>${value(game.team_score)}–${value(game.opp_score)}</span></button>`)}</div>` : ""}
                 ${this._teamRoster.schedule?.next ? html`<p class="muted">PROCHAIN MATCH · ${value(this._teamRoster.schedule.next.date_text)} · ${value(this._teamRoster.schedule.next.name)}</p>` : ""}
               </section>` : ""}
             <div class="panel-head"><h3>${this._selectedPlayer ? "AUTRES JOUEURS" : "EFFECTIF"}</h3><span class="pill">${this._teamRoster?.count ?? 0} JOUEURS</span></div>
@@ -724,6 +724,29 @@ class NBACenterCard extends LitElement {
     } finally {
       if (request === this._calendarRequest) this._calendarLoading = false;
     }
+  }
+  _openRecentTeamGame(game) {
+    const currentTeam = {
+      name: this._teamOverlay?.display_name ?? this._teamOverlay?.name ?? game.team_abbr,
+      abbr: game.team_abbr,
+      logo: this._teamOverlay?.logo,
+      score: game.team_score,
+    };
+    const opponent = {
+      name: game.opp_name ?? game.opp_abbr,
+      abbr: game.opp_abbr,
+      logo: game.opp_logo,
+      score: game.opp_score,
+    };
+    const currentTeamIsAway = game.home_away === "@";
+    this._openGame({
+      id: game.id,
+      date_text: game.date_text,
+      state: "post",
+      detail: "TERMINÉ",
+      away: currentTeamIsAway ? currentTeam : opponent,
+      home: currentTeamIsAway ? opponent : currentTeam,
+    });
   }
   async _openGame(game) {
     const request = ++this._overlayRequest;
