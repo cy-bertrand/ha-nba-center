@@ -505,12 +505,16 @@ class NBACenterCard extends LitElement {
       return isAverage && aliases.some((alias) => keys.includes(normalizeStatKey(alias)));
     });
     const postseasonQuickDefinitions = [
-      ["MIN", ["avgminutes", "minutespergame", "min"]],
-      ["PTS", ["avgpoints", "pointspergame", "pts"]],
-      ["REB", ["avgrebounds", "reboundspergame", "reb"]],
-      ["AST", ["avgassists", "assistspergame", "ast"]],
-      ["STL", ["avgsteals", "stealspergame", "stl"]],
-      ["BLK", ["avgblocks", "blockspergame", "blk"]],
+      // Core v2 peut nommer les moyennes avec les noms complets (minutes,
+      // points...) au lieu des clés Web v3 avgMinutes/avgPoints. Le filtre
+      // isAverage de findPostseasonStat empêche de confondre ces clés avec
+      // les totaux de la catégorie Postseason Totals.
+      ["MIN", ["avgminutes", "minutespergame", "minutes", "min"]],
+      ["PTS", ["avgpoints", "pointspergame", "points", "pts"]],
+      ["REB", ["avgrebounds", "reboundspergame", "rebounds", "reb"]],
+      ["AST", ["avgassists", "assistspergame", "assists", "ast"]],
+      ["STL", ["avgsteals", "stealspergame", "steals", "stl"]],
+      ["BLK", ["avgblocks", "blockspergame", "blocks", "blk"]],
     ];
     // Les moyennes par match sont fournies par ESPN Web API v3. On les affiche
     // directement : aucune division des totaux n'est effectuée côté interface.
