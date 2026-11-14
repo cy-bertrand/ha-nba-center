@@ -997,7 +997,7 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_failed=UpdateFailed,
         )
 
-    async def async_get_game_details(self, game_id: str) -> dict[str, Any]:
+    async def async_get_game_details(self, game_id: str, force: bool = False) -> dict[str, Any]:
         """Charge les détails d'un match (quart-temps, meilleurs joueurs).
 
         Les matchs terminés sont mis en cache (leurs détails ne changent plus).
@@ -1007,6 +1007,8 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
         game_id = str(game_id).strip()
         if not game_id.isdigit() or len(game_id) > 20:
             return {"game_id": game_id, "error": "Identifiant de match ESPN invalide", "teams": []}
+        if force:
+            self._details_cache.pop(game_id, None)
         if game_id in self._details_cache:
             return self._details_cache[game_id]
         try:
