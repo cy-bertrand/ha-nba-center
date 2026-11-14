@@ -926,6 +926,40 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 elif error:
                     schedule_errors[team_id] = error
 
+            # ESPN's team-schedule endpoint becomes incomplete for older NBA
+            # postseasons (notably before 2018-19). Recover the full postseason
+            # from the scoreboard, month by month, when team schedules return
+            # fewer than a plausible number of playoff games.
+            unique_games = {str(game.get("id")): game for game in games if game.get("id")}
+            if len(unique_games) < 40:
+                async def load_postseason_month(month: int) -> list[dict[str, Any]]:
+                    last_day = 30 if month in (4, 6) else 31
+                    try:
+                        payload = await self._get(
+                            SCOREBOARD_URL,
+                            params={
+                                "dates": f"{season_year}{month:02d}01-{season_year}{month:02d}{last_day:02d}",
+                                "seasontype": 3,
+                                "limit": 1000,
+                            },
+                        )
+                        return parse_playoff_payload(payload)
+                    except Exception as err:  # noqa: BLE001 - les autres mois restent exploitables
+                        _LOGGER.debug(
+                            "Scoreboard postseason ESPN indisponible pour %s/%02d: %s",
+                            season_year, month, err,
+                        )
+                        return []
+
+                monthly_games = await asyncio.gather(
+                    *(load_postseason_month(month) for month in (4, 5, 6))
+                )
+                for month_games in monthly_games:
+                    for game in month_games:
+                        if game.get("id"):
+                            unique_games[str(game["id"])] = game
+                games = list(unique_games.values())
+
             series = build_playoff_series(games)
             brackets = build_playoff_bracket(series)
             bracket = next((item for item in brackets if item.get("season_year") == season_year), None)
