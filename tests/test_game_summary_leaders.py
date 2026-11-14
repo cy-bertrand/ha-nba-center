@@ -139,6 +139,28 @@ class SummaryLeadersTests(unittest.TestCase):
 
 
 
+    def test_integer_parser_rejects_booleans_fractions_and_non_finite_values(self):
+        for value in (True, False, "101.5", float("nan"), float("inf"), "-inf"):
+            with self.subTest(value=value):
+                self.assertEqual(coordinator._to_int(value), 0)
+        self.assertEqual(coordinator._to_int("101"), 101)
+        self.assertEqual(coordinator._to_int({"displayValue": "0"}), 0)
+
+    def test_leaders_parser_skips_non_finite_values(self):
+        raw = {
+            "categories": [{"names": ["avgPoints"]}],
+            "athletes": [
+                {"athlete": {"id": "1", "displayName": "Infinite"},
+                 "categories": [{"values": [float("inf")]}]},
+                {"athlete": {"id": "2", "displayName": "Valid"},
+                 "categories": [{"values": [24.7]}]},
+            ],
+        }
+        result = coordinator.NBACoordinator._parse_leaders(raw, "points")
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]["player"], "Valid")
+        self.assertEqual(result[0]["rank"], 1)
+
     def test_leaders_parser_uses_requested_statistic_not_first_available(self):
         raw = {
             "categories": [{"names": ["avgRebounds", "avgPoints"]}],
