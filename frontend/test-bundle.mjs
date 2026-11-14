@@ -131,9 +131,9 @@ assert.match(source, /playoff_\$\{key\}/, "Players Center must resolve dedicated
 assert.match(source, /SAISON & PLAYOFFS/, "Players Center must distinguish regular season and playoff leaderboards");
 assert.match(source, /_leaderPanel\(key,10,true\)/, "Players Center must render top-ten playoff leaderboards");
 
-assert.match(source, /<button class="form-chip[\\s\\S]*this\\._openRecentTeamGame\\(game\\)/, "recent team form games must open Match Center with complete home/away scoreboard data");
-assert.match(source, /_openRecentTeamGame\\(game\\)[\\s\\S]*?away: currentTeamIsAway \? currentTeam : opponent[\\s\\S]*?home: currentTeamIsAway \? opponent : currentTeam/, "recent team game adapter must map scores and teams to the correct home/away sides");
+assert.match(source, /<button class="form-chip[\s\S]*this\\._openRecentTeamGame\\(game\\)/, "recent team form games must open Match Center with complete home/away scoreboard data");
+assert.match(source, /_openRecentTeamGame\\(game\\)[\s\S]*?away: currentTeamIsAway \? currentTeam : opponent[\s\S]*?home: currentTeamIsAway \? opponent : currentTeam/, "recent team game adapter must map scores and teams to the correct home/away sides");
 assert.match(source, /this\._teamOverlay && !this\._overlayGame/, "team roster must remain available behind the Match Center and return when it closes");
-assert.match(bundle, /<button class="form-chip[\\s\\S]*this\\._openRecentTeamGame\\(t\\)/, "bundled recent team form games must open Match Center with scoreboard data");
-assert.match(bundle, /_openRecentTeamGame\(e\)[\\s\\S]*?away:a\?t:s,home:a\?s:t/, "bundled recent team game adapter must map home and away correctly");
+assert.match(bundle, /<button class="form-chip[\s\S]*this\\._openRecentTeamGame\\(t\\)/, "bundled recent team form games must open Match Center with scoreboard data");
+assert.match(bundle, /_openRecentTeamGame\(e\)[\s\S]*?away:a\?t:s,home:a\?s:t/, "bundled recent team game adapter must map home and away correctly");
 assert.match(bundle, /this\._teamOverlay&&!this\._overlayGame/, "bundled team roster must reappear after closing Match Center");
