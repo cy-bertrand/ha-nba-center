@@ -195,6 +195,7 @@ def parse_plays(raw: dict[str, Any]) -> list[dict[str, Any]]:
     # Normalize once here so every consumer receives deterministic chronology.
     indexed = list(enumerate(plays))
     indexed.sort(key=lambda pair: (
+        1 if pair[1].get("is_game_end") else 0,
         0 if pair[1].get("sequence_number") is not None
         and str(pair[1]["sequence_number"]).isdigit() else 1,
         int(pair[1]["sequence_number"])
