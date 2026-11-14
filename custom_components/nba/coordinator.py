@@ -17,7 +17,7 @@ from .scoreboard_utils import async_load_scoreboard, parse_score
 from .game_details import parse_boxscore, parse_game_state, parse_plays
 from .teams_catalog import parse_teams_catalog
 from .team_roster import parse_team_roster
-from .player_data import parse_core_postseason_stats, parse_player_gamelog, parse_player_stats, season_matches_espn_year
+from .player_data import apply_boxscore_player, parse_core_postseason_stats, parse_player_gamelog, parse_player_stats, season_matches_espn_year
 from .playoff_data import (
     annotate_playoff_bracket,
     build_playoff_bracket,
@@ -724,6 +724,7 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # Les gamelogs ESPN fournissent parfois uniquement les métadonnées.
             # Les cinq rencontres récentes sont enrichies via les box scores normalisés.
             async def enrich_recent_games(log: dict[str, Any], label: str) -> None:
+                boxscore_count = 0
                 for game in log["games"][:5]:
                     game_id = game.get("id")
                     if not game_id:
@@ -742,11 +743,9 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
                         ),
                         None,
                     )
-                    if found:
-                        game["stats"] = found.get("stats_by_key") or found.get("stats") or {}
-                        game["player_name"] = found.get("name")
-                        game["did_not_play"] = bool(found.get("did_not_play"))
-                log["boxscore_count"] = sum(bool(game.get("stats")) for game in log["games"][:5])
+                    if found and apply_boxscore_player(game, found):
+                        boxscore_count += 1
+                log["boxscore_count"] = boxscore_count
 
             await enrich_recent_games(gamelog, "saison régulière")
             await enrich_recent_games(postseason_gamelog, "playoffs")
