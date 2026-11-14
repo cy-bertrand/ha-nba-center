@@ -197,7 +197,7 @@ var F=globalThis,V=F.ShadowRoot&&(F.ShadyCSS===void 0||F.ShadyCSS.nativeShadow)&
               <div class="panel-head"><h3>STATISTIQUES PLAYOFFS</h3><span class="pill">${o(p.season,h?.display_name??"POSTSEASON")}</span></div>
               ${s.length?r`<div class="filters player-season-picker"><label class="muted" for="player-playoff-season-select">SAISON PLAYOFFS</label><select id="player-playoff-season-select" aria-label="Choisir la saison des playoffs" .value=${String(this._playerSelectedPlayoffSeason||s[0]?.year||"")} @change=${l=>this._loadPlayerPlayoffSeason(e.id,Number(l.target.value))}>${s.map(l=>r`<option value=${String(l.year)}>${l.display_name}${S(l)?` \xB7 ${S(l)}`:""}</option>`)}</select>${this._playerPlayoffLoading?r`<span class="muted">Chargement…</span>`:""}</div>`:""}
               ${m.length?r`
-                <div class="player-stat-grid player-season-highlights">${je.map(([l,c])=>r`<div><small>${l} / MATCH</small><strong>${_e(c)}</strong></div>`)}</div>
+                <div class="player-stat-grid player-season-highlights">${je.map(([l,c])=>r`<div><small>${l} / MATCH</small><strong>${o(c)}</strong></div>`)}</div>
                 ${ye.length?r`<div class="table-wrap"><table><thead><tr><th>STATISTIQUE</th><th>VALEUR</th></tr></thead><tbody>${ye.map(l=>r`<tr><td>${o(he(l),l.name)}</td><td>${o(l.display_value??l.value)}</td></tr>`)}</tbody></table></div>`:""}
               `:r`<p class="muted">Les statistiques des playoffs sont récupérées séparément. Elles apparaîtront ici dès qu'ESPN publiera les données de postseason pour cette saison.</p>`}
             </section>
