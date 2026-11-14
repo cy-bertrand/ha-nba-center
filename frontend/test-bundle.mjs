@@ -28,6 +28,8 @@ assert.match(source, /_teamsCatalog\(\)/, "Teams Center must read the global fra
 assert.match(source, /_teamCatalogCard\(team\)/, "Teams Center must render lightweight franchise cards");
 assert.match(source, /nba\/team_roster/, "franchise detail must load its roster through Home Assistant websocket");
 assert.match(source, /_teamRosterPanel\(\)/, "franchise roster overlay must be rendered");
+assert.match(source, /request !== this\._teamRequest/, "stale franchise roster responses must not overwrite the currently selected team");
+assert.match(source, /this\._teamRequest \+= 1/, "closing a franchise overlay must invalidate pending roster requests");
 assert.match(source, /roster-injury/, "player injury status must be visible when supplied");
 assert.match(source, /roster-headshot/, "roster player headshots must be supported");
 assert.match(source, /team-season-summary/, "team detail must show the season standings summary");
