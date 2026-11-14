@@ -142,6 +142,7 @@ class NBACenterCard extends LitElement {
     .standing-team-button{display:inline-flex;align-items:center;gap:7px;padding:2px 4px;margin:-2px 0;border:0;border-radius:6px;background:transparent;color:inherit;font:inherit;font-weight:800;cursor:pointer;text-align:left}
     .standing-team-button:hover{background:#1b2a40;color:#f2c45f}
     .standing-team-button:focus-visible{outline:2px solid #f2c45f;outline-offset:2px}
+    .standing-team-button img{display:block;width:28px;height:28px;max-width:28px;max-height:28px;object-fit:contain;flex:0 0 28px}
     .table-wrap{overflow-x:auto}
     table{width:100%;border-collapse:collapse;font-size:10px;white-space:nowrap}
     th{text-align:left;color:#8190a7;font-size:9px;letter-spacing:.08em;padding:8px 7px;border-bottom:1px solid #314158}
@@ -197,6 +198,7 @@ class NBACenterCard extends LitElement {
     this._overlayLoading = false; this._overlayError = "";
     this._playoffData = null; this._playoffLoading = false; this._playoffError = ""; this._playoffSeason = 2027; this._playoffRequest = 0;
     this._standingSeason = 2027; this._standingPhase = "regular"; this._seasonStandings = null; this._seasonStandingsLoading = false; this._seasonStandingsError = ""; this._seasonStandingsRequest = 0;
+    this._standingsResultsCache = new Map(); this._playoffResultsCache = new Map();
     this._config = {};
   }
 
@@ -676,12 +678,20 @@ class NBACenterCard extends LitElement {
   async _loadHistoricalStandings(year = this._standingSeason) {
     if (!this.hass?.callWS || !Number.isInteger(year)) return;
     const request = ++this._seasonStandingsRequest;
+    const cached = this._standingsResultsCache.get(year);
+    if (cached) {
+      this._seasonStandings = cached;
+      this._seasonStandingsLoading = false;
+      this._seasonStandingsError = "";
+      return;
+    }
     this._seasonStandingsLoading = true;
     this._seasonStandingsError = "";
     this._seasonStandings = null;
     try {
       const result = await this.hass.callWS({ type: "nba/standings", season_year: year });
       if (request !== this._seasonStandingsRequest || year !== this._standingSeason) return;
+      this._standingsResultsCache.set(year, result);
       this._seasonStandings = result;
     } catch (err) {
       if (request !== this._seasonStandingsRequest) return;
@@ -693,10 +703,18 @@ class NBACenterCard extends LitElement {
   async _loadPlayoffBracket(year = this._playoffSeason) {
     if (!this.hass?.callWS || !Number.isInteger(year)) return;
     const request = ++this._playoffRequest;
+    const cached = this._playoffResultsCache.get(year);
+    if (cached) {
+      this._playoffData = cached;
+      this._playoffLoading = false;
+      this._playoffError = "";
+      return;
+    }
     this._playoffLoading = true; this._playoffError = ""; this._playoffData = null;
     try {
       const result = await this.hass.callWS({ type: "nba/playoff_bracket", season_year: year });
       if (request !== this._playoffRequest || year !== this._playoffSeason) return;
+      this._playoffResultsCache.set(year, result);
       this._playoffData = result;
     } catch (err) {
       if (request !== this._playoffRequest) return;
@@ -957,10 +975,10 @@ class NBACenterCard extends LitElement {
       <section class="panel">
         <div class="panel-head"><h3>${label}</h3><span class="pill">${rows.length} ÉQUIPES</span></div>
         ${rows.length ? html`<div class="table-wrap"><table>
-          <thead><tr><th>#</th><th>ÉQUIPE</th><th>V</th><th>D</th><th>%</th><th>GB</th></tr></thead>
+          <thead><tr><th>#</th><th>ÉQUIPE</th><th>V</th><th>D</th><th>%</th><th>GB</th><th>SÉRIE</th></tr></thead>
           <tbody>${rows.slice(0,15).map((r,i) => html`
             <tr><td>${value(r.rank,i+1)}</td><td><button class="standing-team-button" type="button" ?disabled=${!r.team_id} @click=${() => this._openStandingTeam(r)}>${r.logo ? html`<img src=${r.logo} alt="" loading="lazy">` : ""}<span>${value(r.abbr,r.team)}</span></button></td><td>${value(r.wins)}</td>
-            <td>${value(r.losses)}</td><td>${value(r.pct)}</td><td>${value(r.gb)}</td></tr>`)}</tbody>
+            <td>${value(r.losses)}</td><td>${value(r.pct)}</td><td>${value(r.gb)}</td><td class="standing-streak">${value(r.streak)}</td></tr>`)}</tbody>
         </table></div>` : html`<p class="muted">Classement indisponible.</p>`}
       </section>`;
   }
