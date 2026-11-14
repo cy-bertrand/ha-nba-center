@@ -618,6 +618,25 @@ class PlayerDataParserTests(unittest.TestCase):
         self.assertTrue(game["did_not_play"])
 
 
+    def test_boxscore_with_only_empty_values_does_not_replace_stats(self):
+        from custom_components.nba.player_data import apply_boxscore_player
+
+        game = {"stats": {"PTS": "18", "REB": "5"}}
+        enriched = apply_boxscore_player(game, {
+            "stats_by_key": {"PTS": None, "REB": ""},
+        })
+        self.assertFalse(enriched)
+        self.assertEqual(game["stats"], {"PTS": "18", "REB": "5"})
+
+    def test_zero_is_a_valid_boxscore_stat(self):
+        from custom_components.nba.player_data import apply_boxscore_player
+
+        game = {"stats": {"PTS": "18"}}
+        enriched = apply_boxscore_player(game, {"stats_by_key": {"PTS": "0"}})
+        self.assertTrue(enriched)
+        self.assertEqual(game["stats"], {"PTS": "0"})
+
+
 
 if __name__ == "__main__":
     unittest.main()
