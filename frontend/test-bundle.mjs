@@ -15,6 +15,7 @@ assert.match(source, /\{ id: "playoffs", label: "PLAYOFFS" \}/, "sixth PLAYOFFS 
 assert.match(source, /nba\/playoff_bracket/, "playoffs view must use the Home Assistant websocket service");
 assert.match(source, /PLAYOFFS CENTER/, "dedicated playoffs center must be rendered");
 assert.match(source, /_playoffSeriesCard\(series\)/, "playoff series must have a dedicated card renderer");
+assert.match(source, /series\.unknown_results \? "≥" : ""/, "playoff wins must be marked as minimum counts when results are unconfirmed");
 assert.match(source, /TÊTES DE SÉRIE NON VALIDÉES|Têtes de série non validées/, "unvalidated playoff seeds must be disclosed");
 assert.match(bundle, /PLAYOFFS CENTER/, "bundled card must include the playoffs center");
 assert.match(bundle, /NBA FINALS/, "bundled card must include NBA Finals");
