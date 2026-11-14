@@ -6,6 +6,7 @@ Les règles exposées ici sont couvertes par la suite unittest du dépôt.
 from __future__ import annotations
 
 from datetime import date, datetime, timedelta, tzinfo
+import math
 import asyncio
 from collections.abc import Awaitable, Callable
 from typing import Any
@@ -26,12 +27,15 @@ def parse_score(value: Any) -> int | None:
     """Convertit un score ESPN sans transformer une valeur absente en zéro."""
     if isinstance(value, dict):
         value = value.get("value", value.get("displayValue"))
-    if value is None or value == "":
+    if isinstance(value, bool) or value is None or value == "":
         return None
     try:
-        return int(float(value))
+        number = float(value)
     except (TypeError, ValueError, OverflowError):
         return None
+    if not math.isfinite(number) or not number.is_integer():
+        return None
+    return int(number)
 
 
 def cache_ttl(games: list[dict[str, Any]]) -> int:
