@@ -142,6 +142,7 @@ class NBACenterCard extends LitElement {
     .standing-team-button{display:inline-flex;align-items:center;gap:7px;padding:2px 4px;margin:-2px 0;border:0;border-radius:6px;background:transparent;color:inherit;font:inherit;font-weight:800;cursor:pointer;text-align:left}
     .standing-team-button:hover{background:#1b2a40;color:#f2c45f}
     .standing-team-button:focus-visible{outline:2px solid #f2c45f;outline-offset:2px}
+    .standing-streak{text-align:right;color:#f2c45f;font-weight:900;font-variant-numeric:tabular-nums}
     .standing-team-button img{display:block;width:28px;height:28px;max-width:28px;max-height:28px;object-fit:contain;flex:0 0 28px}
     .table-wrap{overflow-x:auto}
     table{width:100%;border-collapse:collapse;font-size:10px;white-space:nowrap}
@@ -679,8 +680,9 @@ class NBACenterCard extends LitElement {
     if (!this.hass?.callWS || !Number.isInteger(year)) return;
     const request = ++this._seasonStandingsRequest;
     const cached = this._standingsResultsCache.get(year);
-    if (cached) {
-      this._seasonStandings = cached;
+    const cacheTtl = year === (new Date().getFullYear() + (new Date().getMonth() >= 9 ? 1 : 0)) ? 5 * 60 * 1000 : 7 * 86400 * 1000;
+    if (cached && Date.now() - cached.at < cacheTtl) {
+      this._seasonStandings = cached.data;
       this._seasonStandingsLoading = false;
       this._seasonStandingsError = "";
       return;
@@ -691,7 +693,7 @@ class NBACenterCard extends LitElement {
     try {
       const result = await this.hass.callWS({ type: "nba/standings", season_year: year });
       if (request !== this._seasonStandingsRequest || year !== this._standingSeason) return;
-      this._standingsResultsCache.set(year, result);
+      this._standingsResultsCache.set(year, { at: Date.now(), data: result });
       this._seasonStandings = result;
     } catch (err) {
       if (request !== this._seasonStandingsRequest) return;
@@ -704,8 +706,10 @@ class NBACenterCard extends LitElement {
     if (!this.hass?.callWS || !Number.isInteger(year)) return;
     const request = ++this._playoffRequest;
     const cached = this._playoffResultsCache.get(year);
-    if (cached) {
-      this._playoffData = cached;
+    const currentSeason = new Date().getFullYear() + (new Date().getMonth() >= 9 ? 1 : 0);
+    const cacheTtl = year === currentSeason ? 15 * 60 * 1000 : 7 * 86400 * 1000;
+    if (cached && Date.now() - cached.at < cacheTtl) {
+      this._playoffData = cached.data;
       this._playoffLoading = false;
       this._playoffError = "";
       return;
@@ -714,7 +718,7 @@ class NBACenterCard extends LitElement {
     try {
       const result = await this.hass.callWS({ type: "nba/playoff_bracket", season_year: year });
       if (request !== this._playoffRequest || year !== this._playoffSeason) return;
-      this._playoffResultsCache.set(year, result);
+      this._playoffResultsCache.set(year, { at: Date.now(), data: result });
       this._playoffData = result;
     } catch (err) {
       if (request !== this._playoffRequest) return;
