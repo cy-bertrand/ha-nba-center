@@ -549,3 +549,27 @@ hass.callWS({
 
 Cette première tranche expose les données au frontend mais ne modifie pas encore la carte Lovelace. Elle ne prétend pas non plus compléter une série si ESPN ne renvoie pas son calendrier. Pour une saison dont les seeds ne sont pas validés, la conférence concernée reste sans mapping de seeds et ses calendriers ne sont pas interrogés.
 
+
+
+## Disponibilité historique des playoffs — décision (14 novembre 2026)
+
+### Comportement validé dans NBA Center
+
+- **Saison régulière :** les classements historiques sont proposés à partir de 2002-03. Le chargement fonctionne sur les saisons testées par l'utilisateur.
+- **Playoffs :** les données sont exploitables à partir de 2007-08 (paramètre ESPN `season=2008`). Les saisons antérieures ne renvoient pas de matchs utilisables avec les sources et méthodes actuellement intégrées.
+- Entre 2007-08 et 2016-17, ESPN a fourni des libellés historiques complets tels que `Eastern Conference 1st Round`, au lieu des libellés récents `East 1st Round`. Le parseur reconnaît désormais les deux conventions afin de classer les séries dans les bons tours et conférences.
+
+### Tentatives et limite
+
+La récupération des playoffs combine les calendriers des équipes et, lorsque le volume obtenu est trop faible, une récupération de secours via le scoreboard ESPN par mois (avril, mai et juin, `seasontype=3`). Cette méthode permet de remonter jusqu'à 2007-08 dans les tests effectués, mais n'a pas permis d'obtenir de données exploitables pour les saisons antérieures.
+
+La cause exacte de l'absence des saisons avant 2007-08 n'est pas établie : il peut s'agir d'une limite de disponibilité des endpoints ESPN, de la profondeur historique des calendriers ou d'une différence de format non encore identifiée. Il ne faut donc pas présenter 2007-08 comme une limite officielle garantie d'ESPN.
+
+### Décision produit
+
+- Le sélecteur **Saison régulière** conserve les saisons depuis 2002-03.
+- Le sélecteur **Playoffs** commence à 2007-08.
+- Si l'utilisateur choisit une saison antérieure à 2007-08 en saison régulière puis passe à l'onglet Playoffs, la sélection est automatiquement repositionnée sur 2007-08.
+- Aucune série ou aucun résultat ne sera extrapolé pour combler les saisons manquantes.
+
+Les saisons antérieures à 2007-08 sont laissées de côté jusqu'à l'identification et à la validation d'une source historique alternative.
