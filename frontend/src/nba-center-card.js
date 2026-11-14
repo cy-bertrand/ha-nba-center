@@ -438,6 +438,16 @@ class NBACenterCard extends LitElement {
       || String(team.abbreviation ?? team.abbr ?? "").toUpperCase() === String(player.team_abbreviation ?? player.team ?? "").toUpperCase()
     );
     const seasonTeamLabel = (item) => {
+      if (Array.isArray(item.teams) && item.teams.length > 1) {
+        const abbreviations = item.teams.map((entry) => {
+          const team = teamCatalog.find((candidate) =>
+            (entry.team_id && String(candidate.id) === String(entry.team_id))
+            || (entry.team_abbreviation && String(candidate.abbreviation).toUpperCase() === String(entry.team_abbreviation).toUpperCase())
+          );
+          return entry.team_abbreviation ?? team?.abbreviation ?? entry.team_name ?? team?.display_name ?? "";
+        }).filter(Boolean);
+        if (abbreviations.length) return [...new Set(abbreviations)].join(" · ");
+      }
       const team = teamCatalog.find((candidate) =>
         (item.team_id && String(candidate.id) === String(item.team_id))
         || (item.team_abbreviation && String(candidate.abbreviation).toUpperCase() === String(item.team_abbreviation).toUpperCase())
