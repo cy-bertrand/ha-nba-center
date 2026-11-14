@@ -452,12 +452,22 @@ def parse_player_gamelog(raw: dict[str, Any]) -> dict[str, Any]:
     """Normalise le gamelog ESPN, y compris les stats imbriquées dans seasonTypes."""
     events = raw.get("events")
     if isinstance(events, dict):
-        source = list(events.values())
+        source = [
+            ({**_mapping(event), "id": _mapping(event).get("id") or _mapping(event).get("eventId") or key})
+            for key, event in events.items()
+        ]
     elif isinstance(events, list):
         source = events
     else:
         nested = _mapping(raw.get("gameLog")).get("events")
-        source = list(nested.values()) if isinstance(nested, dict) else nested if isinstance(nested, list) else []
+        source = (
+            [
+                ({**_mapping(event), "id": _mapping(event).get("id") or _mapping(event).get("eventId") or key})
+                for key, event in nested.items()
+            ]
+            if isinstance(nested, dict)
+            else nested if isinstance(nested, list) else []
+        )
 
     # Certaines réponses ESPN ne placent que les métadonnées dans events :
     # les lignes statistiques sont alors dans seasonTypes[].categories[].events[].
