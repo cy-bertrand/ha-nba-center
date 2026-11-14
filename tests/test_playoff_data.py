@@ -33,6 +33,29 @@ class PlayoffPayloadTests(unittest.TestCase):
         self.assertEqual(games[0]["teams"][0]["score"], 103)
         self.assertTrue(games[0]["completed"])
 
+    def test_series_integer_metadata_rejects_boolean_and_fractional_values(self):
+        event = {
+            "id": "invalid-series-meta",
+            "season": {"year": 2025, "type": 3},
+            "competitions": [{
+                "competitors": [
+                    {"id": "1", "homeAway": "home", "team": {"id": "1"}},
+                    {"id": "2", "homeAway": "away", "team": {"id": "2"}},
+                ],
+                "series": {
+                    "competitors": [
+                        {"id": "1", "wins": True},
+                        {"id": "2", "wins": 1.5},
+                    ],
+                    "totalCompetitions": 7.5,
+                },
+            }],
+        }
+        parsed = parse_playoff_event(event)
+        self.assertEqual(parsed["series"]["teams"][0]["wins"], None)
+        self.assertEqual(parsed["series"]["teams"][1]["wins"], None)
+        self.assertIsNone(parsed["series"]["total_games"])
+
     def test_scoreboard_accepts_string_scores_and_optional_series(self):
         payload = load_fixture("espn_playoff_scoreboard_2025_06_05.json")
         games = parse_playoff_payload(payload)
