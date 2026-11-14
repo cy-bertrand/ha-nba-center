@@ -24,6 +24,10 @@ assert.match(source, /_openPlayoffSeries\(series\)/, "playoff series cards must 
 assert.match(source, /_playoffSeriesOverlay\(\)/, "playoff series must have a dedicated match list overlay");
 assert.match(source, /nba\/game_details/, "playoff game selection must reuse Match Center details");
 assert.match(source, /playoff-game-row/, "playoff series overlay must list individual games");
+assert.match(source, /declaredWinners = \(game\.teams \?\? \[\]\)\.filter\(\(team\) => team\.winner === true\)/, "playoff game winner must use ESPN's explicit winner flag");
+assert.match(source, /winnerSide === "away" \? html/, "playoff game winner must be explicitly highlighted");
+assert.match(source, /currentSeasonYear - 2002 \+ 1/, "standings season selector must include historical seasons back to ESPN year 2002");
+
 assert.match(source, /playoff-series-button/, "playoff series cards must be visibly interactive");
 assert.match(source, /@media\(max-width:760px\)\{\.playoff-round \.grid\{grid-template-columns:1fr\}\}/, "playoff series must use a single column on mobile");
 
