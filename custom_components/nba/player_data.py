@@ -48,6 +48,38 @@ def _number(value: Any) -> int | float | None:
     return None
 
 
+def _is_aggregate_season_entry(item: Any) -> bool:
+    """Identifie la ligne de total saison ESPN, distincte des splits par équipe."""
+    block = _mapping(item)
+    markers = (
+        _text(block.get("displayName")),
+        _text(block.get("teamSlug")),
+    )
+    return any("total" in (marker or "").lower() for marker in markers)
+
+
+def _select_season_entry(entries: list[Any], season_year: int | None = None) -> Any:
+    """Sélectionne le total saison explicite, sinon la ligne de saison disponible."""
+    candidates = entries
+    if season_year is not None:
+        candidates = [
+            item for item in entries
+            if _number(_mapping(_mapping(item).get("season")).get("year")) == season_year
+        ]
+        if not candidates:
+            return None
+    else:
+        latest_year = max(
+            (_number(_mapping(_mapping(item).get("season")).get("year")) or 0)
+            for item in entries
+        )
+        candidates = [
+            item for item in entries
+            if (_number(_mapping(_mapping(item).get("season")).get("year")) or 0) == latest_year
+        ]
+    return next((item for item in candidates if _is_aggregate_season_entry(item)), candidates[0])
+
+
 def _stat_rows(raw: dict[str, Any], season_year: int | None = None) -> list[dict[str, Any]]:
     """Convertit les catégories ESPN et les splits overview en lignes stables."""
     rows: list[dict[str, Any]] = []
@@ -60,21 +92,11 @@ def _stat_rows(raw: dict[str, Any], season_year: int | None = None) -> list[dict
             displays = block.get("displayNames") or []
             seasons = block.get("statistics")
             if isinstance(seasons, list) and seasons:
-                if season_year is not None:
-                    selected = next(
-                        (item for item in seasons
-                         if _number(_mapping(_mapping(item).get("season")).get("year")) == season_year),
-                        None,
-                    )
-                    # Une réponse ESPN peut contenir plusieurs saisons malgré le
-                    # paramètre season. Ne jamais substituer la saison la plus récente.
-                    if selected is None:
-                        continue
-                else:
-                    selected = max(
-                        seasons,
-                        key=lambda item: _number(_mapping(_mapping(item).get("season")).get("year")) or 0,
-                    )
+                selected = _select_season_entry(seasons, season_year)
+                # Une réponse ESPN peut contenir plusieurs saisons malgré le
+                # paramètre season. Ne jamais substituer une autre saison.
+                if selected is None:
+                    continue
                 values = _mapping(selected).get("stats")
                 season_name = _text(_mapping(_mapping(selected).get("season")).get("displayName"))
                 if isinstance(values, list):
@@ -240,7 +262,7 @@ def season_matches_espn_year(season: str, espn_year: int) -> bool:
 
 
 def _season_history(raw: dict[str, Any]) -> list[dict[str, Any]]:
-    """Fusionne les catégories ESPN par saison pour construire un historique complet."""
+    """Fusionne les catégories ESPN en privilégiant les totaux saison explicites."""
     seasons: dict[str, dict[str, Any]] = {}
     categories = raw.get("categories")
     if not isinstance(categories, list):
@@ -253,21 +275,27 @@ def _season_history(raw: dict[str, Any]) -> list[dict[str, Any]]:
         entries = block.get("statistics")
         if not isinstance(entries, list):
             continue
+
+        # Les lignes d'équipe servent à identifier toutes les franchises.
+        # Les statistiques affichées pour la saison proviennent de la ligne
+        # "Totals" quand ESPN la fournit, jamais du premier split d'équipe.
+        entries_by_year: dict[str, list[dict[str, Any]]] = {}
         for entry in entries:
             item = _mapping(entry)
             season = _mapping(item.get("season"))
             year = _text(season.get("year"))
-            display_name = _text(season.get("displayName")) or year
             values = item.get("stats")
             if not year or not isinstance(values, list):
                 continue
+            entries_by_year.setdefault(year, []).append(item)
             team = _mapping(item.get("team"))
             team_abbreviation = _text(item.get("teamAbbreviation") or item.get("team_abbreviation")
                                        or team.get("abbreviation") or team.get("shortDisplayName"))
             team_name = _text(team.get("displayName") or team.get("name"))
             team_id = _text(item.get("teamId") or team.get("id"))
             record = seasons.setdefault(year, {"year": int(year) if year.isdigit() else year,
-                                                "display_name": display_name, "statistics": []})
+                                                "display_name": _text(season.get("displayName")) or year,
+                                                "statistics": []})
             if team_abbreviation or team_name or team_id:
                 team_record = {
                     "team_abbreviation": team_abbreviation,
@@ -281,17 +309,20 @@ def _season_history(raw: dict[str, Any]) -> list[dict[str, Any]]:
                     for existing in teams
                 ):
                     teams.append(team_record)
-                # Keep the legacy singular fields for existing consumers. The
-                # complete, de-duplicated list is exposed separately for traded
-                # players and is preferred by the Lovelace season selector.
                 if team_abbreviation and not record.get("team_abbreviation"):
                     record["team_abbreviation"] = team_abbreviation
                 if team_name and not record.get("team_name"):
                     record["team_name"] = team_name
                 if team_id and not record.get("team_id"):
                     record["team_id"] = team_id
+
+        for year, year_entries in entries_by_year.items():
+            selected = next((item for item in year_entries if _is_aggregate_season_entry(item)),
+                            year_entries[0])
+            values = selected.get("stats") or []
             for index, value in enumerate(values):
                 name = str(names[index]) if index < len(names) else f"stat_{index}"
+                record = seasons[year]
                 record["statistics"].append({
                     "name": name,
                     "label": _text(displays[index] if index < len(displays) else None)
