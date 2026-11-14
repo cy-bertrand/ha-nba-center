@@ -6,6 +6,7 @@ Il normalise les deux variantes observées : calendrier d'équipe et scoreboard.
 from __future__ import annotations
 
 import copy
+import math
 import re
 from typing import Any
 
@@ -30,6 +31,19 @@ def _season_type(event: dict[str, Any]) -> int | None:
         return int(raw)
     except (TypeError, ValueError, OverflowError):
         return None
+
+
+def _integer(value: Any) -> int | None:
+    """Parse un entier réel sans accepter booléens, fractions ou infinis."""
+    if isinstance(value, bool) or value is None:
+        return None
+    try:
+        number = float(value)
+    except (TypeError, ValueError, OverflowError):
+        return None
+    if not math.isfinite(number) or not number.is_integer():
+        return None
+    return int(number)
 
 
 def _score(value: Any) -> int | None:
@@ -84,16 +98,10 @@ def _series(competition: dict[str, Any]) -> dict[str, Any] | None:
             item = _mapping(item)
             team_id = item.get("id")
             wins = item.get("wins")
-            try:
-                wins = int(wins) if wins is not None else None
-            except (TypeError, ValueError, OverflowError):
-                wins = None
+            wins = _integer(wins)
             teams.append({"team_id": str(team_id) if team_id is not None else None, "wins": wins})
     total = raw.get("totalCompetitions")
-    try:
-        total = int(total) if total is not None else None
-    except (TypeError, ValueError, OverflowError):
-        total = None
+    total = _integer(total)
     return {
         "summary": raw.get("summary") if isinstance(raw.get("summary"), str) else None,
         "completed": raw.get("completed") if isinstance(raw.get("completed"), bool) else None,
