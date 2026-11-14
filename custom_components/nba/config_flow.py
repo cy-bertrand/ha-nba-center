@@ -16,6 +16,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import CONF_NOTIFY_END, CONF_NOTIFY_START, CONF_TEAMS, DOMAIN, TEAMS_URL
+from .teams_catalog import parse_teams_catalog
 
 
 async def _fetch_teams(hass) -> list[SelectOptionDict]:
@@ -23,9 +24,14 @@ async def _fetch_teams(hass) -> list[SelectOptionDict]:
     async with session.get(TEAMS_URL, timeout=20) as resp:
         resp.raise_for_status()
         raw = await resp.json()
-    teams = raw["sports"][0]["leagues"][0]["teams"]
-    opts = [SelectOptionDict(value=t["team"]["id"], label=t["team"]["displayName"]) for t in teams]
-    return sorted(opts, key=lambda o: o["label"])
+    catalog = parse_teams_catalog(raw)
+    opts = [
+        SelectOptionDict(value=team["id"], label=team["display_name"])
+        for team in catalog["teams"]
+    ]
+    if not opts:
+        raise ValueError("ESPN n'a renvoyé aucune franchise NBA exploitable")
+    return opts
 
 
 def _schema(options: list[SelectOptionDict], defaults: dict[str, Any]) -> vol.Schema:
