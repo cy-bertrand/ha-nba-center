@@ -26,6 +26,9 @@
           "notify_end": "Event when games end"
         }
       }
+    },
+    "error": {
+      "cannot_connect": "Unable to reach ESPN; saved or cached teams are shown."
     }
   }
 }
