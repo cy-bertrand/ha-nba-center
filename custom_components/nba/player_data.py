@@ -268,12 +268,28 @@ def _season_history(raw: dict[str, Any]) -> list[dict[str, Any]]:
             team_id = _text(item.get("teamId") or team.get("id"))
             record = seasons.setdefault(year, {"year": int(year) if year.isdigit() else year,
                                                 "display_name": display_name, "statistics": []})
-            if team_abbreviation and not record.get("team_abbreviation"):
-                record["team_abbreviation"] = team_abbreviation
-            if team_name and not record.get("team_name"):
-                record["team_name"] = team_name
-            if team_id and not record.get("team_id"):
-                record["team_id"] = team_id
+            if team_abbreviation or team_name or team_id:
+                team_record = {
+                    "team_abbreviation": team_abbreviation,
+                    "team_name": team_name,
+                    "team_id": team_id,
+                }
+                teams = record.setdefault("teams", [])
+                identity = team_id or team_abbreviation or team_name
+                if identity and not any(
+                    (existing.get("team_id") or existing.get("team_abbreviation") or existing.get("team_name")) == identity
+                    for existing in teams
+                ):
+                    teams.append(team_record)
+                # Keep the legacy singular fields for existing consumers. The
+                # complete, de-duplicated list is exposed separately for traded
+                # players and is preferred by the Lovelace season selector.
+                if team_abbreviation and not record.get("team_abbreviation"):
+                    record["team_abbreviation"] = team_abbreviation
+                if team_name and not record.get("team_name"):
+                    record["team_name"] = team_name
+                if team_id and not record.get("team_id"):
+                    record["team_id"] = team_id
             for index, value in enumerate(values):
                 name = str(names[index]) if index < len(names) else f"stat_{index}"
                 record["statistics"].append({
