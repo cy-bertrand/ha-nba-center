@@ -21,7 +21,7 @@ def _display_text(value: Any) -> str | None:
     result = _text(value)
     if isinstance(value, bool):
         return None
-    if result is None:
+    if result is None or result.lower() in {"true", "false"}:
         return None
     try:
         if not math.isfinite(float(result.replace(",", ""))):
