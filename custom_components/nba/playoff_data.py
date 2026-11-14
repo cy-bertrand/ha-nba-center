@@ -304,16 +304,37 @@ def build_playoff_series(games: Any) -> list[dict[str, Any]]:
 
 
 def _round_metadata(label: str) -> tuple[str | None, int | None]:
-    """Retourne conférence et rang depuis les libellés ESPN connus."""
-    normalized = " ".join(label.casefold().split())
-    if normalized == "nba finals":
+    """Retourne conférence et rang depuis les libellés ESPN historiques et actuels."""
+    normalized = " ".join(label.casefold().replace("-", " ").split())
+    if normalized in ("nba finals", "nba championship"):
         return "NBA", 4
-    if normalized in ("east 1st round", "west 1st round", "east first round", "west first round"):
-        return ("East" if normalized.startswith("east ") else "West"), 1
-    if normalized in ("east semifinals", "west semifinals"):
-        return ("East" if normalized.startswith("east ") else "West"), 2
-    if normalized in ("east finals", "west finals"):
-        return ("East" if normalized.startswith("east ") else "West"), 3
+
+    # ESPN a utilisé les libellés courts ("East 1st Round") et les
+    # libellés historiques complets ("Eastern Conference 1st Round").
+    aliases = (
+        ("east", "eastern conference", "eastern"),
+        ("west", "western conference", "western"),
+    )
+    conference = None
+    remainder = normalized
+    for canonical, *prefixes in aliases:
+        for prefix in (canonical, *prefixes):
+            if normalized.startswith(prefix + " "):
+                conference = canonical.title()
+                remainder = normalized[len(prefix):].strip()
+                break
+        if conference:
+            break
+    if conference is None:
+        return None, None
+
+    remainder = remainder.removeprefix("conference ").strip()
+    if remainder in ("1st round", "first round", "round 1"):
+        return conference, 1
+    if remainder in ("semifinals", "semi finals", "conference semifinals", "round 2"):
+        return conference, 2
+    if remainder in ("finals", "conference finals", "round 3"):
+        return conference, 3
     return None, None
 
 
