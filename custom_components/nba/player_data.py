@@ -29,7 +29,7 @@ def _number(value: Any) -> int | float | None:
     return None
 
 
-def _stat_rows(raw: dict[str, Any]) -> list[dict[str, Any]]:
+def _stat_rows(raw: dict[str, Any], season_year: int | None = None) -> list[dict[str, Any]]:
     """Convertit les catégories ESPN et les splits overview en lignes stables."""
     rows: list[dict[str, Any]] = []
     categories = raw.get("categories")
@@ -41,10 +41,21 @@ def _stat_rows(raw: dict[str, Any]) -> list[dict[str, Any]]:
             displays = block.get("displayNames") or []
             seasons = block.get("statistics")
             if isinstance(seasons, list) and seasons:
-                selected = max(
-                    seasons,
-                    key=lambda item: _number(_mapping(_mapping(item).get("season")).get("year")) or 0,
-                )
+                if season_year is not None:
+                    selected = next(
+                        (item for item in seasons
+                         if _number(_mapping(_mapping(item).get("season")).get("year")) == season_year),
+                        None,
+                    )
+                    # Une réponse ESPN peut contenir plusieurs saisons malgré le
+                    # paramètre season. Ne jamais substituer la saison la plus récente.
+                    if selected is None:
+                        continue
+                else:
+                    selected = max(
+                        seasons,
+                        key=lambda item: _number(_mapping(_mapping(item).get("season")).get("year")) or 0,
+                    )
                 values = _mapping(selected).get("stats")
                 season_name = _text(_mapping(_mapping(selected).get("season")).get("displayName"))
                 if isinstance(values, list):
@@ -256,11 +267,22 @@ def _season_history(raw: dict[str, Any]) -> list[dict[str, Any]]:
                 })
     return sorted(seasons.values(), key=lambda item: str(item["year"]), reverse=True)
 
-def parse_player_stats(raw: dict[str, Any]) -> dict[str, Any]:
+def parse_player_stats(raw: dict[str, Any], season_year: int | None = None) -> dict[str, Any]:
     """Normalise les statistiques saison ESPN, y compris la structure overview."""
     season = _mapping(raw.get("season"))
     athlete = _mapping(raw.get("athlete"))
     season_name = _text(season.get("displayName") or raw.get("seasonDisplayName"))
+    if season_year is not None:
+        # Le Web API v3 renvoie un historique pluriannuel : le filtre de requête
+        # ne garantit pas que statistics[] ne contienne que l'année demandée.
+        for category in raw.get("categories", []) if isinstance(raw.get("categories"), list) else []:
+            for entry in _mapping(category).get("statistics", []) if isinstance(_mapping(category).get("statistics"), list) else []:
+                entry_season = _mapping(_mapping(entry).get("season"))
+                if _number(entry_season.get("year")) == season_year:
+                    season_name = _text(entry_season.get("displayName")) or str(season_year)
+                    break
+            if season_name and season_name != _text(season.get("displayName") or raw.get("seasonDisplayName")):
+                break
     if not season_name:
         for filter_item in _filter_items(raw):
             item = _mapping(filter_item)
@@ -290,7 +312,7 @@ def parse_player_stats(raw: dict[str, Any]) -> dict[str, Any]:
             "id": _text(athlete.get("id")),
             "name": _text(athlete.get("displayName") or athlete.get("fullName")),
         },
-        "statistics": _stat_rows(raw),
+        "statistics": _stat_rows(raw, season_year=season_year),
         "season_history": _season_history(raw),
         "splits": _overview_splits(raw),
         "career_statistics": _overview_splits(raw).get("career", []),
