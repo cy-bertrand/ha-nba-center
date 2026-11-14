@@ -19,8 +19,10 @@ def _text(value: Any) -> str | None:
 def _display_text(value: Any) -> str | None:
     """Évite d'afficher NaN ou l'infini comme une statistique valide."""
     result = _text(value)
-    if result is None or isinstance(value, bool):
-        return result
+    if isinstance(value, bool):
+        return None
+    if result is None:
+        return None
     try:
         if not math.isfinite(float(result.replace(",", ""))):
             return None
@@ -97,7 +99,7 @@ def _stat_rows(raw: dict[str, Any], season_year: int | None = None) -> list[dict
                             "name": name,
                             "label": _text(item.get("displayName") or item.get("label") or item.get("shortDisplayName")) or name,
                             "value": _number(item.get("value")),
-                            "display_value": _text(item.get("displayValue")),
+                            "display_value": _display_text(item.get("displayValue")),
                             "category": _text(block.get("displayName") or block.get("name")),
                         })
                 continue
@@ -369,7 +371,7 @@ def parse_core_postseason_stats(raw: dict[str, Any], season_year: int) -> dict[s
             if not name:
                 continue
             value = item.get("value")
-            display_value = _text(item.get("displayValue"))
+            display_value = _display_text(item.get("displayValue"))
             if value is None and display_value is not None:
                 value = display_value
             rows.append({
