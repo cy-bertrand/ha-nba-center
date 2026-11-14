@@ -840,15 +840,17 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if isinstance(season_year, bool) or not isinstance(season_year, int) or not 2000 <= season_year <= 2100:
             raise ValueError("Saison NBA invalide")
         now = dt_util.utcnow()
+        current_season = now.year + (1 if now.month >= 10 else 0)
+        cache_ttl = 900 if season_year == current_season else 7 * 86400
         cached = self._standings_cache.get(season_year)
-        if cached and (now - cached[0]).total_seconds() < 3600:
+        if cached and (now - cached[0]).total_seconds() < cache_ttl:
             return cached[1]
 
         lock = self._standings_locks.setdefault(season_year, asyncio.Lock())
         async with lock:
             now = dt_util.utcnow()
             cached = self._standings_cache.get(season_year)
-            if cached and (now - cached[0]).total_seconds() < 3600:
+            if cached and (now - cached[0]).total_seconds() < cache_ttl:
                 return cached[1]
             raw = await self._get(STANDINGS_URL, params={"season": season_year})
             standings = self._parse_standings(raw)
@@ -871,15 +873,17 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if isinstance(season_year, bool) or not isinstance(season_year, int) or not 2000 <= season_year <= 2100:
             raise ValueError("Saison NBA invalide")
         now = dt_util.utcnow()
+        current_season = now.year + (1 if now.month >= 10 else 0)
+        cache_ttl = 1800 if season_year == current_season else 7 * 86400
         cached = self._playoff_cache.get(season_year)
-        if cached and (now - cached[0]).total_seconds() < 3600:
+        if cached and (now - cached[0]).total_seconds() < cache_ttl:
             return cached[1]
 
         lock = self._playoff_locks.setdefault(season_year, asyncio.Lock())
         async with lock:
             now = dt_util.utcnow()
             cached = self._playoff_cache.get(season_year)
-            if cached and (now - cached[0]).total_seconds() < 3600:
+            if cached and (now - cached[0]).total_seconds() < cache_ttl:
                 return cached[1]
 
             raw_standings = await self._get(STANDINGS_URL, params={"season": season_year})
@@ -899,7 +903,7 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 else:
                     seed_errors[conference] = info.get("errors", ["standings_unavailable"])
 
-            semaphore = asyncio.Semaphore(4)
+            semaphore = asyncio.Semaphore(12)
 
             async def load_team_schedule(team_id: str) -> tuple[str, dict[str, Any] | None, str | None]:
                 async with semaphore:
