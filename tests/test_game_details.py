@@ -198,6 +198,16 @@ class BoxscoreParsingTests(unittest.TestCase):
         self.assertEqual([team["score"] for team in state["competitors"]], [32, 26])
         self.assertEqual(play["away_score"], "24")
         self.assertEqual(state["score_source"], "header.competitions[0].competitors")
+    def test_play_parser_sorts_numeric_sequence_numbers_chronologically(self):
+        plays = parse_plays({"plays": [
+            {"id": "late", "sequenceNumber": "300", "text": "Late event"},
+            {"id": "unknown", "text": "No sequence"},
+            {"id": "early", "sequenceNumber": "12", "text": "Early event"},
+            {"id": "middle", "sequenceNumber": "150", "text": "Middle event"},
+        ]})
+        self.assertEqual([play["id"] for play in plays],
+                         ["early", "middle", "late", "unknown"])
+
     def test_missing_plays_is_empty(self):
         self.assertEqual(parse_plays({}), [])
 
