@@ -37,6 +37,12 @@ class TeamRosterParserTests(unittest.TestCase):
         self.assertEqual(luka["height_cm"], 203)
         self.assertEqual(luka["weight_kg"], 104.3)
 
+    def test_parses_decimal_weight_without_truncating(self):
+        result = parse_team_roster({"athletes": [
+            {"id": "1", "displayName": "Decimal Weight", "displayWeight": "220.5 lbs"}
+        ]})
+        self.assertEqual(result["players"][0]["weight_kg"], 100.0)
+
     def test_skips_invalid_and_duplicate_players(self):
         result = parse_team_roster({"athletes": [
             {"id": "1", "displayName": "First"},
