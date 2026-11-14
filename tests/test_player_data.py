@@ -588,3 +588,36 @@ class PlayerDataParserTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+    def test_empty_boxscore_does_not_erase_gamelog_stats(self):
+        from custom_components.nba.player_data import apply_boxscore_player
+
+        game = {"stats": {"PTS": "24", "REB": "7"}}
+        enriched = apply_boxscore_player(game, {
+            "stats_by_key": {}, "stats": {}, "name": "Test Player",
+            "did_not_play": False,
+        })
+        self.assertFalse(enriched)
+        self.assertEqual(game["stats"], {"PTS": "24", "REB": "7"})
+        self.assertEqual(game["player_name"], "Test Player")
+
+    def test_nonempty_boxscore_replaces_gamelog_stats(self):
+        from custom_components.nba.player_data import apply_boxscore_player
+
+        game = {"stats": {"PTS": "24"}}
+        enriched = apply_boxscore_player(game, {
+            "stats_by_key": {"PTS": "26", "REB": "8"},
+        })
+        self.assertTrue(enriched)
+        self.assertEqual(game["stats"], {"PTS": "26", "REB": "8"})
+
+    def test_boxscore_stats_fallback_and_did_not_play_metadata(self):
+        from custom_components.nba.player_data import apply_boxscore_player
+
+        game = {"stats": {"PTS": "0"}}
+        enriched = apply_boxscore_player(game, {
+            "stats": {"MIN": "0"}, "did_not_play": True,
+        })
+        self.assertTrue(enriched)
+        self.assertEqual(game["stats"], {"MIN": "0"})
+        self.assertTrue(game["did_not_play"])
