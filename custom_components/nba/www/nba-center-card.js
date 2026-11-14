@@ -58,7 +58,7 @@ var F=globalThis,V=F.ShadowRoot&&(F.ShadyCSS===void 0||F.ShadyCSS.nativeShadow)&
     .team-info small{display:block;margin-top:3px;color:#8f9db2;font-size:10px}
     .record{text-align:right;font-size:11px;font-weight:800;color:#dce3ef}
     .recent{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
-    .form-chip{display:flex;align-items:center;gap:5px;padding:5px 7px;border:1px solid #2b3b52;border-radius:7px;color:#aab6ca;font-size:9px}
+    .form-chip{display:flex;align-items:center;gap:5px;padding:5px 7px;border:1px solid #2b3b52;border-radius:7px;color:#aab6ca;font-size:9px;min-width:0;cursor:pointer;text-align:left}.form-chip:hover{border-color:#bd9448;background:#1b2a40}.form-chip:disabled{opacity:.6;cursor:default}
     .form-chip strong{font-size:9px}
     .form-chip.win strong{color:#72d5a0}
     .form-chip.loss strong{color:#ff8b91}
