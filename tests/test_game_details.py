@@ -16,6 +16,15 @@ parse_substitutions = module.parse_substitutions
 
 
 class BoxscoreParsingTests(unittest.TestCase):
+    def test_score_and_shot_coordinates_reject_invalid_numbers(self):
+        self.assertIsNone(module._score(True))
+        self.assertIsNone(module._score(12.5))
+        self.assertIsNone(module._score(float("inf")))
+        self.assertEqual(module._score("102"), 102)
+        self.assertIsNone(module._coordinate({"x": float("nan"), "y": 12}))
+        self.assertIsNone(module._coordinate({"x": True, "y": 12}))
+        self.assertEqual(module._coordinate({"x": 36, "y": 0}), {"x": 36, "y": 0})
+
     def test_home_away_is_read_from_team_block_or_team_object(self):
         raw = {"boxscore": {"teams": [
             {"team": {"id": "1", "abbreviation": "WSH"}, "homeAway": "home"},
