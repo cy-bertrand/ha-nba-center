@@ -504,7 +504,7 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
                         PLAYER_DATA_URL.format(player_id=player_id, resource="stats"),
                         params={"season": season_year, "seasontype": 3},
                     )
-                    parsed_postseason = parse_player_stats(postseason_raw)
+                    parsed_postseason = parse_player_stats(postseason_raw, season_year=season_year)
                     if (parsed_postseason.get("season_type_id") == "3"
                             and season_matches_espn_year(str(parsed_postseason.get("season") or ""), season_year)
                             and parsed_postseason.get("statistics")):
