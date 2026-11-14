@@ -16,7 +16,7 @@ from .scoreboard_utils import async_load_scoreboard, parse_score
 from .game_details import parse_boxscore, parse_game_state, parse_plays
 from .teams_catalog import parse_teams_catalog
 from .team_roster import parse_team_roster
-from .player_data import parse_player_gamelog, parse_player_stats, season_matches_espn_year
+from .player_data import parse_core_postseason_stats, parse_player_gamelog, parse_player_stats, season_matches_espn_year
 from .playoff_data import (
     annotate_playoff_bracket,
     build_playoff_bracket,
