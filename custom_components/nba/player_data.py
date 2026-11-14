@@ -128,9 +128,20 @@ def _stat_rows(raw: dict[str, Any]) -> list[dict[str, Any]]:
     return rows
 
 def _filter_items(raw: dict[str, Any]) -> list[dict[str, Any]]:
+    """Normalise les filtres ESPN, parfois indexés par leur clé au lieu d'un champ name."""
     filters = raw.get("filters")
     if isinstance(filters, dict):
-        return [_mapping(item) for item in filters.values() if isinstance(item, dict)]
+        items: list[dict[str, Any]] = []
+        for key, value in filters.items():
+            if not isinstance(value, dict):
+                continue
+            item = dict(value)
+            # L'API ESPN renvoie fréquemment :
+            # {"seasonType": {"value": "3", "displayValue": "Playoffs"}}
+            # Dans cette forme, le nom du filtre est la clé du dictionnaire.
+            item.setdefault("name", str(key))
+            items.append(item)
+        return items
     if isinstance(filters, list):
         return [_mapping(item) for item in filters if isinstance(item, dict)]
     return []
