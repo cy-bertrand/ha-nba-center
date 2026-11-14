@@ -79,6 +79,7 @@ assert.match(source, /\.player-game-row\{display:grid;grid-template-columns:minm
 assert.match(bundle, /\.player-game-row\{display:grid;grid-template-columns:minmax\(0,1fr\)/, "bundled last five game rows must use a compact stacked layout");
 assert.match(source, /\.player-game-meta\{display:flex;align-items:center/, "game date and opponent must share one line");
 assert.match(source, /\.player-game-stats\{display:flex;flex-wrap:nowrap/, "game statistics must stay on one line");
+assert.match(source, /game\.result === "D" \? "loss" : "unknown"/, "unknown recent game outcomes must not be styled as losses");
 assert.match(bundle, /\.player-game-stats\{display:flex;flex-wrap:nowrap/, "bundled game statistics must stay on one line");
 
 console.log("NBA Center frontend bundle and feature checks passed.");
