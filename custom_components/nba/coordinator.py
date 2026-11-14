@@ -496,39 +496,41 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     suffix = int(parts[1])
                     season_year = suffix if suffix > 99 else (int(parts[0]) // 100) * 100 + suffix
             if season_year:
-                # Core v2 est plus adapté aux statistiques historiques par saison :
-                # /seasons/{année de fin}/types/3/athletes/{id}/statistics/
-                core_url = (
-                    "https://sports.core.api.espn.com/v2/sports/basketball/leagues/nba/"
-                    f"seasons/{season_year}/types/3/athletes/{player_id}/statistics/"
-                )
+                # Le Web API v3 expose les catégories de moyennes par match (avgMinutes,
+                # avgPoints, etc.). Il est prioritaire : on affiche les valeurs ESPN telles
+                # quelles, sans recalculer des moyennes à partir de totaux.
                 try:
-                    core_raw = await self._get(core_url)
-                    postseason_stats = parse_core_postseason_stats(core_raw, season_year)
-                    if not postseason_stats.get("statistics"):
-                        postseason_stats = {}
-                except Exception as core_err:  # noqa: BLE001 - fallback Web v3 si Core v2 ne répond pas
-                    _LOGGER.debug(
-                        "Core v2 playoffs indisponible pour le joueur %s / saison %s: %s",
-                        player_id, season_year, core_err,
+                    postseason_raw = await self._get(
+                        PLAYER_DATA_URL.format(player_id=player_id, resource="stats"),
+                        params={"season": season_year, "seasontype": 3},
                     )
-                # Le Web v3 reste une solution de repli, notamment si Core v2
-                # ne fournit pas de statistiques pour un joueur/saison donné.
+                    parsed_postseason = parse_player_stats(postseason_raw, season_year=season_year)
+                    if (parsed_postseason.get("season_type_id") == "3"
+                            and season_matches_espn_year(str(parsed_postseason.get("season") or ""), season_year)
+                            and parsed_postseason.get("statistics")):
+                        postseason_stats = parsed_postseason
+                except Exception as err:  # noqa: BLE001 - Core v2 reste le fallback historique
+                    _LOGGER.debug(
+                        "Web v3 playoffs indisponible pour le joueur %s / saison %s: %s",
+                        player_id, season_year, err,
+                    )
+
+                # Core v2 ne sert que de repli si le Web v3 ne fournit pas le split
+                # playoffs demandé. Ses valeurs sont conservées telles que renvoyées.
                 if not postseason_stats:
+                    core_url = (
+                        "https://sports.core.api.espn.com/v2/sports/basketball/leagues/nba/"
+                        f"seasons/{season_year}/types/3/athletes/{player_id}/statistics/"
+                    )
                     try:
-                        postseason_raw = await self._get(
-                            PLAYER_DATA_URL.format(player_id=player_id, resource="stats"),
-                            params={"season": season_year, "seasontype": 3},
-                        )
-                        parsed_postseason = parse_player_stats(postseason_raw)
-                        if (parsed_postseason.get("season_type_id") == "3"
-                                and season_matches_espn_year(str(parsed_postseason.get("season") or ""), season_year)
-                                and parsed_postseason.get("statistics")):
-                            postseason_stats = parsed_postseason
-                    except Exception as err:  # noqa: BLE001 - les playoffs ne bloquent jamais le profil régulier
+                        core_raw = await self._get(core_url)
+                        postseason_stats = parse_core_postseason_stats(core_raw, season_year)
+                        if not postseason_stats.get("statistics"):
+                            postseason_stats = {}
+                    except Exception as core_err:  # noqa: BLE001 - les playoffs ne bloquent jamais le profil régulier
                         _LOGGER.debug(
-                            "Web v3 playoffs indisponible pour le joueur %s / saison %s: %s",
-                            player_id, season_year, err,
+                            "Core v2 playoffs indisponible pour le joueur %s / saison %s: %s",
+                            player_id, season_year, core_err,
                         )
 
             postseason_gamelog: dict[str, Any] = {"games": [], "count": 0, "boxscore_count": 0}

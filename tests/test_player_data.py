@@ -24,6 +24,36 @@ class PlayerDataParserTests(unittest.TestCase):
         self.assertEqual(result["statistics"][1]["name"], "avgPoints")
         self.assertEqual(result["statistics"][1]["value"], 28.4)
 
+    def test_parses_all_six_espn_web_v3_playoff_per_game_averages(self):
+        result = parse_player_stats({
+            "filters": {"season": {"value": "2024", "options": [
+                {"value": "2024", "displayValue": "2023-24"},
+            ]}, "seasonType": {"value": "3", "displayValue": "Playoffs"}},
+            "categories": [{
+                "name": "averages", "displayName": "Postseason Averages",
+                "stats": [
+                    {"name": "avgMinutes", "abbreviation": "MIN", "displayName": "Minutes Per Game",
+                     "value": 40.2, "displayValue": "40.2"},
+                    {"name": "avgPoints", "abbreviation": "PTS", "displayName": "Points Per Game",
+                     "value": 28.9, "displayValue": "28.9"},
+                    {"name": "avgRebounds", "abbreviation": "REB", "displayName": "Rebounds Per Game",
+                     "value": 9.5, "displayValue": "9.5"},
+                    {"name": "avgAssists", "abbreviation": "AST", "displayName": "Assists Per Game",
+                     "value": 8.1, "displayValue": "8.1"},
+                    {"name": "avgSteals", "abbreviation": "STL", "displayName": "Steals Per Game",
+                     "value": 1.4, "displayValue": "1.4"},
+                    {"name": "avgBlocks", "abbreviation": "BLK", "displayName": "Blocks Per Game",
+                     "value": 0.4, "displayValue": "0.4"},
+                ],
+            }],
+        })
+        self.assertEqual(result["season_type_id"], "3")
+        self.assertEqual(
+            [row["value"] for row in result["statistics"]],
+            [40.2, 28.9, 9.5, 8.1, 1.4, 0.4],
+        )
+        self.assertEqual(result["statistics"][1]["display_value"], "28.9")
+
     def test_core_v2_empty_postseason_payload_stays_empty(self):
         result = parse_core_postseason_stats({"splits": {"categories": []}}, 2025)
         self.assertEqual(result["statistics"], [])
@@ -74,6 +104,38 @@ class PlayerDataParserTests(unittest.TestCase):
         self.assertEqual(result["statistics"][-1]["name"], "avgPoints")
         self.assertEqual(result["statistics"][-1]["value"], 30.3)
         self.assertEqual(result["statistics"][-1]["season"], "2026-27")
+
+    def test_selects_requested_season_from_multiyear_playoff_response(self):
+        result = parse_player_stats({
+            "filters": [
+                {"name": "seasontype", "value": "3",
+                 "options": [{"value": "3", "displayValue": "Postseason"}]},
+            ],
+            "categories": [
+                {
+                    "name": "averages", "displayName": "Postseason Averages",
+                    "names": ["gamesPlayed", "avgMinutes", "avgPoints", "avgRebounds",
+                              "avgAssists", "avgSteals", "avgBlocks"],
+                    "labels": ["GP", "MIN", "PTS", "REB", "AST", "STL", "BLK"],
+                    "displayNames": ["Games Played", "Minutes Per Game", "Points Per Game",
+                                     "Rebounds Per Game", "Assists Per Game", "Steals Per Game",
+                                     "Blocks Per Game"],
+                    "statistics": [
+                        {"season": {"year": 2024, "displayName": "2023-24"},
+                         "stats": ["22", "40.9", "28.9", "9.5", "8.1", "1.9", "0.4"]},
+                        {"season": {"year": 2025, "displayName": "2024-25"},
+                         "stats": ["5", "41.6", "30.2", "7.0", "5.8", "1.0", "0.6"]},
+                    ],
+                },
+            ],
+        }, season_year=2024)
+        self.assertEqual(result["season"], "2023-24")
+        self.assertEqual(result["season_type_id"], "3")
+        self.assertEqual(
+            {row["name"]: row["value"] for row in result["statistics"]},
+            {"gamesPlayed": 22, "avgMinutes": 40.9, "avgPoints": 28.9,
+             "avgRebounds": 9.5, "avgAssists": 8.1, "avgSteals": 1.9, "avgBlocks": 0.4},
+        )
 
     def test_builds_season_history_across_categories(self):
         result = parse_player_stats({"categories": [
