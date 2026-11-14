@@ -267,6 +267,16 @@ class PlayerDataParserTests(unittest.TestCase):
         ]})
         self.assertEqual([game["id"] for game in result["games"]], ["newest", "middle", "older"])
 
+    def test_gamelog_sort_uses_timezone_offsets_not_lexical_dates(self):
+        result = parse_player_gamelog({"events": [
+            {"id": "lexically-later", "gameDate": "2026-11-13T00:30:00+02:00"},
+            {"id": "actually-newer", "gameDate": "2026-11-12T23:00:00Z"},
+        ]})
+        self.assertEqual(
+            [game["id"] for game in result["games"]],
+            ["actually-newer", "lexically-later"],
+        )
+
     def test_missing_stats_are_not_fabricated(self):
         result = parse_player_stats({"statistics": {"labels": ["PTS"], "names": ["avgPoints"], "values": []}})
         self.assertEqual(result["statistics"], [])
