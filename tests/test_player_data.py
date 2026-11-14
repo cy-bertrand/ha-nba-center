@@ -584,11 +584,6 @@ class PlayerDataParserTests(unittest.TestCase):
         self.assertEqual(parse_player_gamelog({"events": "invalid"})["games"], [])
 
 
-
-
-if __name__ == "__main__":
-    unittest.main()
-
     def test_empty_boxscore_does_not_erase_gamelog_stats(self):
         from custom_components.nba.player_data import apply_boxscore_player
 
@@ -621,3 +616,8 @@ if __name__ == "__main__":
         self.assertTrue(enriched)
         self.assertEqual(game["stats"], {"MIN": "0"})
         self.assertTrue(game["did_not_play"])
+
+
+
+if __name__ == "__main__":
+    unittest.main()
