@@ -112,6 +112,7 @@ assert.match(bundle, /this\._leaderPanel\([a-z],10\)/, "bundled Players Center m
 assert.match(bundle, /opponent_abbreviation/, "bundled recent player games must use opponent abbreviations");
 
 assert.match(source, /Web API v3\. On les affiche[\s\S]*directement/, "playoff highlights must use ESPN Web v3 averages directly");
+assert.match(source, /\["PTS", \["avgpoints", "pointspergame", "points", "pts"\]\]/, "playoff highlights must recognize full-name ESPN average keys without matching totals");
 assert.match(source, /findPostseasonStat/, "playoff highlights must resolve normalized ESPN names and labels");
 assert.doesNotMatch(source, /postseasonGameCount|postseasonPerGameValue/, "frontend must not recalculate playoff per-game averages");
 assert.match(source, /postseasonDetailOrder/, "playoff detailed stats must use a stable basketball priority order");
