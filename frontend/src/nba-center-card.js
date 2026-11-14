@@ -1,7 +1,7 @@
 // NBA Center Lovelace card — reads only Home Assistant entity state. Lit is bundled locally.
 import { LitElement, css, html } from "lit";
 
-const BUILD_VERSION = "2026.11.14.1";
+const BUILD_VERSION = "2026.11.14.2";
 
 const VIEWS = [
   { id: "home", label: "HOME" },
@@ -123,7 +123,7 @@ class NBACenterCard extends LitElement {
     .team-info small{display:block;margin-top:3px;color:#8f9db2;font-size:10px}
     .record{text-align:right;font-size:11px;font-weight:800;color:#dce3ef}
     .recent{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
-    .form-chip{display:flex;align-items:center;gap:5px;padding:5px 7px;border:1px solid #2b3b52;border-radius:7px;color:#aab6ca;font-size:9px}
+    .form-chip{display:flex;align-items:center;gap:5px;padding:5px 7px;border:1px solid #2b3b52;border-radius:7px;color:#aab6ca;font-size:9px;min-width:0;cursor:pointer;text-align:left}.form-chip:hover{border-color:#bd9448;background:#1b2a40}.form-chip:disabled{opacity:.6;cursor:default}
     .form-chip strong{font-size:9px}
     .form-chip.win strong{color:#72d5a0}
     .form-chip.loss strong{color:#ff8b91}
@@ -345,7 +345,7 @@ class NBACenterCard extends LitElement {
                   <div><small>% VICTOIRES</small><strong>${value(this._teamRoster.standing.pct)}</strong></div>
                   <div><small>RETARD</small><strong>${value(this._teamRoster.standing.gb)}</strong></div><div><small>SÉRIE</small><strong>${value(this._teamRoster.standing.streak)}</strong></div>
                 </div>
-                ${this._teamRoster.schedule?.recent?.length ? html`<div class="muted" style="margin-top:12px">FORME RÉCENTE</div><div class="recent">${this._teamRoster.schedule.recent.slice(0,5).map((game) => html`<span class="form-chip ${game.result === "V" ? "win" : game.result === "D" ? "loss" : "unknown"}"><strong>${value(game.result)}</strong><span>${game.home_away === "@" ? `@${value(game.opp_abbr)}` : value(game.opp_abbr)}</span><span>${value(game.team_score)}–${value(game.opp_score)}</span></span>`)}</div>` : ""}
+                ${this._teamRoster.schedule?.recent?.length ? html`<div class="muted" style="margin-top:12px">FORME RÉCENTE</div><div class="recent">${this._teamRoster.schedule.recent.slice(0,5).map((game) => html`<button class="form-chip ${game.result === "V" ? "win" : game.result === "D" ? "loss" : "unknown"}" type="button" ?disabled=${!game.id} aria-label="Voir le match ${value(game.team_abbr)} contre ${value(game.opp_abbr)} du ${value(game.date_text)}" @click=${() => game.id && this._openGame(game)}><strong>${value(game.result)}</strong><span>${game.home_away === "@" ? `@${value(game.opp_abbr)}` : value(game.opp_abbr)}</span><span>${value(game.team_score)}–${value(game.opp_score)}</span></button>`)}</div>` : ""}
                 ${this._teamRoster.schedule?.next ? html`<p class="muted">PROCHAIN MATCH · ${value(this._teamRoster.schedule.next.date_text)} · ${value(this._teamRoster.schedule.next.name)}</p>` : ""}
               </section>` : ""}
             <div class="panel-head"><h3>${this._selectedPlayer ? "AUTRES JOUEURS" : "EFFECTIF"}</h3><span class="pill">${this._teamRoster?.count ?? 0} JOUEURS</span></div>
@@ -1058,7 +1058,7 @@ class NBACenterCard extends LitElement {
               </div>` : ""}
             ${this._playByPlayPanel()}
             ${!this._overlayLoading && !this._overlayError && !this._overlayDetails?.error && !this._overlayDetails?.teams?.length && !this._overlayDetails?.has_boxscore ? html`<section class="empty"><p>Le résumé détaillé n’est pas encore disponible pour cette rencontre.</p></section>` : ""}            </div></section></div>` : ""}
-        ${this._teamOverlay ? this._teamRosterPanel() : ""}
+        ${this._teamOverlay && !this._overlayGame ? this._teamRosterPanel() : ""}
         ${this._playerOverlay ? this._playerProfilePanel() : ""}
         <footer class="footer"><span>NBA CENTER · ${active.label}</span><span>JS ${BUILD_VERSION}</span></footer>
       </ha-card>`;
