@@ -58,7 +58,7 @@ class NBACenterCard extends LitElement {
     _overlayLoading: { state: true }, _overlayError: { state: true },
     _showAllPlays: { state: true }, _scoringOnly: { state: true },
     _teamSearch: { state: true }, _teamConference: { state: true },
-    _teamOverlay: { state: true }, _teamRoster: { state: true }, _teamRosterLoading: { state: true }, _teamRosterError: { state: true },
+    _teamOverlay: { state: true }, _teamRoster: { state: true }, _teamRosterLoading: { state: true }, _teamRosterError: { state: true }, _teamRequest: { state: true },
     _playerSearch: { state: true }, _playerOverlay: { state: true }, _playerData: { state: true }, _playerLoading: { state: true }, _playerError: { state: true }, _playerRequest: { state: true }, _playerSelectedSeason: { state: true }, _playerSelectedPlayoffSeason: { state: true }, _playerPlayoffLoading: { state: true },
     _playoffData: { state: true }, _playoffLoading: { state: true }, _playoffError: { state: true }, _playoffSeason: { state: true }, _playoffRequest: { state: true },
   };
@@ -183,6 +183,7 @@ class NBACenterCard extends LitElement {
     this._teamRoster = null;
     this._teamRosterLoading = false;
     this._teamRosterError = "";
+    this._teamRequest = 0;
     this._selectedPlayer = null;
     this._playerSearch = ""; this._playerOverlay = null; this._playerData = null; this._playerLoading = false; this._playerError = ""; this._playerSelectedSeason = ""; this._playerSelectedPlayoffSeason = ""; this._playerPlayoffLoading = false; this._playerPlayoffRequest += 1; this._playerPlayoffRequest = 0; this._playerRequest = 0;
     this._selectedDate = localDateISO();
@@ -282,20 +283,25 @@ class NBACenterCard extends LitElement {
   }
 
   async _openTeam(team) {
+    const request = ++this._teamRequest;
     this._teamOverlay = team;
     this._teamRoster = null;
     this._teamRosterError = "";
     this._teamRosterLoading = true;
     try {
-      this._teamRoster = await this.hass.callWS({ type: "nba/team_roster", team_id: String(team.id) });
+      const roster = await this.hass.callWS({ type: "nba/team_roster", team_id: String(team.id) });
+      if (request !== this._teamRequest || String(this._teamOverlay?.id) !== String(team.id)) return;
+      this._teamRoster = roster;
     } catch (err) {
+      if (request !== this._teamRequest || String(this._teamOverlay?.id) !== String(team.id)) return;
       this._teamRosterError = err?.message ?? "Effectif indisponible.";
     } finally {
-      this._teamRosterLoading = false;
+      if (request === this._teamRequest) this._teamRosterLoading = false;
     }
   }
 
   _closeTeamOverlay() {
+    this._teamRequest += 1;
     this._teamOverlay = null;
     this._teamRoster = null;
     this._teamRosterLoading = false;
