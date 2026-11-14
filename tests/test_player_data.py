@@ -24,6 +24,36 @@ class PlayerDataParserTests(unittest.TestCase):
         self.assertEqual(result["statistics"][1]["name"], "avgPoints")
         self.assertEqual(result["statistics"][1]["value"], 28.4)
 
+    def test_parses_all_six_espn_web_v3_playoff_per_game_averages(self):
+        result = parse_player_stats({
+            "filters": {"season": {"value": "2024", "options": [
+                {"value": "2024", "displayValue": "2023-24"},
+            ]}, "seasonType": {"value": "3", "displayValue": "Playoffs"}},
+            "categories": [{
+                "name": "averages", "displayName": "Postseason Averages",
+                "stats": [
+                    {"name": "avgMinutes", "abbreviation": "MIN", "displayName": "Minutes Per Game",
+                     "value": 40.2, "displayValue": "40.2"},
+                    {"name": "avgPoints", "abbreviation": "PTS", "displayName": "Points Per Game",
+                     "value": 28.9, "displayValue": "28.9"},
+                    {"name": "avgRebounds", "abbreviation": "REB", "displayName": "Rebounds Per Game",
+                     "value": 9.5, "displayValue": "9.5"},
+                    {"name": "avgAssists", "abbreviation": "AST", "displayName": "Assists Per Game",
+                     "value": 8.1, "displayValue": "8.1"},
+                    {"name": "avgSteals", "abbreviation": "STL", "displayName": "Steals Per Game",
+                     "value": 1.4, "displayValue": "1.4"},
+                    {"name": "avgBlocks", "abbreviation": "BLK", "displayName": "Blocks Per Game",
+                     "value": 0.4, "displayValue": "0.4"},
+                ],
+            }],
+        })
+        self.assertEqual(result["season_type_id"], "3")
+        self.assertEqual(
+            [row["value"] for row in result["statistics"]],
+            [40.2, 28.9, 9.5, 8.1, 1.4, 0.4],
+        )
+        self.assertEqual(result["statistics"][1]["display_value"], "28.9")
+
     def test_core_v2_empty_postseason_payload_stays_empty(self):
         result = parse_core_postseason_stats({"splits": {"categories": []}}, 2025)
         self.assertEqual(result["statistics"], [])
