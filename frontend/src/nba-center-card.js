@@ -1,6 +1,8 @@
 // NBA Center Lovelace card — reads only Home Assistant entity state. Lit is bundled locally.
 import { LitElement, css, html } from "lit";
 
+const BUILD_VERSION = "2026.11.14.1";
+
 const VIEWS = [
   { id: "home", label: "HOME" },
   { id: "scores", label: "SCORES" },
@@ -1058,7 +1060,7 @@ class NBACenterCard extends LitElement {
             ${!this._overlayLoading && !this._overlayError && !this._overlayDetails?.error && !this._overlayDetails?.teams?.length && !this._overlayDetails?.has_boxscore ? html`<section class="empty"><p>Le résumé détaillé n’est pas encore disponible pour cette rencontre.</p></section>` : ""}            </div></section></div>` : ""}
         ${this._teamOverlay ? this._teamRosterPanel() : ""}
         ${this._playerOverlay ? this._playerProfilePanel() : ""}
-        <footer class="footer"><span>NBA CENTER · ${active.label}</span><span>DATA VIA HOME ASSISTANT</span></footer>
+        <footer class="footer"><span>NBA CENTER · ${active.label}</span><span>JS ${BUILD_VERSION}</span></footer>
       </ha-card>`;
   }
 
@@ -1067,6 +1069,7 @@ class NBACenterCard extends LitElement {
 
 if (!customElements.get("nba-center-card")) customElements.define("nba-center-card", NBACenterCard);
 window.customCards = window.customCards ?? [];
+console.info(`[NBA Center] JS build ${BUILD_VERSION}`);
 if (!window.customCards.some((card) => card.type === "nba-center-card")) {
   window.customCards.push({ type: "nba-center-card", name: "NBA Center",
     description: "NBA Dark dashboard — scores, teams, players and stats", preview: true });
