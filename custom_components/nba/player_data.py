@@ -164,8 +164,16 @@ def _stat_rows(raw: dict[str, Any], season_year: int | None = None) -> list[dict
         split = {}
         values = statistics.get("values")
         if isinstance(splits, list):
-            split = next((item for item in splits if "regular" in str(_mapping(item).get("displayName", "")).lower()), splits[0] if splits else {})
-            values = _mapping(split).get("stats")
+            # Ne jamais présenter les chiffres Career ou Playoffs comme ceux
+            # de la saison régulière lorsque le split Regular Season manque.
+            split = next(
+                (
+                    item for item in splits
+                    if "regular" in str(_mapping(item).get("displayName", "")).lower()
+                ),
+                None,
+            )
+            values = _mapping(split).get("stats") if split is not None else None
         if isinstance(values, list):
             for index, value in enumerate(values):
                 name = names[index] if index < len(names) else f"stat_{index}"
