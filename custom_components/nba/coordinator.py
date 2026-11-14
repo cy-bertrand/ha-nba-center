@@ -131,9 +131,10 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except Exception as err:  # noqa: BLE001 - une panne ESPN ne doit pas effacer les données déjà affichées
             errors.append(f"scoreboard: {err}")
             games = previous.get("games", [])
-            if not previous:
-                raise UpdateFailed(f"Erreur API ESPN (scoreboard): {err}") from err
-            _LOGGER.warning("Scoreboard ESPN indisponible : conservation des données précédentes (%s)", err)
+            _LOGGER.warning(
+                "Scoreboard ESPN indisponible : démarrage en mode dégradé ou conservation des données précédentes (%s)",
+                err,
+            )
 
         try:
             standings_raw = await self._get(STANDINGS_URL)
@@ -190,9 +191,11 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "data_updated_at": dt_util.utcnow().isoformat(),
             "data_stale": bool(errors),
         }
-        if not errors:
-            self._fire_events(games)
+        if any(error.startswith("scoreboard:") for error in errors):
+            _LOGGER.warning("Événements NBA non évalués : scoreboard indisponible")
         else:
+            self._fire_events(games)
+        if errors:
             _LOGGER.warning("NBA Center utilise des données partiellement conservées : %s", "; ".join(errors))
         live = any(g.get("state") == "in" for g in games)
         self.update_interval = SCAN_INTERVAL_LIVE if live else SCAN_INTERVAL_IDLE
