@@ -103,8 +103,9 @@ assert.match(bundle, /TOP 10 · SAISON/, "bundled Players Center must show top-t
 assert.match(bundle, /this\._leaderPanel\([a-z],10\)/, "bundled Players Center must render ten players per leaderboard");
 assert.match(bundle, /opponent_abbreviation/, "bundled recent player games must use opponent abbreviations");
 
-assert.match(source, /postseasonGameCount/, "playoff per-game highlights must use the postseason games played count");
-assert.match(source, /postseasonPerGameValue/, "playoff totals must be converted to per-game averages");
+assert.match(source, /Web API v3\. On les affiche[\s\S]*directement/, "playoff highlights must use ESPN Web v3 averages directly");
+assert.match(source, /findPostseasonStat/, "playoff highlights must resolve normalized ESPN names and labels");
+assert.doesNotMatch(source, /postseasonGameCount|postseasonPerGameValue/, "frontend must not recalculate playoff per-game averages");
 assert.match(source, /postseasonDetailOrder/, "playoff detailed stats must use a stable basketball priority order");
 assert.match(source, /postseason_stats/, "player profile must receive separate playoff statistics");
 assert.match(source, /STATISTIQUES PLAYOFFS/, "player profile must display a separate postseason section");
