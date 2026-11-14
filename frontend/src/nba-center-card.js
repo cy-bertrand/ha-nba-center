@@ -1,7 +1,7 @@
 // NBA Center Lovelace card — reads only Home Assistant entity state. Lit is bundled locally.
 import { LitElement, css, html } from "lit";
 
-const BUILD_VERSION = "2026.11.14.12";
+const BUILD_VERSION = "2026.11.14.13";
 
 const VIEWS = [
   { id: "home", label: "HOME" },
@@ -389,7 +389,9 @@ class NBACenterCard extends LitElement {
       const playoffHistory = result.stats?.season_history ?? [];
       this._playerSelectedPlayoffSeason = String(playoffHistory[0]?.year ?? "");
       // Les leaders de PLAYERS ne contiennent pas la biographie : la récupérer via l’effectif ESPN.
-      const hasBio = ["age", "position", "height_cm", "weight_kg", "experience_years", "jersey", "status"].some((key) => this._playerOverlay[key] != null);
+      // Le box-score contient souvent déjà le poste et le numéro, mais pas la biographie.
+      // Compléter dès qu'une information personnelle essentielle manque.
+      const hasBio = ["age", "height_cm", "weight_kg", "experience_years", "college"].every((key) => this._playerOverlay[key] != null);
       if (!hasBio) {
         const teamAbbr = String(source.team_abbreviation ?? source.team ?? this._teamOverlay?.abbreviation ?? this._teamOverlay?.abbr ?? "").toUpperCase();
         const team = this._teamsCatalog().teams.find((item) => (source.team_id != null && String(item.id) === String(source.team_id)) || String(item.abbreviation ?? item.abbr ?? "").toUpperCase() === teamAbbr);
@@ -496,6 +498,8 @@ class NBACenterCard extends LitElement {
     // Les six indicateurs mis en évidence doivent être des moyennes par match.
     // Ne jamais retomber sur les totaux (points, rebounds, minutes, etc.).
     const quickDefinitions = [
+      ["GP", ["gamesplayed", "games", "gp"]],
+      ["GS", ["gamesstarted", "gs"]],
       ["MIN", ["avgminutes", "minutespergame", "minutes per game"]],
       ["PTS", ["avgpoints", "pointspergame", "points per game"]],
       ["REB", ["avgrebounds", "reboundspergame", "rebounds per game"]],
@@ -514,6 +518,8 @@ class NBACenterCard extends LitElement {
       postseasonStats.map((item) => [String(item.name ?? ""), item])
     );
     const postseasonQuickDefinitions = [
+      ["GP", "gamesPlayed"],
+      ["GS", "gamesStarted"],
       ["MIN", "avgMinutes"],
       ["PTS", "avgPoints"],
       ["REB", "avgRebounds"],
@@ -620,7 +626,7 @@ class NBACenterCard extends LitElement {
               </section>` : ""}
             <section class="panel player-season-panel"><div class="panel-head"><h3>STATISTIQUES DE SAISON</h3><span class="pill">${value(seasonLabel, "SAISON")}</span></div>
               ${seasonHistory.length > 1 ? html`<div class="filters player-season-picker"><label class="muted" for="player-season-select">SAISON</label><select id="player-season-select" aria-label="Choisir une saison" .value=${String(selectedSeason?.year ?? "")} @change=${(event) => { this._playerSelectedSeason = event.target.value; this.requestUpdate(); }}>${seasonHistory.map((item) => html`<option value=${String(item.year)}>${item.display_name}${seasonTeamLabel(item) ? ` · ${seasonTeamLabel(item)}` : ""}</option>`)}</select></div>` : ""}
-            <div class="player-stat-grid player-season-highlights">${quick.map(([label,item]) => html`<div><small>${label} / MATCH</small><strong>${statLabel(item)}</strong></div>`)}</div>
+            <div class="player-stat-grid player-season-highlights">${quick.map(([label,item]) => html`<div><small>${["GP","GS"].includes(label) ? (label === "GP" ? "MATCHS JOUÉS" : "MATCHS TITULAIRE") : `${label} / MATCH`}</small><strong>${statLabel(item)}</strong></div>`)}</div>
               ${stats.length ? html`<div class="table-wrap"><table><thead><tr><th>STATISTIQUE</th><th>VALEUR</th></tr></thead><tbody>${detailedStats.map((item) => html`<tr><td>${value(translateStat(item),item.name)}</td><td>${value(item.display_value ?? item.value)}</td></tr>`)}</tbody></table></div>` : html`<p class="muted">Aucune autre statistique disponible pour cette saison.</p>`}
             </section>
             <section class="panel player-postseason-panel">
@@ -628,7 +634,7 @@ class NBACenterCard extends LitElement {
               <p class="muted">Moyennes fournies par ESPN Web API v3. On les affiche directement, sans recalcul local.</p>
               ${seasonHistory.length ? html`<div class="filters player-season-picker"><label class="muted" for="player-playoff-season-select">SAISON PLAYOFFS</label><select id="player-playoff-season-select" aria-label="Choisir la saison des playoffs" .value=${String(this._playerSelectedPlayoffSeason || seasonHistory[0]?.year || "")} @change=${(event) => this._loadPlayerPlayoffSeason(player.id, Number(event.target.value))}>${seasonHistory.map((item) => html`<option value=${String(item.year)}>${item.display_name}${seasonTeamLabel(item) ? ` · ${seasonTeamLabel(item)}` : ""}</option>`)}</select>${this._playerPlayoffLoading ? html`<span class="muted">Chargement…</span>` : ""}</div>` : ""}
               ${postseasonStats.length ? html`
-                <div class="player-stat-grid player-season-highlights">${postseasonQuick.map(([label,item]) => html`<div><small>${label} / MATCH</small><strong>${value(item)}</strong></div>`)}</div>
+                <div class="player-stat-grid player-season-highlights">${postseasonQuick.map(([label,item]) => html`<div><small>${["GP","GS"].includes(label) ? (label === "GP" ? "MATCHS JOUÉS" : "MATCHS TITULAIRE") : `${label} / MATCH`}</small><strong>${value(item)}</strong></div>`)}</div>
                 ${postseasonDetailed.length ? html`<div class="table-wrap"><table><thead><tr><th>STATISTIQUE</th><th>VALEUR</th></tr></thead><tbody>${postseasonDetailed.map((item) => html`<tr><td>${value(translateStat(item),item.name)}</td><td>${value(item.display_value ?? item.value)}</td></tr>`)}</tbody></table></div>` : ""}
               ` : html`<p class="muted">Les statistiques des playoffs sont récupérées séparément. Elles apparaîtront ici dès qu'ESPN publiera les données de postseason pour cette saison.</p>`}
             </section>
@@ -883,6 +889,23 @@ class NBACenterCard extends LitElement {
       if (request === this._overlayRequest) this._overlayLoading = false;
     }
   }
+  async _refreshGameDetails() {
+    const gameId = this._overlayGame?.id;
+    if (!gameId || this._overlayLoading) return;
+    const request = ++this._overlayRequest;
+    this._overlayLoading = true;
+    this._overlayError = "";
+    try {
+      const details = await this.hass.callWS({ type: "nba/game_details", game_id: String(gameId), force: true });
+      if (request !== this._overlayRequest || String(this._overlayGame?.id) !== String(gameId)) return;
+      this._overlayDetails = details;
+    } catch (err) {
+      if (request === this._overlayRequest) this._overlayError = err?.message ?? "Actualisation du match impossible.";
+    } finally {
+      if (request === this._overlayRequest) this._overlayLoading = false;
+    }
+  }
+
   _closeOverlay() {
     this._overlayRequest += 1;
     this._overlayGame = null; this._overlayDetails = null; this._overlayLoading = false; this._overlayError = "";
@@ -975,11 +998,12 @@ class NBACenterCard extends LitElement {
     if (!plays.length) return "";
     const filtered = this._scoringOnly ? plays.filter((play) => play.scoring) : plays;
     // The backend already normalizes ESPN sequence numbers chronologically.
-    // Keep that order in the timeline and show the latest 12 events by default.
-    const rows = this._showAllPlays ? filtered : filtered.slice(-12);
+    // The latest action is shown first; the default view keeps the 12 most recent events.
+    const chronologicalRows = this._showAllPlays ? filtered : filtered.slice(-12);
+    const rows = [...chronologicalRows].reverse();
     return html`
       <section class="panel playbyplay-panel">
-        <div class="panel-head"><h3>FIL DU MATCH</h3><span class="pill">${plays.length} ACTIONS</span></div>
+        <div class="panel-head"><h3>FIL DU MATCH</h3><div class="overlay-actions"><span class="pill">${plays.length} ACTIONS</span><button class="overlay-refresh" type="button" ?disabled=${this._overlayLoading} @click=${() => this._refreshGameDetails()}>${this._overlayLoading ? "ACTUALISATION…" : "↻ ACTUALISER"}</button></div></div>
         <div class="play-controls">
           <button class="chip" aria-pressed=${!this._scoringOnly} @click=${() => { this._scoringOnly = false; this._showAllPlays = false; }}>TOUTES</button>
           <button class="chip" aria-pressed=${this._scoringOnly} @click=${() => { this._scoringOnly = true; this._showAllPlays = false; }}>POINTS SEULEMENT</button>
