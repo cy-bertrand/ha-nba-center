@@ -20,6 +20,30 @@ class PlayerDataParserTests(unittest.TestCase):
             [None, None, None, "12.5"],
         )
 
+    def test_non_finite_and_boolean_display_values_are_hidden_in_all_shapes(self):
+        result = parse_player_stats({"categories": [{
+            "stats": [
+                {"name": "avgPoints", "value": "NaN", "displayValue": "NaN"},
+                {"name": "avgRebounds", "value": True, "displayValue": "True"},
+                {"name": "avgAssists", "value": 7.5, "displayValue": "7.5"},
+            ],
+        }]})
+        self.assertEqual(
+            [row["display_value"] for row in result["statistics"]],
+            [None, None, "7.5"],
+        )
+
+        postseason = parse_core_postseason_stats({"splits": {"categories": [{
+            "stats": [
+                {"name": "avgPoints", "value": "Infinity", "displayValue": "Infinity"},
+                {"name": "avgRebounds", "value": 8.2, "displayValue": "8.2"},
+            ],
+        }]}}, 2025)
+        self.assertEqual(
+            [row["display_value"] for row in postseason["statistics"]],
+            [None, "8.2"],
+        )
+
     def test_parses_core_v2_historical_postseason_statistics(self):
         result = parse_core_postseason_stats({
             "athlete": {"id": "2544", "displayName": "LeBron James"},
