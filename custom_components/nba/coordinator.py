@@ -425,18 +425,41 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     @staticmethod
     def _parse_standings(raw: dict) -> dict[str, list[dict]]:
+        """Parse les classements en ignorant les lignes ESPN mal formées."""
         result: dict[str, list[dict]] = {}
-        for conf in raw.get("children", []):
+        children = raw.get("children") if isinstance(raw, dict) else None
+        if not isinstance(children, list):
+            return result
+        for conf in children:
+            if not isinstance(conf, dict):
+                continue
+            conf_name = conf.get("name")
+            standings = conf.get("standings")
+            entries = standings.get("entries") if isinstance(standings, dict) else None
+            if not isinstance(conf_name, str) or not conf_name or not isinstance(entries, list):
+                continue
             rows = []
-            for entry in conf.get("standings", {}).get("entries", []):
-                stats = {s["name"]: s.get("displayValue") for s in entry.get("stats", [])}
+            for entry in entries:
+                if not isinstance(entry, dict) or not isinstance(entry.get("team"), dict):
+                    continue
                 team = entry["team"]
+                team_id = team.get("id")
+                if team_id is None:
+                    continue
+                raw_stats = entry.get("stats")
+                stats = {
+                    item["name"]: item.get("displayValue")
+                    for item in raw_stats
+                    if isinstance(item, dict) and isinstance(item.get("name"), str)
+                } if isinstance(raw_stats, list) else {}
+                logos = team.get("logos")
+                logo = logos[0].get("href") if isinstance(logos, list) and logos and isinstance(logos[0], dict) else None
                 rows.append(
                     {
-                        "team_id": str(team["id"]),
-                        "team": team["displayName"],
-                        "abbr": team["abbreviation"],
-                        "logo": (team.get("logos") or [{}])[0].get("href"),
+                        "team_id": str(team_id),
+                        "team": team.get("displayName") or team.get("name") or str(team_id),
+                        "abbr": team.get("abbreviation"),
+                        "logo": logo,
                         "wins": stats.get("wins"),
                         "losses": stats.get("losses"),
                         "pct": stats.get("winPercent"),
@@ -445,8 +468,8 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
                         "rank": _to_int(stats.get("playoffSeed")),
                     }
                 )
-            rows.sort(key=lambda r: (r["rank"] == 0, r["rank"]))
-            result[conf["name"]] = rows
+            rows.sort(key=lambda row: (row["rank"] == 0, row["rank"]))
+            result[conf_name] = rows
         return result
 
     def _parse_team(self, team_id: str, schedule: dict, today_games: list[dict]) -> dict[str, Any]:
