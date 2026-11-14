@@ -608,8 +608,12 @@ def apply_boxscore_player(game: dict[str, Any], player: dict[str, Any]) -> bool:
     appliquées ; ce résultat alimente le compteur d'enrichissement affiché.
     """
     boxscore_stats = player.get("stats_by_key") or player.get("stats")
-    if isinstance(boxscore_stats, dict) and boxscore_stats:
-        game["stats"] = boxscore_stats
+    usable_stats = (
+        {key: value for key, value in boxscore_stats.items() if value is not None and value != ""}
+        if isinstance(boxscore_stats, dict) else {}
+    )
+    if usable_stats:
+        game["stats"] = usable_stats
         enriched = True
     else:
         enriched = False
