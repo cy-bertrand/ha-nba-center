@@ -1,7 +1,7 @@
 // NBA Center Lovelace card — reads only Home Assistant entity state. Lit is bundled locally.
 import { LitElement, css, html } from "lit";
 
-const BUILD_VERSION = "2026.11.14.3";
+const BUILD_VERSION = "2026.11.14.4";
 
 const VIEWS = [
   { id: "home", label: "HOME" },
@@ -139,6 +139,9 @@ class NBACenterCard extends LitElement {
     .player{min-width:0;font-size:11px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .player small{display:block;color:#8f9db2;font-size:9px;margin-top:3px;font-weight:500}
     .stat{color:#f2c45f;font-size:13px;font-weight:900;font-variant-numeric:tabular-nums}
+    .standing-team-button{display:inline-flex;align-items:center;gap:7px;padding:2px 4px;margin:-2px 0;border:0;border-radius:6px;background:transparent;color:inherit;font:inherit;font-weight:800;cursor:pointer;text-align:left}
+    .standing-team-button:hover{background:#1b2a40;color:#f2c45f}
+    .standing-team-button:focus-visible{outline:2px solid #f2c45f;outline-offset:2px}
     .table-wrap{overflow-x:auto}
     table{width:100%;border-collapse:collapse;font-size:10px;white-space:nowrap}
     th{text-align:left;color:#8190a7;font-size:9px;letter-spacing:.08em;padding:8px 7px;border-bottom:1px solid #314158}
@@ -908,6 +911,18 @@ class NBACenterCard extends LitElement {
       </section>`;
   }
 
+  _openStandingTeam(row) {
+    if (!row?.team_id) return;
+    const team = this._teamsCatalog().teams.find((item) => String(item.id) === String(row.team_id)) ?? {
+      id: row.team_id,
+      name: row.team,
+      display_name: row.team,
+      abbreviation: row.abbr,
+      logo: row.logo,
+    };
+    this._openTeam(team);
+  }
+
   _standingsTable(slug, label) {
     const rows = this._standings(slug).rows;
     return html`
@@ -916,7 +931,7 @@ class NBACenterCard extends LitElement {
         ${rows.length ? html`<div class="table-wrap"><table>
           <thead><tr><th>#</th><th>ÉQUIPE</th><th>V</th><th>D</th><th>%</th><th>GB</th></tr></thead>
           <tbody>${rows.slice(0,15).map((r,i) => html`
-            <tr><td>${value(r.rank,i+1)}</td><td>${value(r.abbr,r.team)}</td><td>${value(r.wins)}</td>
+            <tr><td>${value(r.rank,i+1)}</td><td><button class="standing-team-button" type="button" ?disabled=${!r.team_id} @click=${() => this._openStandingTeam(r)}>${r.logo ? html`<img src=${r.logo} alt="" loading="lazy">` : ""}<span>${value(r.abbr,r.team)}</span></button></td><td>${value(r.wins)}</td>
             <td>${value(r.losses)}</td><td>${value(r.pct)}</td><td>${value(r.gb)}</td></tr>`)}</tbody>
         </table></div>` : html`<p class="muted">Classement indisponible.</p>`}
       </section>`;
