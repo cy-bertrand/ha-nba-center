@@ -496,33 +496,40 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     suffix = int(parts[1])
                     season_year = suffix if suffix > 99 else (int(parts[0]) // 100) * 100 + suffix
             if season_year:
+                # Core v2 est plus adapté aux statistiques historiques par saison :
+                # /seasons/{année de fin}/types/3/athletes/{id}/statistics/
+                core_url = (
+                    "https://sports.core.api.espn.com/v2/sports/basketball/leagues/nba/"
+                    f"seasons/{season_year}/types/3/athletes/{player_id}/statistics/"
+                )
                 try:
-                    postseason_raw = await self._get(
-                        PLAYER_DATA_URL.format(player_id=player_id, resource="stats"),
-                        params={"season": season_year, "seasontype": 3},
-                    )
-                    parsed_postseason = parse_player_stats(postseason_raw)
-                    if parsed_postseason.get("season_type_id") == "3":
-                        returned_season = str(parsed_postseason.get("season") or "")
-                        # ESPN attend l'année de fin : 2023 correspond à 2022-23.
-                        # Comparer le libellé complet sur son année de fin évite le décalage d'un an.
-                        if season_matches_espn_year(returned_season, season_year):
-                            postseason_stats = parsed_postseason
-                        else:
-                            _LOGGER.debug(
-                                "ESPN a renvoyé les playoffs %s au lieu de %s pour le joueur %s",
-                                returned_season, season_year, player_id,
-                            )
-                    else:
-                        _LOGGER.debug(
-                            "ESPN n'a pas confirmé le split playoffs pour le joueur %s / saison %s",
-                            player_id, season_year,
-                        )
-                except Exception as err:  # noqa: BLE001 - les playoffs ne bloquent jamais le profil régulier
+                    core_raw = await self._get(core_url)
+                    postseason_stats = parse_core_postseason_stats(core_raw, season_year)
+                    if not postseason_stats.get("statistics"):
+                        postseason_stats = {}
+                except Exception as core_err:  # noqa: BLE001 - fallback Web v3 si Core v2 ne répond pas
                     _LOGGER.debug(
-                        "Statistiques playoffs ESPN indisponibles pour le joueur %s / saison %s: %s",
-                        player_id, season_year, err,
+                        "Core v2 playoffs indisponible pour le joueur %s / saison %s: %s",
+                        player_id, season_year, core_err,
                     )
+                # Le Web v3 reste une solution de repli, notamment si Core v2
+                # ne fournit pas de statistiques pour un joueur/saison donné.
+                if not postseason_stats:
+                    try:
+                        postseason_raw = await self._get(
+                            PLAYER_DATA_URL.format(player_id=player_id, resource="stats"),
+                            params={"season": season_year, "seasontype": 3},
+                        )
+                        parsed_postseason = parse_player_stats(postseason_raw)
+                        if (parsed_postseason.get("season_type_id") == "3"
+                                and season_matches_espn_year(str(parsed_postseason.get("season") or ""), season_year)
+                                and parsed_postseason.get("statistics")):
+                            postseason_stats = parsed_postseason
+                    except Exception as err:  # noqa: BLE001 - les playoffs ne bloquent jamais le profil régulier
+                        _LOGGER.debug(
+                            "Web v3 playoffs indisponible pour le joueur %s / saison %s: %s",
+                            player_id, season_year, err,
+                        )
 
             postseason_gamelog: dict[str, Any] = {"games": [], "count": 0, "boxscore_count": 0}
             if postseason_stats and season_year:
