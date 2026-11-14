@@ -20,6 +20,13 @@ assert.match(source, /STANDINGS CENTER/, "unified standings center must be rende
 assert.match(source, /nba\/playoff_bracket/, "playoffs view must use the Home Assistant websocket service");
 assert.match(source, /TABLEAU DES PLAYOFFS/, "playoff bracket must be embedded in standings center");
 assert.match(source, /_playoffSeriesCard\(series\)/, "playoff series must have a dedicated card renderer");
+assert.match(source, /_openPlayoffSeries\(series\)/, "playoff series cards must open their game list");
+assert.match(source, /_playoffSeriesOverlay\(\)/, "playoff series must have a dedicated match list overlay");
+assert.match(source, /nba\/game_details/, "playoff game selection must reuse Match Center details");
+assert.match(source, /playoff-game-row/, "playoff series overlay must list individual games");
+assert.match(source, /playoff-series-button/, "playoff series cards must be visibly interactive");
+assert.match(source, /@media\(max-width:760px\)\{\.playoff-round \.grid\{grid-template-columns:1fr\}\}/, "playoff series must use a single column on mobile");
+
 assert.match(source, /series\.unknown_results \? "≥" : ""/, "playoff wins must be marked as minimum counts when results are unconfirmed");
 assert.match(source, /_dataStatus\(\)/, "card must read the diagnostic sensor");
 assert.match(source, /dataStatus\?\.state !== "À jour"/, "unknown diagnostic states must be treated as degraded");
