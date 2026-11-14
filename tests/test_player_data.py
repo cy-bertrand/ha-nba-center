@@ -184,6 +184,21 @@ class PlayerDataParserTests(unittest.TestCase):
              "avgRebounds": 9.5, "avgAssists": 8.1, "avgSteals": 1.9, "avgBlocks": 0.4},
         )
 
+    def test_traded_player_without_aggregate_has_no_partial_season_statistics(self):
+        result = parse_player_stats({"categories": [{
+            "name": "averages", "displayName": "Regular Season Averages",
+            "names": ["gamesPlayed", "avgPoints"], "labels": ["GP", "PTS"],
+            "statistics": [
+                {"season": {"year": 2025, "displayName": "2024-25"},
+                 "teamId": "6", "teamSlug": "dallas-mavericks",
+                 "stats": ["22", "28.1"]},
+                {"season": {"year": 2025, "displayName": "2024-25"},
+                 "teamId": "13", "teamSlug": "los-angeles-lakers",
+                 "stats": ["28", "28.2"]},
+            ],
+        }]}, season_year=2025)
+        self.assertEqual(result["statistics"], [])
+
     def test_traded_player_uses_espn_season_totals_not_first_team_split(self):
         raw = {"categories": [
             {
