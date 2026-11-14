@@ -78,7 +78,7 @@ class CompletedSummaryFixtureTests(unittest.TestCase):
                 ("assists", "assists"), ("turnovers", "turnovers"),
                 ("steals", "steals"), ("blocks", "blocks"),
             ):
-                total = sum(int(player["stats_by_key"][stat_key] or 0) for player in players)
+                total = sum(int(player["stats_by_key"].get(stat_key) or 0) for player in players)
                 self.assertEqual(total, int(team_stats[abbr][team_key]))
         # ESPN reports team turnovers separately from player turnovers.
         self.assertEqual(team_stats["LAL"]["totalTurnovers"], "18")
@@ -87,7 +87,7 @@ class CompletedSummaryFixtureTests(unittest.TestCase):
         # preserve both values instead of silently recalculating either one.
         self.assertEqual(team_stats["LAL"]["fouls"], "24")
         lakers = player_blocks["LAL"]["players"]
-        player_fouls = sum(int(player["stats_by_key"]["fouls"] or 0) for player in lakers)
+        player_fouls = sum(int(player["stats_by_key"].get("fouls") or 0) for player in lakers)
         self.assertEqual(player_fouls, 25)
 
     def test_full_play_by_play_volume_and_event_categories(self):
