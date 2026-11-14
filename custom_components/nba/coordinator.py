@@ -163,8 +163,8 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     }
                 _LOGGER.warning("Calendrier ESPN indisponible pour %s : conservation des données précédentes (%s)", team_id, err)
 
-        await self._update_leaders()
-        await self._update_teams_catalog()
+        errors.extend(await self._update_leaders())
+        errors.extend(await self._update_teams_catalog())
 
         # Enrichit les matchs récents sans rendre le rafraîchissement global dépendant
         # de la disponibilité de l'endpoint summary.
@@ -201,7 +201,7 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.update_interval = SCAN_INTERVAL_LIVE if live else SCAN_INTERVAL_IDLE
         return data
 
-    async def _update_teams_catalog(self) -> None:
+    async def _update_teams_catalog(self) -> list[str]:
         """Actualise le catalogue des franchises au maximum une fois par jour.
 
         Une réponse vide/incomplète ne remplace pas un catalogue complet déjà
@@ -209,7 +209,7 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """
         now = dt_util.utcnow()
         if self._teams_catalog_fetched and (now - self._teams_catalog_fetched).total_seconds() < 86400:
-            return
+            return []
         try:
             raw = await self._get(TEAMS_URL)
             parsed = parse_teams_catalog(raw)
@@ -220,20 +220,24 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     "Catalogue ESPN incomplet (%s/30) : conservation du catalogue complet en cache",
                     parsed["count"],
                 )
-                return
+                return [f"teams_catalog: catalogue incomplet ({parsed['count']}/30), cache complet conservé"]
             self._teams_catalog = parsed
             self._teams_catalog_fetched = now
             if not parsed["complete"]:
                 _LOGGER.warning("Catalogue ESPN incomplet : %s/30 franchises", parsed["count"])
+                return [f"teams_catalog: catalogue incomplet ({parsed['count']}/30)"]
+            return []
         except Exception as err:  # noqa: BLE001 - cette ressource ne bloque pas le coordinator
             _LOGGER.warning("Catalogue des franchises NBA indisponible : %s", err)
+            return [f"teams_catalog: {err}"]
 
-    async def _update_leaders(self) -> None:
+    async def _update_leaders(self) -> list[str]:
         """Actualise chaque classement indépendamment sans effacer les données valides."""
         now = dt_util.utcnow()
         regular = dict(self._leaders)
         postseason = dict(self._postseason_leaders)
         season_year = now.year + (1 if now.month >= 10 else 0)
+        errors: list[str] = []
 
         for key, (_label, sort) in LEADER_CATEGORIES.items():
             for season_type, target, cache in (
@@ -252,18 +256,27 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 }
                 try:
                     raw = await self._get(LEADERS_URL, params=params)
+                    expected = {
+                        "points": "avgPoints", "rebounds": "avgRebounds",
+                        "assists": "avgAssists", "steals": "avgSteals",
+                        "blocks": "avgBlocks",
+                    }[key]
+                    categories = raw.get("categories")
+                    if not isinstance(categories, list) or not any(
+                        isinstance(category, dict)
+                        and isinstance(category.get("names"), list)
+                        and expected in category["names"]
+                        for category in categories
+                    ) or not isinstance(raw.get("athletes"), list):
+                        raise ValueError(f"structure ESPN invalide ou statistique {expected} absente")
                     parsed = self._parse_leaders(raw, key)
-                    # Chaque réponse valide possède son propre délai de rafraîchissement.
-                    # Une catégorie vide ne remplace jamais ses dernières données connues.
                     self._leaders_fetched[cache_key] = now
                     if parsed:
                         target[key] = parsed
                     elif key in cache:
-                        _LOGGER.debug(
-                            "Classement ESPN vide/inexploitable (%s) ; cache conservé",
-                            cache_key,
-                        )
+                        _LOGGER.debug("Classement ESPN vide (%s) ; cache conservé", cache_key)
                 except Exception as err:  # noqa: BLE001
+                    errors.append(f"leaders {cache_key}: {err}")
                     _LOGGER.warning(
                         "Classement ESPN indisponible (%s) ; cache conservé : %s",
                         cache_key, err,
@@ -271,6 +284,7 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         self._leaders = regular
         self._postseason_leaders = postseason
+        return errors
 
     @staticmethod
     def _parse_leaders(raw: dict, key: str) -> list[dict]:
