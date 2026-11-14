@@ -26,6 +26,9 @@
           "notify_end": "Événement à la fin des matchs"
         }
       }
+    },
+    "error": {
+      "cannot_connect": "Impossible de joindre ESPN ; les équipes enregistrées ou en cache sont proposées."
     }
   }
 }
