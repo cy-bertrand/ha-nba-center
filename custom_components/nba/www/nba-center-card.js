@@ -368,7 +368,7 @@ var F=globalThis,V=F.ShadowRoot&&(F.ShadyCSS===void 0||F.ShadyCSS.nativeShadow)&
       <div class="section-kicker" style="margin-top:18px">PLAYOFFS</div>
       <div class="grid">${Object.keys(B).map(e=>this._leaderPanel(e,10,!0))}</div>`}_statsView(){return r`<div class="head"><h2>STATS CENTER</h2><span class="pill">SAISON</span></div>
       <div class="grid">${this._standingsTable("east","EASTERN CONFERENCE")}${this._standingsTable("west","WESTERN CONFERENCE")}</div>
-      <div class="grid" style="margin-top:12px">${Object.keys(B).map(e=>this._leaderPanel(e,5))}</div>`}render(){let e=ne.find(i=>i.id===this._active)??ne[0],t=this._dataStatus(),s=t?.state==="D\xE9grad\xE9"||t?.attributes?.stale,a={home:()=>this._homeView(),scores:()=>this._scoresView(),teams:()=>this._teamsView(),players:()=>this._playersView(),stats:()=>this._statsView(),playoffs:()=>this._playoffsView()};return r`
+      <div class="grid" style="margin-top:12px">${Object.keys(B).map(e=>this._leaderPanel(e,5))}</div>`}render(){let e=ne.find(i=>i.id===this._active)??ne[0],t=this._dataStatus(),s=t?.state!=="\xC0 jour"||t?.attributes?.stale,a={home:()=>this._homeView(),scores:()=>this._scoresView(),teams:()=>this._teamsView(),players:()=>this._playersView(),stats:()=>this._statsView(),playoffs:()=>this._playoffsView()};return r`
       <ha-card class="shell">
         <header class="hero"><div class="eyebrow">THE ASSOCIATION · HOME ASSISTANT</div>
           <h1>${this._config.title}</h1><div class="subtitle">${this._config.subtitle}</div>
