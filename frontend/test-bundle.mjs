@@ -29,7 +29,7 @@ assert.match(source, /winnerSide === "away" \? html/, "playoff game winner must 
 assert.match(source, /this\._standingPhase === "playoffs" \? 2008 : 2002/, "regular standings must retain history back to 2002-03");
 assert.match(source, /this\._standingPhase === "playoffs" \? 2008 : 2002/, "playoff season selector must start at 2007-08 while regular standings start at 2002-03");
 assert.match(source, /this\._standingSeason < 2008/, "switching to playoffs from an earlier regular season must select the first supported playoff season");
-assert.match(source, /2026\.11\.14\.10/, "build version must be bumped for historical playoff selector range");
+assert.match(source, /2026\.11\.14\.11/, "build version must be bumped for historical playoff selector range");
 
 
 assert.match(source, /playoff-series-button/, "playoff series cards must be visibly interactive");
@@ -84,7 +84,7 @@ assert.match(source, /player\.ejected/, "player ejection metadata must be render
 assert.match(source, /const preferred = \["MIN", "PTS", "FG"/, "player points must appear immediately after minutes in the box score");
 assert.match(source, /boxscore-player-link/, "player names in Match Center box scores must be interactive");
 assert.match(source, /_openPlayer\(player\.id, \{ \.\.\.player, player: player\.name, team_id: block\.team_id/, "clicking a box-score player must open the profile with the player's franchise context");
-assert.match(source, /2026\.11\.14\.10/, "build version must be bumped for clickable box-score player profiles");
+assert.match(source, /2026\.11\.14\.11/, "build version must be bumped for clickable box-score player profiles");
 
 assert.match(bundle, /player-table/, "responsive player statistics table must be included");
 assert.match(bundle, /type="date"/, "calendar date picker must be included");
