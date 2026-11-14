@@ -19,6 +19,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     entities: list[SensorEntity] = [
         NBATodayGamesSensor(coordinator),
         NBATeamsCatalogSensor(coordinator),
+        NBADataStatusSensor(coordinator),
         NBAStandingsSensor(coordinator, "Eastern Conference", "east"),
         NBAStandingsSensor(coordinator, "Western Conference", "west"),
     ]
@@ -226,4 +227,32 @@ class NBATeamsCatalogSensor(NBABaseSensor):
             "count": catalog.get("count", 0),
             "expected_count": catalog.get("expected_count", 30),
             "complete": catalog.get("complete", False),
+        }
+
+
+
+class NBADataStatusSensor(NBABaseSensor):
+    """État global de fraîcheur des données récupérées depuis ESPN."""
+
+    _attr_name = "État des données"
+    _attr_icon = "mdi:database-check"
+
+    def __init__(self, coordinator: NBACoordinator) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{DOMAIN}_data_status"
+
+    @property
+    def native_value(self) -> str:
+        data = self.coordinator.data or {}
+        return "Dégradé" if data.get("data_stale") or data.get("data_errors") else "À jour"
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        data = self.coordinator.data or {}
+        errors = data.get("data_errors") or []
+        return {
+            "stale": bool(data.get("data_stale")),
+            "errors": errors,
+            "error_count": len(errors),
+            "last_check": data.get("data_updated_at"),
         }
