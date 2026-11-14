@@ -275,14 +275,26 @@ def parse_player_stats(raw: dict[str, Any], season_year: int | None = None) -> d
     if season_year is not None:
         # Le Web API v3 renvoie un historique pluriannuel : le filtre de requête
         # ne garantit pas que statistics[] ne contienne que l'année demandée.
+        # Le libellé doit provenir de l'entrée correspondant exactement à cette
+        # année, jamais de la première saison rencontrée dans l'historique.
+        requested_season_name = None
         for category in raw.get("categories", []) if isinstance(raw.get("categories"), list) else []:
-            for entry in _mapping(category).get("statistics", []) if isinstance(_mapping(category).get("statistics"), list) else []:
-                entry_season = _mapping(_mapping(entry).get("season"))
-                if _number(entry_season.get("year")) == season_year:
-                    season_name = _text(entry_season.get("displayName")) or str(season_year)
+            entries = _mapping(category).get("statistics")
+            if not isinstance(entries, list):
+                continue
+            matching_entry = next(
+                (
+                    _mapping(entry)
+                    for entry in entries
+                    if _number(_mapping(_mapping(entry).get("season")).get("year")) == season_year
+                ),
+                None,
+            )
+            if matching_entry is not None:
+                requested_season_name = _text(_mapping(matching_entry.get("season")).get("displayName"))
+                if requested_season_name:
                     break
-            if season_name and season_name != _text(season.get("displayName") or raw.get("seasonDisplayName")):
-                break
+        season_name = requested_season_name or str(season_year)
     if not season_name:
         for filter_item in _filter_items(raw):
             item = _mapping(filter_item)
