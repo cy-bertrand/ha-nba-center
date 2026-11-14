@@ -470,12 +470,52 @@ class NBACenterCard extends LitElement {
     const postseasonStat = (...names) => postseasonStats.find((item) =>
       names.includes(String(item.name ?? "").toLowerCase()) || names.includes(String(item.label ?? "").toLowerCase())
     );
-    const postseasonQuick = quickDefinitions.map(([label, aliases]) => [label, postseasonStat(...aliases)]);
-    const postseasonHighlighted = new Set(quickDefinitions.flatMap(([, aliases]) => aliases));
-    const postseasonDetailed = postseasonStats.filter((item) =>
-      !postseasonHighlighted.has(String(item.name ?? "").toLowerCase())
-      && !postseasonHighlighted.has(String(item.label ?? "").toLowerCase())
-    );
+    const postseasonGamesPlayed = postseasonStat("gamesplayed", "games", "gp");
+    const postseasonGameCount = Number(postseasonGamesPlayed?.value ?? postseasonGamesPlayed?.display_value);
+    const postseasonPerGameValue = (item) => {
+      if (!item) return "—";
+      const key = String(item.name ?? "").toLowerCase();
+      // Les noms avg*/pergame sont déjà des moyennes. Les autres champs
+      // (minutes, points, rebounds...) sont des totaux Core v2.
+      if (key.startsWith("avg") || key.includes("pergame") || key.includes("per game")) {
+        return item.display_value ?? item.value ?? "—";
+      }
+      const total = Number(item.value ?? item.display_value);
+      if (!Number.isFinite(total) || !Number.isFinite(postseasonGameCount) || postseasonGameCount <= 0) {
+        return item.display_value ?? item.value ?? "—";
+      }
+      const average = total / postseasonGameCount;
+      return key === "minutes" || key === "avgminutes" ? average.toFixed(1) : average.toFixed(1);
+    };
+    const postseasonQuick = quickDefinitions.map(([label, aliases]) => [
+      label,
+      postseasonPerGameValue(postseasonStat(...aliases)),
+    ]);
+    const postseasonHighlighted = new Set([
+      ...quickDefinitions.flatMap(([, aliases]) => aliases),
+      "gamesplayed", "games", "gp",
+    ]);
+    const postseasonDetailOrder = [
+      "gamesstarted", "fieldgoalsmade", "fieldgoalsattempted", "fieldgoalsmadeattempted",
+      "fieldgoalpercentage", "threepointersmade", "threepointersattempted",
+      "threepointfieldgoalsmade", "threepointfieldgoalsattempted", "threepointfieldgoalpercentage",
+      "freethrowsmade", "freethrowsattempted", "freethrowpercentage",
+      "offensiverebounds", "defensiverebounds", "rebounds",
+      "assists", "steals", "blocks", "turnovers", "assisttoturnoverratio",
+      "personalfouls", "fouls", "technicalfouls", "flagrantfouls",
+      "doubledouble", "tripledouble", "disqualifications", "ejections",
+    ];
+    const postseasonDetailed = postseasonStats
+      .filter((item) => !postseasonHighlighted.has(String(item.name ?? "").toLowerCase())
+        && !postseasonHighlighted.has(String(item.label ?? "").toLowerCase()))
+      .sort((a, b) => {
+        const rank = (item) => {
+          const key = String(item.name ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
+          const index = postseasonDetailOrder.indexOf(key);
+          return index < 0 ? 1000 : index;
+        };
+        return rank(a) - rank(b) || String(a.label ?? a.name).localeCompare(String(b.label ?? b.name), "fr");
+      });
     const highlightedNames = new Set(quickDefinitions.flatMap(([, aliases]) => aliases));
     const detailedStats = stats.filter((item) => !highlightedNames.has(String(item.name ?? "").toLowerCase()) && !highlightedNames.has(String(item.label ?? "").toLowerCase()));
     const statLabel = (item) => item?.display_value ?? (item?.value == null ? "—" : item.value);
