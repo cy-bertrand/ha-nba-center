@@ -252,7 +252,7 @@ class NBADataStatusSensor(NBABaseSensor):
         errors = data.get("data_errors") or []
         return {
             "stale": bool(data.get("data_stale")),
-            "scope": "scoreboard, standings et calendriers des équipes favorites",
+            "scope": "scoreboard, standings, calendriers favoris, classements et catalogue des équipes",
             "errors": errors,
             "error_count": len(errors),
             "last_check": data.get("data_updated_at"),
