@@ -112,7 +112,7 @@ def _stat_rows(raw: dict[str, Any], season_year: int | None = None) -> list[dict
                         "label": _text(displays[index] if index < len(displays) else None)
                             or _text(labels[index] if index < len(labels) else None) or name,
                         "value": _number(value),
-                        "display_value": _text(value),
+                        "display_value": _display_text(value),
                         "category": _text(block.get("displayName") or block.get("name")),
                     })
                 continue
@@ -126,7 +126,7 @@ def _stat_rows(raw: dict[str, Any], season_year: int | None = None) -> list[dict
                         "label": _text(displays[index] if index < len(displays) else None)
                             or _text(labels[index] if index < len(labels) else None) or str(name),
                         "value": _number(values[index]),
-                        "display_value": _text(values[index]),
+                        "display_value": _display_text(values[index]),
                         "category": _text(block.get("displayName") or block.get("name")),
                     })
 
@@ -149,7 +149,7 @@ def _stat_rows(raw: dict[str, Any], season_year: int | None = None) -> list[dict
                     "label": _text(displays[index] if index < len(displays) else None)
                         or _text(labels[index] if index < len(labels) else None) or str(name),
                     "value": _number(value),
-                    "display_value": _text(value),
+                    "display_value": _display_text(value),
                     "category": _text(_mapping(split).get("displayName")) or "Saison",
                 })
     return rows
@@ -215,7 +215,7 @@ def _overview_splits(raw: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:
                 "label": _text(displays[index] if index < len(displays) else None)
                     or _text(labels[index] if index < len(labels) else None) or str(name),
                 "value": _number(value),
-                "display_value": _text(value),
+                "display_value": _display_text(value),
             })
         result[split_name.lower().replace(" ", "_")] = rows
     return result
@@ -278,7 +278,7 @@ def _season_history(raw: dict[str, Any]) -> list[dict[str, Any]]:
                     "label": _text(displays[index] if index < len(displays) else None)
                         or _text(labels[index] if index < len(labels) else None) or name,
                     "value": _number(value),
-                    "display_value": _text(value),
+                    "display_value": _display_text(value),
                     "category": _text(block.get("displayName") or block.get("name")),
                 })
     return sorted(seasons.values(), key=lambda item: str(item["year"]), reverse=True)
