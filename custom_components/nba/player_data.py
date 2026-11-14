@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from typing import Any
+import math
 
 
 def _mapping(value: Any) -> dict[str, Any]:
@@ -19,10 +20,12 @@ def _number(value: Any) -> int | float | None:
     if isinstance(value, bool):
         return None
     if isinstance(value, (int, float)):
-        return value
+        return value if math.isfinite(value) else None
     if isinstance(value, str):
         try:
             parsed = float(value.replace(",", ""))
+            if not math.isfinite(parsed):
+                return None
             return int(parsed) if parsed.is_integer() else parsed
         except ValueError:
             return None
