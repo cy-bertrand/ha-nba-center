@@ -893,7 +893,7 @@ class NBACenterCard extends LitElement {
         ${team.recent?.length ? html`
           <div class="muted" style="margin-top:10px">FORME RÉCENTE</div>
           <div class="recent">${team.recent.slice(0,5).map((game) => html`
-            <span class="form-chip ${game.result === "V" ? "win" : "loss"}">
+            <span class="form-chip ${game.result === "V" ? "win" : game.result === "D" ? "loss" : "unknown"}">
               <strong>${value(game.result)}</strong><span>${value(game.opp_abbr)}</span>
               <span>${value(game.team_score)}–${value(game.opp_score)}</span>
             </span>`)}</div>` : ""}
