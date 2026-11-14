@@ -497,32 +497,24 @@ class NBACenterCard extends LitElement {
     const statKeys = (item) => [
       item.name, item.label, item.display_name, item.abbreviation, item.shortDisplayName,
     ].map(normalizeStatKey).filter(Boolean);
-    const findPostseasonStat = (aliases) => postseasonStats.find((item) => {
-      const keys = statKeys(item);
-      const isAverage = keys.some((key) => key.startsWith("avg") || key.includes("pergame"))
-        || String(item.category ?? "").toLowerCase().includes("average")
-        || String(item.label ?? "").toLowerCase().includes("per game");
-      return isAverage && aliases.some((alias) => keys.includes(normalizeStatKey(alias)));
-    });
+    // Les six valeurs mises en évidence utilisent les mêmes lignes ESPN que
+    // le tableau détaillé : l'identifiant "name" est la seule clé de sélection.
+    const postseasonByName = Object.fromEntries(
+      postseasonStats.map((item) => [String(item.name ?? ""), item])
+    );
     const postseasonQuickDefinitions = [
-      // Core v2 peut nommer les moyennes avec les noms complets (minutes,
-      // points...) au lieu des clés Web v3 avgMinutes/avgPoints. Le filtre
-      // isAverage de findPostseasonStat empêche de confondre ces clés avec
-      // les totaux de la catégorie Postseason Totals.
-      ["MIN", ["avgminutes", "minutespergame", "minutes", "min"]],
-      ["PTS", ["avgpoints", "pointspergame", "points", "pts"]],
-      ["REB", ["avgrebounds", "reboundspergame", "rebounds", "reb"]],
-      ["AST", ["avgassists", "assistspergame", "assists", "ast"]],
-      ["STL", ["avgsteals", "stealspergame", "steals", "stl"]],
-      ["BLK", ["avgblocks", "blockspergame", "blocks", "blk"]],
+      ["MIN", "avgMinutes"],
+      ["PTS", "avgPoints"],
+      ["REB", "avgRebounds"],
+      ["AST", "avgAssists"],
+      ["STL", "avgSteals"],
+      ["BLK", "avgBlocks"],
     ];
-    // Les moyennes par match sont fournies par ESPN Web API v3. On les affiche
-    // directement : aucune division des totaux n'est effectuée côté interface.
-    const postseasonQuick = postseasonQuickDefinitions.map(([label, aliases]) => {
-      const item = findPostseasonStat(aliases);
+    const postseasonQuick = postseasonQuickDefinitions.map(([label, id]) => {
+      const item = postseasonByName[id];
       return [label, item ? (item.display_value ?? item.value ?? "—") : "—"];
     });
-    const postseasonHighlighted = new Set(postseasonQuickDefinitions.flatMap(([, aliases]) => aliases).map(normalizeStatKey));
+    const postseasonHighlighted = new Set(postseasonQuickDefinitions.map(([, id]) => normalizeStatKey(id)));
     const postseasonGamesPlayed = postseasonStats.find((item) =>
       statKeys(item).some((key) => ["gamesplayed", "games", "gp"].includes(key))
     );
