@@ -139,7 +139,7 @@ var F=globalThis,V=F.ShadowRoot&&(F.ShadyCSS===void 0||F.ShadyCSS.nativeShadow)&
                   <div><small>% VICTOIRES</small><strong>${o(this._teamRoster.standing.pct)}</strong></div>
                   <div><small>RETARD</small><strong>${o(this._teamRoster.standing.gb)}</strong></div><div><small>SÉRIE</small><strong>${o(this._teamRoster.standing.streak)}</strong></div>
                 </div>
-                ${this._teamRoster.schedule?.recent?.length?r`<div class="muted" style="margin-top:12px">FORME RÉCENTE</div><div class="recent">${this._teamRoster.schedule.recent.slice(0,5).map(t=>r`<span class="form-chip ${t.result==="V"?"win":t.result==="D"?"loss":"unknown"}"><strong>${o(t.result)}</strong><span>${t.home_away==="@"?`@${o(t.opp_abbr)}`:o(t.opp_abbr)}</span><span>${o(t.team_score)}–${o(t.opp_score)}</span></span>`)}</div>`:""}
+                ${this._teamRoster.schedule?.recent?.length?r`<div class="muted" style="margin-top:12px">FORME RÉCENTE</div><div class="recent">${this._teamRoster.schedule.recent.slice(0,5).map(t=>r`<button class="form-chip ${t.result==="V"?"win":t.result==="D"?"loss":"unknown"}" type="button" ?disabled=${!t.id} aria-label=${`Voir le match ${o(t.team_abbr)} contre ${o(t.opp_abbr)} du ${o(t.date_text)}`} @click=${()=>t.id&&this._openGame(t)}><strong>${o(t.result)}</strong><span>${t.home_away==="@"?`@${o(t.opp_abbr)}`:o(t.opp_abbr)}</span><span>${o(t.team_score)}–${o(t.opp_score)}</span></button>`)}</div>`:""}
                 ${this._teamRoster.schedule?.next?r`<p class="muted">PROCHAIN MATCH · ${o(this._teamRoster.schedule.next.date_text)} · ${o(this._teamRoster.schedule.next.name)}</p>`:""}
               </section>`:""}
             <div class="panel-head"><h3>${this._selectedPlayer?"AUTRES JOUEURS":"EFFECTIF"}</h3><span class="pill">${this._teamRoster?.count??0} JOUEURS</span></div>
@@ -406,7 +406,7 @@ var F=globalThis,V=F.ShadowRoot&&(F.ShadyCSS===void 0||F.ShadyCSS.nativeShadow)&
               </div>`:""}
             ${this._playByPlayPanel()}
             ${!this._overlayLoading&&!this._overlayError&&!this._overlayDetails?.error&&!this._overlayDetails?.teams?.length&&!this._overlayDetails?.has_boxscore?r`<section class="empty"><p>Le résumé détaillé n’est pas encore disponible pour cette rencontre.</p></section>`:""}            </div></section></div>`:""}
-        ${this._teamOverlay?this._teamRosterPanel():""}
+        ${this._teamOverlay&&!this._overlayGame?this._teamRosterPanel():""}
         ${this._playerOverlay?this._playerProfilePanel():""}
-        <footer class="footer"><span>NBA CENTER · ${e.label}</span><span>JS 2026.11.14.1</span></footer>
-      </ha-card>`}static getStubConfig(){return{title:"NBA CENTER",subtitle:"Your league. Your teams. One center."}}};customElements.get("nba-center-card")||customElements.define("nba-center-card",ce);console.info("[NBA Center] JS build 2026.11.14.1");window.customCards=window.customCards??[];window.customCards.some(n=>n.type==="nba-center-card")||window.customCards.push({type:"nba-center-card",name:"NBA Center",description:"NBA Dark dashboard \u2014 scores, teams, players and stats",preview:!0});
+        <footer class="footer"><span>NBA CENTER · ${e.label}</span><span>JS 2026.11.14.2</span></footer>
+      </ha-card>`}static getStubConfig(){return{title:"NBA CENTER",subtitle:"Your league. Your teams. One center."}}};customElements.get("nba-center-card")||customElements.define("nba-center-card",ce);console.info("[NBA Center] JS build 2026.11.14.2");window.customCards=window.customCards??[];window.customCards.some(n=>n.type==="nba-center-card")||window.customCards.push({type:"nba-center-card",name:"NBA Center",description:"NBA Dark dashboard \u2014 scores, teams, players and stats",preview:!0});
