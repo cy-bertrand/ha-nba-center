@@ -11,9 +11,14 @@ assert.match(bundle, /customElements\.define/, "custom element must be registere
 assert.match(bundle, /window\.customCards/, "Lovelace card metadata must be exposed");
 assert.match(bundle, /SCORES & CALENDRIER/, "scores view must be included");
 assert.match(bundle, /PLAYERS CENTER/, "players view must be included");
-assert.match(source, /\{ id: "playoffs", label: "PLAYOFFS" \}/, "sixth PLAYOFFS navigation tab must be present");
+assert.match(source, /\{ id: "stats", label: "STANDINGS" \}/, "standings must be the unified navigation destination");
+assert.doesNotMatch(source, /\{ id: "playoffs", label: "PLAYOFFS" \}/, "standalone PLAYOFFS navigation tab must be removed");
+assert.match(source, /nba\/standings/, "historical regular-season standings must load through websocket");
+assert.match(source, /_loadHistoricalStandings/, "season selector must load historical standings");
+assert.match(source, /SAISON RÉGULIÈRE/, "standings center must switch between regular season and playoffs");
+assert.match(source, /STANDINGS CENTER/, "unified standings center must be rendered");
 assert.match(source, /nba\/playoff_bracket/, "playoffs view must use the Home Assistant websocket service");
-assert.match(source, /PLAYOFFS CENTER/, "dedicated playoffs center must be rendered");
+assert.match(source, /TABLEAU DES PLAYOFFS/, "playoff bracket must be embedded in standings center");
 assert.match(source, /_playoffSeriesCard\(series\)/, "playoff series must have a dedicated card renderer");
 assert.match(source, /series\.unknown_results \? "≥" : ""/, "playoff wins must be marked as minimum counts when results are unconfirmed");
 assert.match(source, /_dataStatus\(\)/, "card must read the diagnostic sensor");
@@ -21,7 +26,7 @@ assert.match(source, /dataStatus\?\.state !== "À jour"/, "unknown diagnostic st
 assert.match(source, /DONNÉES PARTIELLES/, "card must warn when core NBA feeds are degraded");
 assert.match(source, /series\.unknown_results \? "≥" : ""/, "playoff wins must be marked as minimum counts when results are unconfirmed");
 assert.match(source, /TÊTES DE SÉRIE NON VALIDÉES|Têtes de série non validées/, "unvalidated playoff seeds must be disclosed");
-assert.match(bundle, /PLAYOFFS CENTER/, "bundled card must include the playoffs center");
+assert.match(bundle, /TABLEAU DES PLAYOFFS/, "bundled card must include the playoff bracket inside standings center");
 assert.match(bundle, /NBA FINALS/, "bundled card must include NBA Finals");
 assert.match(bundle, /FORME RÉCENTE/, "favorite team recent form must be included");
 assert.match(source, /_teamsCatalog\(\)/, "Teams Center must read the global franchise catalog sensor");
