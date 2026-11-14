@@ -1002,7 +1002,7 @@ class NBACenterCard extends LitElement {
   render() {
     const active = VIEWS.find((v) => v.id === this._active) ?? VIEWS[0];
     const dataStatus = this._dataStatus();
-    const degraded = dataStatus?.state === "Dégradé" || dataStatus?.attributes?.stale;
+    const degraded = dataStatus?.state !== "À jour" || dataStatus?.attributes?.stale;
     const view = { home: () => this._homeView(), scores: () => this._scoresView(),
       teams: () => this._teamsView(), players: () => this._playersView(), stats: () => this._statsView(), playoffs: () => this._playoffsView() };
     return html`
