@@ -184,6 +184,19 @@ class SummaryLeadersTests(unittest.TestCase):
         self.assertEqual(parsed["home"]["id"], "1")
         self.assertEqual(parsed["away"]["id"], "3")
 
+    def test_game_details_rejects_invalid_event_ids_without_network_access(self):
+        async def check():
+            instance = object.__new__(coordinator.NBACoordinator)
+            for game_id in ("", "abc", "../123", "1" * 21):
+                with self.subTest(game_id=game_id):
+                    result = await instance.async_get_game_details(game_id)
+                    self.assertIn("error", result)
+                    self.assertEqual(result["teams"], [])
+            valid_shape = await instance.async_get_game_details("401234567")
+            self.assertIn("error", valid_shape)
+        import asyncio
+        asyncio.run(check())
+
     def test_game_parser_rejects_malformed_event_and_competitors_without_team_ids(self):
         self.assertIsNone(coordinator.NBACoordinator._parse_game(None))
         self.assertIsNone(coordinator.NBACoordinator._parse_game({"id": "missing", "competitions": []}))
