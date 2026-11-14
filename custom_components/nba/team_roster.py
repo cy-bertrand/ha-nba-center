@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 import re
+import math
 
 
 def _mapping(value: Any) -> dict[str, Any]:
@@ -14,6 +15,13 @@ def _text(value: Any) -> str | None:
         return None
     result = str(value).strip()
     return result or None
+
+
+def _finite_number(value: Any) -> int | float | None:
+    """Return real numeric values only; bool is an int subclass in Python."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    return value if math.isfinite(value) else None
 
 
 def parse_team_roster(raw: dict[str, Any]) -> dict[str, Any]:
@@ -65,9 +73,9 @@ def parse_team_roster(raw: dict[str, Any]) -> dict[str, Any]:
             "weight": weight_text,
             "height_cm": height_cm,
             "weight_kg": weight_kg,
-            "age": athlete.get("age") if isinstance(athlete.get("age"), (int, float)) else None,
+            "age": _finite_number(athlete.get("age")),
             "college": _text(college.get("shortName") or college.get("name")),
-            "experience_years": experience.get("years") if isinstance(experience.get("years"), (int, float)) else None,
+            "experience_years": _finite_number(experience.get("years")),
             "status": _text(status.get("name") or status.get("abbreviation")),
             "injuries": injury_rows,
         })
