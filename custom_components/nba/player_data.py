@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from typing import Any
+from datetime import datetime, timezone
 import math
 
 
@@ -469,5 +470,17 @@ def parse_player_gamelog(raw: dict[str, Any]) -> dict[str, Any]:
                                            or event.get("opponentAbbreviation") or event.get("opponent_abbreviation")),
             "stats": stat_values,
         })
-    games.sort(key=lambda item: item.get("date") or "", reverse=True)
+    def game_date_key(item: dict[str, Any]) -> tuple[int, float | str]:
+        raw_date = item.get("date") or ""
+        try:
+            parsed = datetime.fromisoformat(raw_date.replace("Z", "+00:00"))
+            if parsed.tzinfo is None:
+                parsed = parsed.replace(tzinfo=timezone.utc)
+            return (1, parsed.timestamp())
+        except (TypeError, ValueError, OverflowError):
+            # Les dates ESPN non conformes restent triées de façon déterministe,
+            # après les dates ISO valides.
+            return (0, str(raw_date))
+
+    games.sort(key=game_date_key, reverse=True)
     return {"games": games, "count": len(games)}
