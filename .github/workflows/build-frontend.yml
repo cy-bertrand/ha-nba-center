@@ -38,6 +38,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # Sur pull_request, éviter le ref synthétique "<numéro>/merge" :
+          # le bundle généré doit être commité sur la branche source.
+          ref: ${{ github.head_ref || github.ref_name }}
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
@@ -69,6 +73,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add custom_components/nba/www/nba-center-card.js package-lock.json
           git commit -m "build(frontend): bundle NBA Center Lit card"
-          git fetch origin ${{ github.ref_name }}
-          git rebase origin/${{ github.ref_name }}
-          git push origin HEAD:${{ github.ref_name }}
+          TARGET_BRANCH="${{ github.head_ref || github.ref_name }}"
+          git fetch origin "$TARGET_BRANCH"
+          git rebase "origin/$TARGET_BRANCH"
+          git push origin "HEAD:$TARGET_BRANCH"
