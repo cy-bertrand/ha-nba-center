@@ -103,55 +103,98 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._playoff_locks: dict[int, asyncio.Lock] = {}
 
     async def _get(self, url: str, params: dict | None = None) -> dict:
-        async with self.session.get(url, params=params, timeout=20) as resp:
-            resp.raise_for_status()
-            return await resp.json()
+        """Appel ESPN avec deux tentatives courtes pour les incidents réseau transitoires."""
+        last_error: Exception | None = None
+        for attempt in range(3):
+            try:
+                async with self.session.get(url, params=params, timeout=20) as resp:
+                    resp.raise_for_status()
+                    payload = await resp.json()
+                    if not isinstance(payload, dict):
+                        raise ValueError(f"Réponse ESPN invalide pour {url}: objet JSON attendu")
+                    return payload
+            except Exception as err:  # noqa: BLE001 - les erreurs réseau ESPN varient selon aiohttp
+                last_error = err
+                if attempt < 2:
+                    await asyncio.sleep(1 + attempt)
+        assert last_error is not None
+        raise last_error
 
     async def _async_update_data(self) -> dict[str, Any]:
+        """Actualise chaque ressource indépendamment et conserve les dernières données valides."""
+        previous = self.data or {}
+        errors: list[str] = []
+
         try:
             scoreboard = await self._get(SCOREBOARD_URL)
-            standings = await self._get(STANDINGS_URL)
-            schedules: dict[str, Any] = {}
-            for team_id in self.teams:
-                schedules[team_id] = await self._get(TEAM_SCHEDULE_URL.format(team_id=team_id))
-        except Exception as err:
-            raise UpdateFailed(f"Erreur API ESPN: {err}") from err
+            games = [g for g in (self._parse_game(e) for e in scoreboard.get("events", [])) if g]
+        except Exception as err:  # noqa: BLE001 - une panne ESPN ne doit pas effacer les données déjà affichées
+            errors.append(f"scoreboard: {err}")
+            games = previous.get("games", [])
+            if not previous:
+                raise UpdateFailed(f"Erreur API ESPN (scoreboard): {err}") from err
+            _LOGGER.warning("Scoreboard ESPN indisponible : conservation des données précédentes (%s)", err)
+
+        try:
+            standings_raw = await self._get(STANDINGS_URL)
+            standings = self._parse_standings(standings_raw)
+            if not standings and previous.get("standings"):
+                raise ValueError("ESPN a renvoyé un classement vide")
+        except Exception as err:  # noqa: BLE001
+            errors.append(f"standings: {err}")
+            standings = previous.get("standings", {})
+            _LOGGER.warning("Classements ESPN indisponibles : conservation des données précédentes (%s)", err)
+
+        team_data: dict[str, Any] = {}
+        for team_id in self.teams:
+            try:
+                schedule = await self._get(TEAM_SCHEDULE_URL.format(team_id=team_id))
+                team_data[team_id] = self._parse_team(team_id, schedule, games)
+            except Exception as err:  # noqa: BLE001
+                errors.append(f"schedule {team_id}: {err}")
+                old_team = previous.get("teams", {}).get(team_id)
+                if old_team is not None:
+                    team_data[team_id] = old_team
+                else:
+                    team_data[team_id] = {
+                        "name": team_id, "abbr": None, "logo": None,
+                        "last": None, "next": None, "live": None, "recent": [],
+                    }
+                _LOGGER.warning("Calendrier ESPN indisponible pour %s : conservation des données précédentes (%s)", team_id, err)
 
         await self._update_leaders()
         await self._update_teams_catalog()
 
-        games = [g for g in (self._parse_game(e) for e in scoreboard.get("events", [])) if g]
-        team_data = {tid: self._parse_team(tid, schedules[tid], games) for tid in self.teams}
-        # Complète les cinq rencontres de chaque équipe en réutilisant le cache
-        # partagé avec le service nba.get_game_details.
+        # Enrichit les matchs récents sans rendre le rafraîchissement global dépendant
+        # de la disponibilité de l'endpoint summary.
         detail_ids = list(dict.fromkeys(
-            game["id"] for info in team_data.values() for game in info["recent"]
+            game["id"] for info in team_data.values() for game in info.get("recent", [])
         ))
         for game_id in detail_ids:
-            try:
-                summary = await self.async_get_game_details(game_id)
-            except Exception as err:  # noqa: BLE001 - un résumé absent ne bloque pas l'actualisation
-                _LOGGER.debug("Résumé ESPN %s indisponible: %s", game_id, err)
-                summary = {}
-            # Un résumé ESPN peut manquer ou être incomplet : un détail vide reste
-            # utilisable et aucune erreur ne remonte au coordinateur.
-            detail = {"teams": summary.get("teams", [])} if summary else {"teams": []}
+            summary = await self.async_get_game_details(game_id)
+            detail = {"teams": summary.get("teams", [])} if summary and not summary.get("error") else {"teams": []}
             for info in team_data.values():
-                for recent_game in info["recent"]:
-                    if recent_game["id"] == game_id:
+                for recent_game in info.get("recent", []):
+                    if recent_game.get("id") == game_id:
                         recent_game["details"] = detail
 
         data = {
             "games": games,
-            "standings": self._parse_standings(standings),
+            "standings": standings,
             "teams": team_data,
             "leaders": self._leaders,
             "postseason_leaders": self._postseason_leaders,
             "favorites": list(self.teams),
             "teams_catalog": self._teams_catalog,
+            "data_errors": errors,
+            "data_updated_at": dt_util.utcnow().isoformat(),
+            "data_stale": bool(errors),
         }
-        self._fire_events(games)
-        live = any(g["state"] == "in" for g in games)
+        if not errors:
+            self._fire_events(games)
+        else:
+            _LOGGER.warning("NBA Center utilise des données partiellement conservées : %s", "; ".join(errors))
+        live = any(g.get("state") == "in" for g in games)
         self.update_interval = SCAN_INTERVAL_LIVE if live else SCAN_INTERVAL_IDLE
         return data
 
@@ -183,86 +226,128 @@ class NBACoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER.warning("Catalogue des franchises NBA indisponible : %s", err)
 
     async def _update_leaders(self) -> None:
-        """Récupère les leaders de saison régulière et de playoffs (cache horaire)."""
+        """Récupère les leaders ; une réponse vide ou invalide ne détruit jamais le cache."""
         now = dt_util.utcnow()
-        if self._leaders_fetched and (now - self._leaders_fetched).total_seconds() < 3600 and self._leaders:
+        if self._leaders_fetched and (now - self._leaders_fetched).total_seconds() < 3600:
             return
-        regular: dict[str, list[dict]] = {}
-        postseason: dict[str, list[dict]] = {}
-        # ESPN utilise l'année de fin de saison NBA (ex. 2027 pour 2026-27).
+
+        regular = dict(self._leaders)
+        postseason = dict(self._postseason_leaders)
+        successes = 0
         season_year = now.year + (1 if now.month >= 10 else 0)
         for key, (_label, sort) in LEADER_CATEGORIES.items():
-            params = {"region": "us", "lang": "en", "contentorigin": "espn",
-                      "isqualified": "true", "page": 1, "limit": LEADERS_COUNT, "sort": sort}
+            params = {
+                "region": "us", "lang": "en", "contentorigin": "espn",
+                "isqualified": "true", "page": 1, "limit": LEADERS_COUNT, "sort": sort,
+            }
             try:
                 raw = await self._get(LEADERS_URL, params=params)
-                regular[key] = self._parse_leaders(raw, key)
+                parsed = self._parse_leaders(raw, key)
+                if parsed:
+                    regular[key] = parsed
+                    successes += 1
+                else:
+                    _LOGGER.warning("ESPN a renvoyé un classement saison vide/inexploitable pour '%s' ; cache conservé", key)
             except Exception as err:  # noqa: BLE001
-                _LOGGER.debug("Leaders réguliers '%s' indisponibles: %s", key, err)
-                regular[key] = self._leaders.get(key, [])
+                _LOGGER.warning("Leaders réguliers '%s' indisponibles ; cache conservé : %s", key, err)
+
             try:
                 playoff_params = {**params, "season": season_year, "seasontype": 3}
                 playoff_raw = await self._get(LEADERS_URL, params=playoff_params)
-                postseason[key] = self._parse_leaders(playoff_raw, key)
+                parsed_playoffs = self._parse_leaders(playoff_raw, key)
+                if parsed_playoffs:
+                    postseason[key] = parsed_playoffs
+                    successes += 1
+                elif key in postseason:
+                    _LOGGER.debug("Leaders playoffs '%s' vides ; cache conservé", key)
             except Exception as err:  # noqa: BLE001
-                _LOGGER.debug("Leaders playoffs '%s' indisponibles: %s", key, err)
-                postseason[key] = self._postseason_leaders.get(key, [])
+                _LOGGER.debug("Leaders playoffs '%s' indisponibles ; cache conservé : %s", key, err)
+
         self._leaders = regular
         self._postseason_leaders = postseason
-        self._leaders_fetched = now
+        # Un incident global DNS ne doit pas déclencher un nouvel appel complet
+        # à chaque cycle, mais un cache vide ne doit pas être marqué comme valide.
+        if successes:
+            self._leaders_fetched = now
 
     @staticmethod
     def _parse_leaders(raw: dict, key: str) -> list[dict]:
-        """Extrait joueur / équipe / valeur depuis la réponse ESPN."""
-        # Noms des colonnes de stats, par catégorie ESPN
+        """Extrait uniquement la statistique demandée ; aucune substitution silencieuse."""
         wanted = {
             "points": "avgPoints",
             "rebounds": "avgRebounds",
             "assists": "avgAssists",
             "steals": "avgSteals",
             "blocks": "avgBlocks",
-        }[key]
-        # Position de la colonne voulue dans chaque catégorie
+        }.get(key)
+        if not wanted or not isinstance(raw, dict):
+            return []
+
         positions: list[tuple[int, int]] = []
-        for ci, cat in enumerate(raw.get("categories", [])):
-            for ni, name in enumerate(cat.get("names", [])):
-                if name == wanted:
-                    positions.append((ci, ni))
+        categories = raw.get("categories")
+        athletes = raw.get("athletes")
+        if not isinstance(categories, list) or not isinstance(athletes, list):
+            return []
+        for category_index, category in enumerate(categories):
+            if not isinstance(category, dict):
+                continue
+            names = category.get("names")
+            if isinstance(names, list):
+                positions.extend(
+                    (category_index, stat_index)
+                    for stat_index, name in enumerate(names)
+                    if name == wanted
+                )
+        if not positions:
+            return []
+
         rows: list[dict] = []
-        for i, item in enumerate(raw.get("athletes", [])[:LEADERS_COUNT], start=1):
-            athlete = item.get("athlete", {})
+        for item in athletes:
+            if not isinstance(item, dict):
+                continue
+            athlete = item.get("athlete")
+            if not isinstance(athlete, dict) or not athlete.get("displayName"):
+                continue
+            athlete_categories = item.get("categories")
+            if not isinstance(athlete_categories, list):
+                continue
+            value = None
+            for category_index, stat_index in positions:
+                try:
+                    values = athlete_categories[category_index].get("values")
+                    if isinstance(values, list) and stat_index < len(values):
+                        value = values[stat_index]
+                        break
+                except (IndexError, TypeError, AttributeError):
+                    continue
+            if value is None:
+                continue
+            try:
+                numeric_value = round(float(value), 1)
+            except (TypeError, ValueError):
+                continue
+
             athlete_team = athlete.get("team") if isinstance(athlete.get("team"), dict) else {}
             team_logos = athlete_team.get("logos") or athlete.get("teamLogos") or []
             team_logo = athlete_team.get("logo")
             if not team_logo and team_logos and isinstance(team_logos[0], dict):
                 team_logo = team_logos[0].get("href")
-            value = None
-            for ci, ni in positions:
-                try:
-                    value = item["categories"][ci]["values"][ni]
-                    break
-                except (KeyError, IndexError, TypeError):
-                    continue
-            if value is None:
-                try:
-                    value = item["categories"][0]["values"][0]
-                except (KeyError, IndexError, TypeError):
-                    value = None
-            rows.append(
-                {
-                    "rank": i,
-                    "id": str(athlete.get("id")) if athlete.get("id") is not None else None,
-                    "player": athlete.get("displayName"),
-                    "team": athlete_team.get("abbreviation") or athlete.get("teamAbbreviation")
-                            or athlete.get("teamShortName") or athlete.get("teamName"),
-                    "team_abbreviation": athlete_team.get("abbreviation") or athlete.get("teamAbbreviation"),
-                    "team_id": str(athlete_team.get("id") or athlete.get("teamId"))
-                               if athlete_team.get("id") or athlete.get("teamId") else None,
-                    "team_logo": team_logo,
-                    "headshot": (athlete.get("headshot") or {}).get("href"),
-                    "value": round(float(value), 1) if isinstance(value, (int, float)) else value,
-                }
-            )
+            headshot = athlete.get("headshot")
+            rows.append({
+                "rank": len(rows) + 1,
+                "id": str(athlete.get("id")) if athlete.get("id") is not None else None,
+                "player": athlete.get("displayName"),
+                "team": athlete_team.get("abbreviation") or athlete.get("teamAbbreviation")
+                        or athlete.get("teamShortName") or athlete.get("teamName"),
+                "team_abbreviation": athlete_team.get("abbreviation") or athlete.get("teamAbbreviation"),
+                "team_id": str(athlete_team.get("id") or athlete.get("teamId"))
+                           if athlete_team.get("id") or athlete.get("teamId") else None,
+                "team_logo": team_logo,
+                "headshot": headshot.get("href") if isinstance(headshot, dict) else headshot,
+                "value": numeric_value,
+            })
+            if len(rows) >= LEADERS_COUNT:
+                break
         return rows
 
     @staticmethod
