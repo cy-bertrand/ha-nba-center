@@ -77,7 +77,25 @@ def _select_season_entry(entries: list[Any], season_year: int | None = None) -> 
             item for item in entries
             if (_number(_mapping(_mapping(item).get("season")).get("year")) or 0) == latest_year
         ]
-    return next((item for item in candidates if _is_aggregate_season_entry(item)), candidates[0])
+    aggregate = next((item for item in candidates if _is_aggregate_season_entry(item)), None)
+    if aggregate is not None:
+        return aggregate
+    # Sans total ESPN, une seule ligne d'équipe est exploitable. Plusieurs
+    # franchises signifient que le premier split serait un total partiel.
+    team_identities = set()
+    for item in candidates:
+        block = _mapping(item)
+        team = _mapping(block.get("team"))
+        identity = _text(
+            block.get("teamId") or block.get("team_id")
+            or team.get("id") or block.get("teamAbbreviation")
+            or team.get("abbreviation") or block.get("teamSlug")
+        )
+        if identity:
+            team_identities.add(identity)
+    if len(team_identities) > 1:
+        return None
+    return candidates[0] if candidates else None
 
 
 def _stat_rows(raw: dict[str, Any], season_year: int | None = None) -> list[dict[str, Any]]:
